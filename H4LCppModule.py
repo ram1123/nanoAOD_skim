@@ -112,9 +112,9 @@ class HZZAnalysisCppProducer(Module):
         self.out.branch("etaZ2_2j",  "F")
         self.out.branch("pTZ2_2j",  "F")
         self.out.branch("EneZ2_2j",  "F")
-        self.out.branch("phiZ2_met",  "F")
-        self.out.branch("pTZ2_met",  "F")
-        self.out.branch("EneZ2_met",  "F")
+        self.out.branch("phiZ2_2l2v",  "F")
+        self.out.branch("pTZ2_2l2v",  "F")
+        self.out.branch("EneZ2_2l2v",  "F")
         self.out.branch("D_CP",  "F")
         self.out.branch("D_0m",  "F")
         self.out.branch("D_0hp",  "F")
@@ -271,12 +271,12 @@ class HZZAnalysisCppProducer(Module):
             self.passZZEvts += 1
         #     FatJet_PNZvsQCD = self.worker.FatJet_PNZvsQCD
         #     self.out.fillBranch("FatJet_PNZvsQCD",FatJet_PNZvsQCD)
-            phiZ2_met = self.worker.Z2_met.Phi()
-            pTZ2_met = self.worker.Z2_met.Pt()
-            EneZ2_met = self.worker.Z2_met.sumEt()
-            self.out.fillBranch("phiZ2_met",phiZ2_met)
-            self.out.fillBranch("pTZ2_2j",pTZ2_2j)
-            self.out.fillBranch("EneZ2_met",EneZ2_met)
+            phiZ2_2l2v = self.worker.Z2_met.Phi()
+            pTZ2_2l2v = self.worker.Z2_met.Pt()
+            EneZ2_2l2v = self.worker.Z2_met.sumEt()
+            self.out.fillBranch("phiZ2_2l2v",phiZ2_2l2v)
+            self.out.fillBranch("pTZ2_2l2v",pTZ2_2l2v)
+            self.out.fillBranch("EneZ2_2l2v",EneZ2_2l2v)
 
         if (foundZZCandidate or foundZZCandidate_2l2q or foundZZCandidate_2l2nu):
             keepIt = True

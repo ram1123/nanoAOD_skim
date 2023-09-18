@@ -1060,7 +1060,7 @@ bool H4LTools::ZZSelection_2l2nu(){
     if (MET_sumEt > 150)
     {
      foundZZCandidate = true;
-     Z2_met.SetPtPhiMt(MET_pt[0], MET_phi[0], MET_sumEt[0]);
+     Z2_met.SetPtEtaPhiM(MET_pt[0], 0,  MET_phi[0], 0);
      cut2l1met++;
     }
     ZZ_metsystem = Z1 + Z2_met;
