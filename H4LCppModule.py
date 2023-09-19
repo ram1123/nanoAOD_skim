@@ -206,7 +206,7 @@ class HZZAnalysisCppProducer(Module):
         jets = Collection(event, "Jet")
         FatJets = Collection(event, "FatJet")
         genparts = Collection(event, "GenPart")
-        met = Collection(events, "MET")
+        met = Collection(event, "MET")
         for xe in electrons:
             self.worker.SetElectrons(xe.pt, xe.eta, xe.phi, xe.mass, xe.dxy,
                                       xe.dz, xe.sip3d, xe.mvaFall17V2Iso, xe.pdgId, xe.pfRelIso03_all)
@@ -222,7 +222,7 @@ class HZZAnalysisCppProducer(Module):
             self.worker.SetFatJets(xj.pt, xj.eta, xj.phi, xj.msoftdrop, xj.jetId, xj.btagDeepB, xj.particleNet_ZvsQCD)
 	for xg in genparts:
             self.worker.SetGenParts(xg.pt)
-       # for xn in MET:
+        #for xn in met:
         self.worker.SetMET(met.pt,met.phi,met.sumEt)
         self.worker.MuonPtCorrection(self.isMC)
         self.worker.LeptonSelection()

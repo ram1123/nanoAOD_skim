@@ -232,7 +232,7 @@ class H4LTools {
         Muon_nTrackerLayers.clear();Muon_genPartIdx.clear();Muon_pdgId.clear();Muon_charge.clear();
         Muon_isTracker.clear();Muon_isGlobal.clear();Muon_isPFcand.clear();
         Jet_pt.clear();Jet_phi.clear();Jet_eta.clear();Jet_mass.clear();Jet_btagDeepC.clear();
-        MET_pt.clear();MET_phi.clear();MET_sumEt.clear();  ////new
+        MET_pt.clear();MET_phi.clear();  ////new
         Jet_jetId.clear();Jet_puId.clear();
         FatJet_pt.clear();FatJet_phi.clear();FatJet_eta.clear();FatJet_SDmass.clear();FatJet_btagDeepB.clear(); FatJet_PNZvsQCD.clear();
 
@@ -324,7 +324,8 @@ class H4LTools {
 
       std::vector<float> Jet_pt,Jet_phi,Jet_eta,Jet_mass,Jet_btagDeepC;
       std::vector<int> Jet_jetId,Jet_puId;
-      std::vector<float> MET_pt,MET_phi,MET_sumEt; ///new
+      std::vector<float> MET_pt,MET_phi;
+      float MET_sumEt; ///new
 
       std::vector<float> FatJet_pt, FatJet_phi, FatJet_eta, FatJet_SDmass, FatJet_btagDeepB, FatJet_PNZvsQCD;
       std::vector<int> FatJet_jetId;

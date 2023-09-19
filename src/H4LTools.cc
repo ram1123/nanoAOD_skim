@@ -1060,14 +1060,14 @@ bool H4LTools::ZZSelection_2l2nu(){
     if (MET_sumEt > 150)
     {
      foundZZCandidate = true;
-     Z2_met.SetPtEtaPhiM(MET_pt[0], 0,  MET_phi[0], 0);
+     Z2_met.SetPtEtaPhiE(MET_pt[0], 0,  MET_phi[0], MET_sumEt);
      cut2l1met++;
     }
     ZZ_metsystem = Z1 + Z2_met;
     ZZ_metsystemnofsr = Z1nofsr + Z2_met;
     
     float METZZ_met;
-    METZZ_met = ZZ_metsystem.sumEt();    
+    METZZ_met = ZZ_metsystem.E();    
     
     
     return foundZZCandidate;
