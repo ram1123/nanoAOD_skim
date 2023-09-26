@@ -5,7 +5,7 @@ config = Configuration()
 
 config.section_("General")
 config.General.requestName = 'nanoAOD_testing_2'
-config.General.workArea = '/uscms/home/rasharma/nobackup/nanoAOD/CMSSW_10_2_22/src/PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_vvVBS/crab/crab_projects_sendPythonFolderFalse'
+config.General.workArea = '/uscms/home/rasharma/nobackup/nanoAOD/CMSSW_10_2_22/src/PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim/crab/crab_projects_sendPythonFolderFalse'
 config.General.transferLogs=True
 config.General.transferOutputs = True
 config.section_("JobType")

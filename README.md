@@ -62,7 +62,7 @@ nanoAOD skiming code for H->ZZ->2l2Q studies.
       1. In the file [condor_setup_lxplus.py](condor_setup_lxplus.py), specify the correct input text file (present inside directory [input_data_Files](input_data_Files)) from which you need to take input NanoAOD DAS names. Also, updated the output EOS path. Then do the following:
 
          ```bash
-         cd $CMSSW_BASE/src/PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_vvVBS
+         cd $CMSSW_BASE/src/PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim
          # Use the arguments that you need.
          python condor_setup_lxplus.py --input-file sample_list_v9.dat
          # Set proxy before submitting the condor jobs.

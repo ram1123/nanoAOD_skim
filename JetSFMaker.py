@@ -4,7 +4,7 @@ import os
 import ROOT
 
 from PhysicsTools.NanoAODTools.postprocessing.framework.eventloop import Module
-from PhysicsTools.NanoAODTools.postprocessing.framework.datamodel import Collection 
+from PhysicsTools.NanoAODTools.postprocessing.framework.datamodel import Collection
 
 class JetSFMaker(Module):
     #----------------------------------------------------------------------------
@@ -13,11 +13,11 @@ class JetSFMaker(Module):
     #weight. Same for up/down variations (weights).
     #----------------------------------------------------------------------------
 
-    def __init__(self, cmssw, puid_sf_config='PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_vvVBS/data/JetPUID_cfg.py'):
+    def __init__(self, cmssw, puid_sf_config='PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim/data/JetPUID_cfg.py'):
         cmssw_base = os.getenv('CMSSW_BASE')
         with open(cmssw_base + '/src/' + puid_sf_config) as src:
             exec(src)
-            
+
         puid_sf_cfg = jet_puid_sf[cmssw]
 
         source = ROOT.TFile.Open(cmssw_base + '/src/' + puid_sf_cfg['source'])
@@ -77,7 +77,7 @@ class JetSFMaker(Module):
                         up   = 1 + abs(sf-1)
                         down = 1 - abs(sf-1)
                     puid_upjw   = up
-                    puid_downjw = down  
+                    puid_downjw = down
                 else:
                     puid_jw = (1.-sf*eff)/(1.-eff)
                     if (jtype == 'real') or (jtype == 'pu' and abs(jet.eta)>=2.5):
@@ -87,7 +87,7 @@ class JetSFMaker(Module):
                         up   = 1 + abs(sf-1)
                         down = 1 - abs(sf-1)
                     puid_upjw   = (1.-up*eff)/(1.-eff)
-                    puid_downjw = (1.-down*eff)/(1.-eff) 
+                    puid_downjw = (1.-down*eff)/(1.-eff)
 
                 #store per jet weights and variations
                 sfs[wp].append(puid_jw)
@@ -95,7 +95,7 @@ class JetSFMaker(Module):
                 sfs_down[wp].append(puid_downjw)
 
         for wp in ['loose', 'medium', 'tight']:
-            self.out.fillBranch('Jet_PUIDSF_%s' % wp, sfs[wp])            
+            self.out.fillBranch('Jet_PUIDSF_%s' % wp, sfs[wp])
             self.out.fillBranch('Jet_PUIDSF_%s_up' % wp, sfs_up[wp])
             self.out.fillBranch('Jet_PUIDSF_%s_down' % wp, sfs_down[wp])
 
@@ -103,12 +103,12 @@ class JetSFMaker(Module):
 
     def get_sf_and_eff(self, jtype, wp, jet):
         sf_map = self.sf_maps['%s_%s' % (jtype, wp)]
-        sf_uncty_map = self.sf_uncty_maps['%s_%s_uncty' % (jtype, wp)] 
+        sf_uncty_map = self.sf_uncty_maps['%s_%s_uncty' % (jtype, wp)]
         eff_map = self.eff_maps['%s_mc_%s' % (jtype, wp)]
 
-        if jet.pt < 30. or jet.pt > 50. or abs(jet.eta) > 4.7: 
-            #do not apply SF outside CleanJet region and where PUID was not applied 
-            return 1.,0.,0.,0. 
+        if jet.pt < 30. or jet.pt > 50. or abs(jet.eta) > 4.7:
+            #do not apply SF outside CleanJet region and where PUID was not applied
+            return 1.,0.,0.,0.
 
         ix = min(max(1, sf_map.GetXaxis().FindFixBin(jet.pt)), sf_map.GetNbinsX())
         iy = min(max(1, sf_map.GetYaxis().FindFixBin(jet.eta)), sf_map.GetNbinsY())
