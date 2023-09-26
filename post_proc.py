@@ -7,7 +7,7 @@ from H4LCppModule import *
 from PhysicsTools.NanoAODTools.postprocessing.modules.jme.jetmetHelperRun2 import *
 from PhysicsTools.NanoAODTools.postprocessing.modules.btv.btagSFProducer import *
 
-ifRunningOnCondor = True
+ifRunningOnCondor = False
 WhichSample = "2l2q" # options: "4l", "2l2q", "2l2nu"
 
 testfilelist = []

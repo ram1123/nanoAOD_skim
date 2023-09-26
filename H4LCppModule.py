@@ -206,7 +206,7 @@ class HZZAnalysisCppProducer(Module):
         jets = Collection(event, "Jet")
         FatJets = Collection(event, "FatJet")
         genparts = Collection(event, "GenPart")
-        met = Collection(event, "MET")
+        met = Collection(event, "MET", None)
         for xe in electrons:
             self.worker.SetElectrons(xe.pt, xe.eta, xe.phi, xe.mass, xe.dxy,
                                       xe.dz, xe.sip3d, xe.mvaFall17V2Iso, xe.pdgId, xe.pfRelIso03_all)
