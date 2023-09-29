@@ -70,7 +70,7 @@ if WhichSample == "2l2q"  and (not ifRunningOnCondor):
 if WhichSample == "2l2nu"  and (not ifRunningOnCondor): #2l2nu
     testfilelist.append("root://cms-xrd-global.cern.ch/")
 
-entriesToRun = 0 # 0 if need to run over all entries else put number of entries to run
+entriesToRun = 100 # 0 if need to run over all entries else put number of entries to run
 isMC = True
 # Keep DownloadFileToLocalThenRun=True this should reduce the file read error from eos.
 DownloadFileToLocalThenRun=True
