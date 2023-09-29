@@ -70,6 +70,13 @@ class H4LTools {
         FatJet_PNZvsQCD.push_back(Jet_PNZvsQCD_); // 1 or 0?
       }
 
+      void SetMET(float MET_pt_, float MET_phi_, float MET_sumEt_)
+      {
+        MET_pt.push_back(MET_pt_);
+        MET_phi.push_back(MET_phi_);
+        MET_sumEt = MET_sumEt_;
+      }
+
       void SetMuons(float Muon_pt_, float Muon_eta_, float Muon_phi_, float Muon_mass_, bool Muon_isGlobal_, bool Muon_isTracker_,
                         float Muon_dxy_, float Muon_dz_,float Muon_sip3d_, float Muon_ptErr_,
                         int Muon_nTrackerLayers_, bool Muon_isPFcand_, int Muon_pdgId_,int Muon_charge_, float Muon_pfRelIso03_all_,
@@ -256,7 +263,7 @@ class H4LTools {
         Electronindex.clear();  Muonindex.clear(); AllEid.clear(); AllMuid.clear(); Elelist.clear(); Mulist.clear(); ElelistFsr.clear(); Mulist.clear();
         Elechg.clear(); Muchg.clear(); Muiso.clear();Eiso.clear(); Eid.clear(); muid.clear(); TightEleindex.clear(); TightMuindex.clear();
         nElectron = 0; nMuon = 0; nJet = 0; nFsrPhoton = 0; nGenPart = 0;
-        nTightEle = 0; nTightMu = 0; nTightEleChgSum = 0; nTightMuChgSum = 0;
+        nTightEle = 0; nTightMu = 0; nTightEleChgSum = 0; nTightMuChgSum = 0; MET_sumEt = 0;
 
         pTL1 = -999; etaL1 = -999; phiL1 = -999; massL1 = -999;
         pTL2 = -999; etaL2 = -999; phiL2 = -999; massL2 = -999;
@@ -314,6 +321,7 @@ class H4LTools {
       int cut2e_met, cut2mu_met, cut2l_met;
       float pTL1, etaL1, phiL1, massL1, pTL2, etaL2, phiL2, massL2, pTL3, etaL3, phiL3, massL3, pTL4, etaL4, phiL4, massL4;
       float pTj1, etaj1, phij1, mj1, pTj2, etaj2, phij2, mj2;
+      float MET_sumEt; ///new
 
 
 
@@ -325,7 +333,6 @@ class H4LTools {
       std::vector<float> Jet_pt,Jet_phi,Jet_eta,Jet_mass,Jet_btagDeepC;
       std::vector<int> Jet_jetId,Jet_puId;
       std::vector<float> MET_pt,MET_phi;
-      float MET_sumEt; ///new
 
       std::vector<float> FatJet_pt, FatJet_phi, FatJet_eta, FatJet_SDmass, FatJet_btagDeepB, FatJet_PNZvsQCD;
       std::vector<int> FatJet_jetId;

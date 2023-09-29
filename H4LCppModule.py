@@ -233,6 +233,7 @@ class HZZAnalysisCppProducer(Module):
         if ((self.worker.nTightEle<2)&(self.worker.nTightMu<2)):
             pass
 
+       # if ((self.worker.nTightEle + self.worker.nTightMu == 2) and (not self.worker.nTightMu == 1) and (self.worker.sumEt < 150)):
         if ((self.worker.nTightEle + self.worker.nTightMu == 2) and (not self.worker.nTightMu == 1) and (self.worker.MET_sumEt < 150)):
             # This event should belong to either 2l2q or 2l2nu \
             # nTightEle + nTightMu == 2 => 2l2q or 2l2nu => (2,0), (0,2), (1,1)
@@ -246,7 +247,7 @@ class HZZAnalysisCppProducer(Module):
         elif (self.worker.nTightEle + self.worker.nTightMu >= 4):
             # This event should belong to 4l; nTightEle + nTightMu >= 4
             foundZZCandidate = self.worker.ZZSelection_4l()
-        elif ((self.worker.nTightEle + self.worker.nTightMu >= 4) and (self.worker.MET_sumEt > 150)):
+        elif ((self.worker.nTightEle + self.worker.nTightMu >= 4) and (MET_sumEt > 150)):
             # This event should belong to 4l; nTightEle + nTightMu >= 4
             foundZZCandidate_2l2nu = self.worker.ZZSelection_2l2nu()
 
