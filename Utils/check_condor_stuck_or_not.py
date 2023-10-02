@@ -7,14 +7,13 @@ from color_style import style
 output = os.popen('condor_q -submitter rasharma').read()
 
 error_check_string = [ 'Server responded with an error',
-                       'The remote file is not open',
-                       'Error in <TNetXNGFile::ReadBuffer>']
+                       'The remote file is not open']
 
 #Oprint output.split("\t")
 lpcschedd = ""
 print type(output)
 for outputs in output.split('\n'):
-  #print outputs
+  print outputs
   if outputs.find('Submitter') != -1:
     lpcschedd = outputs.split()[2].split('.')[0]
   if outputs.find('rasharma') != -1 and outputs.split()[5] == 'R':
@@ -33,7 +32,6 @@ for outputs in output.split('\n'):
     foundOrNot = any(match in output for match in error_check_string)
 
     if foundOrNot:
-        print output
         print(style.RED + "ERROR: Going to kill this job" + style.RESET)
         killCommand = "condor_rm "+outputs.split()[0]+" -name "+lpcschedd
         print(style.RED + "Running Command: " + killCommand + style.RESET)
