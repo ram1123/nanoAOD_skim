@@ -50,6 +50,7 @@ class HZZAnalysisCppProducer(Module):
           self.worker.InitializeJetcut(cfg['Jet']['pTcut'],cfg['Jet']['Etacut'])
           self.worker.InitializeEvtCut(cfg['MZ1cut'],cfg['MZZcut'],cfg['Higgscut']['down'],cfg['Higgscut']['up'],cfg['Zmass'],cfg['MZcut']['down'],cfg['MZcut']['up'])
 
+        self.noCutsEvts = 0
         self.passtrigEvts = 0
         self.passMETFilters = 0
         self.passZZEvts = 0
@@ -61,27 +62,36 @@ class HZZAnalysisCppProducer(Module):
         pass
 
     def endJob(self):
-        print("PassTrig: "+str(self.passtrigEvts)+" Events")
-        print("PassMETFilters: "+str(self.passMETFilters)+" Events")
-        print("Pass4eCut: "+str(self.worker.cut4e)+" Events")
-        print("Pass4eGhostRemoval: "+str(self.worker.cutghost4e)+" Events")
-        print("Pass4eLepPtCut: "+str(self.worker.cutLepPt4e)+" Events")
-        print("Pass4eQCDSupress: "+str(self.worker.cutQCD4e)+" Events")
-        print("PassmZ1mZ2Cut_4e: "+str(self.worker.cutZZ4e)+" Events")
-        print("Passm4l_105_160_Cut_4e: "+str(self.worker.cutm4l4e)+" Events")
-        print("Pass4muCut: "+str(self.worker.cut4mu)+" Events")
-        print("Pass4muGhostRemoval: "+str(self.worker.cutghost4mu)+" Events")
-        print("Pass4muLepPtCut: "+str(self.worker.cutLepPt4mu)+" Events")
-        print("Pass4muQCDSupress: "+str(self.worker.cutQCD4mu)+" Events")
-        print("PassmZ1mZ2Cut_4mu: "+str(self.worker.cutZZ4mu)+" Events")
-        print("Passm4l_105_160_Cut_4mu: "+str(self.worker.cutm4l4mu)+" Events")
-        print("Pass2e2muCut: "+str(self.worker.cut2e2mu)+" Events")
-        print("Pass2e2muGhostRemoval: "+str(self.worker.cutghost2e2mu)+" Events")
-        print("Pass2e2muLepPtCut: "+str(self.worker.cutLepPt2e2mu)+" Events")
-        print("Pass2e2muQCDSupress: "+str(self.worker.cutQCD2e2mu)+" Events")
-        print("PassmZ1mZ2Cut_2e2mu: "+str(self.worker.cutZZ2e2mu)+" Events")
-        print("Passm4l_105_160_Cut_2e2mu: "+str(self.worker.cutm4l2e2mu)+" Events")
-        print("PassZZSelection: "+str(self.passZZEvts)+" Events")
+        print("=====================================================================")
+        print("===       Summary of cut-flow of HZZAnalysisCppProducer:                      ===")
+        print("=====================================================================")
+        print("{:27}:{:7} {}".format("Total: ", str(self.noCutsEvts), " Events"))
+        print("{:27}:{:7} {}".format("PassTrig: ", str(self.passtrigEvts), " Events"))
+        print("{:27}:{:7} {}".format("PassMETFilters: ", str(self.passMETFilters), " Events"))
+        print("\n===>     4e     <===")
+        print("{:27}:{:7} {}".format("Pass4eCut: ", str(self.worker.cut4e), " Events"))
+        print("{:27}:{:7} {}".format("Pass4eGhostRemoval: ", str(self.worker.cutghost4e), " Events"))
+        print("{:27}:{:7} {}".format("Pass4eLepPtCut: ", str(self.worker.cutLepPt4e), " Events"))
+        print("{:27}:{:7} {}".format("Pass4eQCDSupress: ", str(self.worker.cutQCD4e), " Events"))
+        print("{:27}:{:7} {}".format("PassmZ1mZ2Cut_4e: ", str(self.worker.cutZZ4e), " Events"))
+        print("{:27}:{:7} {}".format("Passm4l_105_160_Cut_4e: ", str(self.worker.cutm4l4e), " Events"))
+        print("\n===>     4mu     <===")
+        print("{:27}:{:7} {}".format("Pass4muCut: ", str(self.worker.cut4mu), " Events"))
+        print("{:27}:{:7} {}".format("Pass4muGhostRemoval: ", str(self.worker.cutghost4mu), " Events"))
+        print("{:27}:{:7} {}".format("Pass4muLepPtCut: ", str(self.worker.cutLepPt4mu), " Events"))
+        print("{:27}:{:7} {}".format("Pass4muQCDSupress: ", str(self.worker.cutQCD4mu), " Events"))
+        print("{:27}:{:7} {}".format("PassmZ1mZ2Cut_4mu: ", str(self.worker.cutZZ4mu), " Events"))
+        print("{:27}:{:7} {}".format("Passm4l_105_160_Cut_4mu: ", str(self.worker.cutm4l4mu), " Events"))
+        print("\n===>     2e2mu     <===")
+        print("{:27}:{:7} {}".format("Pass2e2muCut: ", str(self.worker.cut2e2mu), " Events"))
+        print("{:27}:{:7} {}".format("Pass2e2muGhostRemoval: ", str(self.worker.cutghost2e2mu), " Events"))
+        print("{:27}:{:7} {}".format("Pass2e2muLepPtCut: ", str(self.worker.cutLepPt2e2mu), " Events"))
+        print("{:27}:{:7} {}".format("Pass2e2muQCDSupress: ", str(self.worker.cutQCD2e2mu), " Events"))
+        print("{:27}:{:7} {}".format("PassmZ1mZ2Cut_2e2mu: ", str(self.worker.cutZZ2e2mu), " Events"))
+        print("{:27}:{:7} {}".format("Passm4l_105_160_Cut_2e2mu: ", str(self.worker.cutm4l2e2mu), " Events"))
+        print("\n===>     4e/4mu/2e2mu     <===")
+        print("{:27}:{:7} {}".format("PassZZSelection: ", str(self.passZZEvts), " Events"))
+        print("=====================================================================")
         pass
 
     def beginFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
@@ -179,6 +189,8 @@ class HZZAnalysisCppProducer(Module):
         passedZXCRSelection=False
         passedFiducialSelection=False
         nZXCRFailedLeptons=0
+
+        self.noCutsEvts += 1
         passedTrig = PassTrig(event, self.cfgFile)
         if (passedTrig==True):
             self.passtrigEvts += 1
