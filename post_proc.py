@@ -12,6 +12,7 @@ from PhysicsTools.NanoAODTools.postprocessing.modules.common.puWeightProducer im
 from H4Lmodule import *
 from H4LCppModule import *
 from JetSFMaker import *
+from GenVarsProducer import *
 
 def parse_arguments():
     """Parse command line arguments."""
@@ -81,7 +82,8 @@ def main():
         sfFileName = "DeepCSV_102XSF_V2.csv"
 
     H4LCppModule = lambda: HZZAnalysisCppProducer(year,cfgFile, isMC, isFSR)
-    modulesToRun.extend([H4LCppModule()])
+    GenVarModule = lambda : GenVarsProducer()
+    modulesToRun.extend([H4LCppModule(), GenVarModule()])
 
     print("Input json file: {}".format(jsonFileName))
     print("Input cfg file: {}".format(cfgFile))
@@ -94,12 +96,12 @@ def main():
         # btagSF = lambda: btagSFProducer("UL"+str(year), algo="deepjet",selectedWPs=['L','M','T','shape_corr'], sfFileName=sfFileName)
         btagSF = lambda: btagSFProducer(era = "UL"+str(year), algo = "deepcsv")
         puidSF = lambda: JetSFMaker("%s" % year)
-        modulesToRun.extend([jetmetCorrector(), fatJetCorrector(), puidSF()])
+        # modulesToRun.extend([jetmetCorrector(), fatJetCorrector(), puidSF()])
         # # modulesToRun.extend([jetmetCorrector(), fatJetCorrector(), btagSF(), puidSF()])
 
-        if year == 2018: modulesToRun.extend([puAutoWeight_2018()])
-        if year == 2017: modulesToRun.extend([puAutoWeight_2017()])
-        if year == 2016: modulesToRun.extend([puAutoWeight_2016()])
+        # if year == 2018: modulesToRun.extend([puAutoWeight_2018()])
+        # if year == 2017: modulesToRun.extend([puAutoWeight_2017()])
+        # if year == 2016: modulesToRun.extend([puAutoWeight_2016()])
 
         p=PostProcessor(".",testfilelist, None, None,modules = modulesToRun, provenance=True,fwkJobReport=False,haddFileName="skimmed_nano_mc.root", maxEntries=entriesToRun, prefetch=DownloadFileToLocalThenRun, outputbranchsel="keep_and_drop.txt")
     else:

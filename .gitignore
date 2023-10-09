@@ -1,4 +1,5 @@
 # Ignore root files
+*.rst
 *.bkup
 *.patch
 summary.dat

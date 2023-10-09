@@ -86,3 +86,6 @@ keep FatJet_*
 keep Gen*
 keep Jet_*
 keep Muon*
+keep pass*
+keep higgs*
+keep genVPt
