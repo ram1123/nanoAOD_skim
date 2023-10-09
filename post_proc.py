@@ -22,12 +22,10 @@ def parse_arguments():
     parser.add_argument("-d", "--DownloadFileToLocalThenRun", default=True, type=bool, help="Download file to local then run")
     return parser.parse_args()
 
-
 def getListFromFile(filename):
     """Read file list from a text file."""
     with open(filename, "r") as file:
         return ["root://cms-xrd-global.cern.ch/" + line.strip() for line in file]
-
 
 def main():
     args = parse_arguments()
@@ -96,12 +94,12 @@ def main():
         # btagSF = lambda: btagSFProducer("UL"+str(year), algo="deepjet",selectedWPs=['L','M','T','shape_corr'], sfFileName=sfFileName)
         btagSF = lambda: btagSFProducer(era = "UL"+str(year), algo = "deepcsv")
         puidSF = lambda: JetSFMaker("%s" % year)
-        # modulesToRun.extend([jetmetCorrector(), fatJetCorrector(), puidSF()])
-        # # modulesToRun.extend([jetmetCorrector(), fatJetCorrector(), btagSF(), puidSF()])
+        modulesToRun.extend([jetmetCorrector(), fatJetCorrector(), puidSF()])
+        # modulesToRun.extend([jetmetCorrector(), fatJetCorrector(), btagSF(), puidSF()])
 
-        # if year == 2018: modulesToRun.extend([puAutoWeight_2018()])
-        # if year == 2017: modulesToRun.extend([puAutoWeight_2017()])
-        # if year == 2016: modulesToRun.extend([puAutoWeight_2016()])
+        if year == 2018: modulesToRun.extend([puAutoWeight_2018()])
+        if year == 2017: modulesToRun.extend([puAutoWeight_2017()])
+        if year == 2016: modulesToRun.extend([puAutoWeight_2016()])
 
         p=PostProcessor(".",testfilelist, None, None,modules = modulesToRun, provenance=True,fwkJobReport=False,haddFileName="skimmed_nano_mc.root", maxEntries=entriesToRun, prefetch=DownloadFileToLocalThenRun, outputbranchsel="keep_and_drop.txt")
     else:
@@ -112,7 +110,6 @@ def main():
         p=PostProcessor(".",testfilelist, None, None, modules = modulesToRun, provenance=True, fwkJobReport=False,haddFileName="skimmed_nano_data.root", jsonInput=jsonFileName, maxEntries=entriesToRun, prefetch=DownloadFileToLocalThenRun, outputbranchsel="keep_and_drop_data.txt")
 
     p.run()
-
 
 if __name__ == "__main__":
     main()

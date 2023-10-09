@@ -87,6 +87,7 @@ class HZZAnalysisCppProducer(Module):
     def beginFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
         self.initReaders(inputTree)  # initReaders must be called in beginFile
         self.out = wrappedOutputTree
+        self.out.branch("passZZ4lSelection", "O")
         self.out.branch("mass4l",  "F")
         self.out.branch("pT4l",  "F")
         self.out.branch("eta4l",  "F")
@@ -243,6 +244,7 @@ class HZZAnalysisCppProducer(Module):
         if (foundZZCandidate):
             keepIt = True
             self.passZZEvts += 1
+            passZZ4lSelection = True
             pTZ1 = self.worker.Z1.Pt()
             etaZ1 = self.worker.Z1.Eta()
             phiZ1 = self.worker.Z1.Phi()
@@ -304,6 +306,7 @@ class HZZAnalysisCppProducer(Module):
                 eta4l = self.worker.ZZsystemnofsr.Eta()
                 phi4l = self.worker.ZZsystemnofsr.Phi()
                 mass4l = self.worker.ZZsystemnofsr.M()
+            self.out.fillBranch("passZZ4lSelection",passZZ4lSelection)
             self.out.fillBranch("mass4l",mass4l)
             self.out.fillBranch("pT4l",pT4l)
             self.out.fillBranch("eta4l",eta4l)
