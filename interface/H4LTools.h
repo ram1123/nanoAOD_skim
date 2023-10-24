@@ -14,13 +14,7 @@
 class H4LTools {
     public:
       H4LTools(int year, std::string DATAPATH);
-<<<<<<< HEAD
-      int elePtcut = 7;
-      int MuPtcut = 5;
-      int sip3dCut = 4;
-      float Zmass = 91.1876;
 
-=======
       float elePtcut, MuPtcut, eleEtacut, MuEtacut, elesip3dCut, Musip3dCut,Zmass,MZ1cut,MZcutup,MZcutdown,MZZcut,HiggscutUp,HiggscutDown;
       float eleLoosedxycut,eleLoosedzcut,MuLoosedxycut,MuLoosedzcut,MuTightdxycut,MuTightdzcut,MuTightTrackerLayercut,MuTightpTErrorcut,MuHighPtBound,eleIsocut,MuIsocut;
       float fsrphotonPtcut,fsrphotonEtacut,fsrphotonIsocut,fsrphotondRlcut,fsrphotondRlOverPtcut, JetPtcut,JetEtacut;
@@ -72,7 +66,7 @@ class H4LTools {
         MZcutdown = MZcutdown_;
         MZcutup = MZcutup_;
       }
->>>>>>> d6f5026445d9074bde26cedb894b2f1d53186ed0
+
       void SetElectrons(float Electron_pt_, float Electron_eta_, float Electron_phi_, float Electron_mass_, float Electron_dxy_,float Electron_dz_,
                         float Electron_sip3d_, float Electron_mvaFall17V2Iso_, int Electron_pdgId_, float Electron_pfRelIso03_all_){
         Electron_pt.push_back(Electron_pt_);
@@ -87,23 +81,6 @@ class H4LTools {
         Electron_pfRelIso03_all.push_back(Electron_pfRelIso03_all_);
       }
 
-<<<<<<< HEAD
-
-      /*void SetElectrons(TTreeReaderArray<float> *Electron_pt_, TTreeReaderArray<float> *Electron_eta_,
-                        TTreeReaderArray<float> *Electron_phi_, TTreeReaderArray<float> *Electron_mass_, TTreeReaderArray<float> *Electron_dxy_,TTreeReaderArray<float> *Electron_dz_,
-                        TTreeReaderArray<float> *Electron_sip3d_, TTreeReaderArray<bool> *Electron_mvaFall17V2Iso_WP90_, TTreeReaderArray<int> *Electron_pdgId_){
-        Electron_pt = Electron_pt_;
-        Electron_phi = Electron_phi_;
-        Electron_eta = Electron_eta_;
-        Electron_mass = Electron_mass_;
-        Electron_dxy = Electron_dxy_;
-        Electron_dz = Electron_dz_;
-        Electron_sip3d = Electron_sip3d_;
-        Electron_mvaFall17V2Iso_WP90 = Electron_mvaFall17V2Iso_WP90_;
-        Electron_pdgId = Electron_pdgId_;
-      }*/
-=======
->>>>>>> d6f5026445d9074bde26cedb894b2f1d53186ed0
       void SetJets(float Jet_pt_, float Jet_eta_, float Jet_phi_, float Jet_mass_, int Jet_jetId_, float Jet_btagDeepC_,
                          int Jet_puId_){
         Jet_pt.push_back(Jet_pt_);
@@ -114,7 +91,6 @@ class H4LTools {
         Jet_jetId.push_back(Jet_jetId_);
         Jet_puId.push_back(Jet_puId_); //1 or 0?
       }
-<<<<<<< HEAD
 
       void SetFatJets(float Jet_pt_, float Jet_eta_, float Jet_phi_, float Jet_mass_, int Jet_jetId_, float Jet_btagDeepB_,
                       float Jet_PNZvsQCD_)
@@ -135,20 +111,12 @@ class H4LTools {
         MET_sumEt = MET_sumEt_;
       }
 
-      void SetMuons(float Muon_pt_, float Muon_eta_, float Muon_phi_, float Muon_mass_, bool Muon_isGlobal_, bool Muon_isTracker_,
-                        float Muon_dxy_, float Muon_dz_,float Muon_sip3d_, float Muon_ptErr_,
-                        int Muon_nTrackerLayers_, bool Muon_isPFcand_, int Muon_pdgId_,int Muon_charge_, float Muon_pfRelIso03_all_,
-                        int Muon_genPartIdx_){
-        Muon_pt.push_back(Muon_pt_);
-=======
-    
       
       void SetMuons(float Muon_pt_, float Muon_eta_, float Muon_phi_, float Muon_mass_, bool Muon_isGlobal_, bool Muon_isTracker_,
                         float Muon_dxy_, float Muon_dz_,float Muon_sip3d_, float Muon_ptErr_,
                         int Muon_nTrackerLayers_, bool Muon_isPFcand_, int Muon_pdgId_,int Muon_charge_, float Muon_pfRelIso03_all_
                         ){
         Muon_pt.push_back(Muon_pt_); 
->>>>>>> d6f5026445d9074bde26cedb894b2f1d53186ed0
         Muon_phi.push_back(Muon_phi_);
         Muon_eta.push_back(Muon_eta_);
         Muon_mass.push_back(Muon_mass_);
@@ -213,13 +181,8 @@ class H4LTools {
       /*void SetGenParts(TTreeReaderArray<float> *GenPart_pt_){
         GenPart_pt = GenPart_pt_;
       }*/
-<<<<<<< HEAD
-      void SetObjectNum(unsigned nElectron_,unsigned nMuon_,unsigned nJet_,unsigned nGenPart_,unsigned nFsrPhoton_){
-        nElectron = nElectron_;
-=======
       void SetObjectNum(unsigned nElectron_,unsigned nMuon_,unsigned nJet_,unsigned nFsrPhoton_){
         nElectron = nElectron_; 
->>>>>>> d6f5026445d9074bde26cedb894b2f1d53186ed0
         nMuon = nMuon_;
         nJet = nJet_;
         nFsrPhoton = nFsrPhoton_;
@@ -393,15 +356,11 @@ class H4LTools {
       float getDL1Constant(float ZZMass);
       float getDL1ZgsConstant(float ZZMass);
 
-<<<<<<< HEAD
-      int cut4e, cut4mu, cut2e2mu, cutZZ4e, cutZZ4mu, cutZZ2e2mu, cutm4l4e, cutm4l4mu, cutm4l2e2mu;
       int cut2e_m40_180, cut2mu_m40_180, cut2l_m40_180;
       int cut2l_met_m40_180, cut2e_met_m40_180, cut2mu_met_m40_180;
       int cut2e, cut2mu, cut2l, cut2l1J, cut2l2j, cut2l1Jor2j, cut2l1met;
       int cut2e_met, cut2mu_met, cut2l_met;
-=======
       int cut4e, cut4mu, cut2e2mu, cutZZ4e, cutZZ4mu, cutZZ2e2mu, cutm4l4e, cutm4l4mu, cutm4l2e2mu, cutghost2e2mu, cutQCD2e2mu, cutLepPt2e2mu, cutghost4e, cutQCD4e, cutLepPt4e, cutghost4mu, cutQCD4mu, cutLepPt4mu;
->>>>>>> d6f5026445d9074bde26cedb894b2f1d53186ed0
       float pTL1, etaL1, phiL1, massL1, pTL2, etaL2, phiL2, massL2, pTL3, etaL3, phiL3, massL3, pTL4, etaL4, phiL4, massL4;
       float pTj1, etaj1, phij1, mj1, pTj2, etaj2, phij2, mj2;
       float MET_sumEt; ///new
