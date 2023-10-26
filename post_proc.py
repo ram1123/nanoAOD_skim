@@ -7,10 +7,11 @@ from PhysicsTools.NanoAODTools.postprocessing.framework.postprocessor import Pos
 from PhysicsTools.NanoAODTools.postprocessing.modules.jme.jetmetHelperRun2 import createJMECorrector
 from PhysicsTools.NanoAODTools.postprocessing.modules.btv.btagSFProducer import btagSFProducer
 from PhysicsTools.NanoAODTools.postprocessing.modules.common.puWeightProducer import *
+from PhysicsTools.NanoAODTools.postprocessing.modules.common.muonScaleResProducer import muonScaleResProducer
+from ggTemporaryScale import gammaSFProducer
 
 # Custom module imports
-from H4Lmodule import *
-from H4LCppModule import *
+from HHWWgg_AnalysisModule import *
 from JetSFMaker import *
 
 def parse_arguments():
@@ -80,8 +81,9 @@ def main():
         jsonFileName = "golden_Json/Cert_271036-284044_13TeV_Legacy2016_Collisions16_JSON.txt"
         sfFileName = "DeepCSV_102XSF_V2.csv"
 
-    H4LCppModule = lambda: HZZAnalysisCppProducer(year,cfgFile, isMC, isFSR)
-    modulesToRun.extend([H4LCppModule()])
+    # H4LCppModule = lambda: HZZAnalysisCppProducer(year,cfgFile, isMC, isFSR)
+    HHWWgg_AnalysisModule = lambda: HHWWgg_AnalysisProducer()
+    modulesToRun.extend([HHWWgg_AnalysisModule()])
 
     print("Input json file: {}".format(jsonFileName))
     print("Input cfg file: {}".format(cfgFile))
@@ -92,9 +94,19 @@ def main():
         jetmetCorrector = createJMECorrector(isMC=isMC, dataYear=year, jesUncert="All", jetType = "AK4PFchs")
         fatJetCorrector = createJMECorrector(isMC=isMC, dataYear=year, jesUncert="All", jetType = "AK8PFPuppi")
         # btagSF = lambda: btagSFProducer("UL"+str(year), algo="deepjet",selectedWPs=['L','M','T','shape_corr'], sfFileName=sfFileName)
+        muonScaleRes = lambda: muonScaleResProducer('roccor.Run2.v3', 'RoccoR'+str(year)+'.txt', year)
+
+        # Format year string for gammaSFProducer
+        if year == 2018: gammaYear = "UL18"
+        if year == 2017: gammaYear = "UL17"
+        # if year == 2016: gammaYear = "UL16Pre-VFP" # FIXME: update this
+        # if year == 2016: gammaYear = "UL16Post-VFP" # FIXME: update this
+        gammaSF = lambda: gammaSFProducer(year)
+
+
         btagSF = lambda: btagSFProducer(era = "UL"+str(year), algo = "deepcsv")
         puidSF = lambda: JetSFMaker("%s" % year)
-        modulesToRun.extend([jetmetCorrector(), fatJetCorrector(), puidSF()])
+        modulesToRun.extend([jetmetCorrector(), fatJetCorrector(), puidSF(), muonScaleRes(), gammaSF()])
         # # modulesToRun.extend([jetmetCorrector(), fatJetCorrector(), btagSF(), puidSF()])
 
         if year == 2018: modulesToRun.extend([puAutoWeight_2018()])

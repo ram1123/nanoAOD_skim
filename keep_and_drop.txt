@@ -14,18 +14,8 @@ keep HLT*
 keep Flag*
 #
 #
-keep *4l
-keep *Z1
-keep *Z2
-keep *L1
-keep *L2
-keep *L3
-keep *L4
-keep *j1
-keep *j2
-keep D_*
-# keep nPhoton
-# keep Photon*
+keep nPhoton
+keep Photon*
 keep nElectron
 keep Electron*
 keep nMuon
