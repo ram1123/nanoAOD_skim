@@ -445,6 +445,13 @@ H4LTools::H4LTools(int year, std::string DATAPATH){
   cut2mu_m40_180 = 0;
   cut2l_m40_180 = 0;
 
+  cut2e_met = 0;
+  cut2mu_met = 0;
+  cut2l_met = 0;
+  cut2l_met_m40_180 = 0;
+  cut2e_met_m40_180 = 0;
+  cut2mu_met_m40_180 = 0;
+  cut2l1met = 0;    
 }
 #endif
 

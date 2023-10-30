@@ -211,7 +211,6 @@ class HZZAnalysisCppProducer(Module):
         # do NOT access other branches in python between the check/call to
         # initReaders and the call to C++ worker code
         self.worker.Initialize()
-        self.worker.SetObjectNum(event.nElectron,event.nMuon,event.nJet,event.nGenPart,event.nFsrPhoton)
         isMC = self.isMC
         self.worker.SetObjectNum(event.nElectron,event.nMuon,event.nJet,event.nFsrPhoton)
         if isMC:

@@ -22,14 +22,14 @@ entriesToRun = 0 if ifRunningOnCondor else 100
 
 
 if ifRunningOnCondor:
-    testfile = "root://cms-xrd-global.cern.ch//store/mc/RunIISummer20UL18NanoAODv9/GluGluHToZZTo4L_M125_TuneCP5_13TeV_powheg2_JHUGenV7011_pythia8/NANOAODSIM/106X_upgrade2018_realistic_v16_L1v1-v1/120000/3ED05633-EBB7-4A44-8F9D-CD956490BCFD.root"
+    testfile = "root://cms-xrd-global.cern.ch//store/mc/RunIISummer20UL17NanoAODv9/GluGluHToZZTo2L2Nu_M1000_TuneCP5_13TeV_powheg2_JHUGenV7011_pythia8/NANOAODSIM/106X_mc2017_realistic_v9-v2/2520000/B618B858-5CC8-154E-8952-8D0E3A463989.root"
     testfilelist.append(testfile)
 
 else:
     if len(sys.argv) > 1:
        InputFileList = sys.argv[1]
     else:
-       InputFileList = "ExampleInputFileList.txt"
+       InputFileList = "ExampleInputFileList_v1.txt"
     with open(InputFileList, 'r') as file:
       for line in file:
         # Remove newline characters
