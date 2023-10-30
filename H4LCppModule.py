@@ -283,15 +283,12 @@ class HZZAnalysisCppProducer(Module):
             # 2nd part is to avoid the situation where we get 1 electron and 1 muon
             # foundZZCandidate_2l2q = False # print("Inside the 2l2q loop")
             foundZZCandidate_2l2q = self.worker.ZZSelection_2l2q()
-            foundZZCandidate_2l2nu = False
             # print("Inside the 2l2q loop: END")
-            pass
+        elif ((self.worker.nTightEle + self.worker.nTightMu == 2) and (not self.worker.nTightMu == 1) and (self.worker.MET_sumEt > 150)):
+            foundZZCandidate_2l2nu = self.worker.ZZSelection_2l2nu()
         elif (self.worker.nTightEle + self.worker.nTightMu >= 4):
             # This event should belong to 4l; nTightEle + nTightMu >= 4
             foundZZCandidate = self.worker.ZZSelection_4l()
-        elif ((self.worker.nTightEle + self.worker.nTightMu >= 4) and (MET_sumEt > 150)):
-            # This event should belong to 4l; nTightEle + nTightMu >= 4
-            foundZZCandidate_2l2nu = self.worker.ZZSelection_2l2nu()
 
         if (foundZZCandidate_2l2q):
             keepIt = True
@@ -316,7 +313,7 @@ class HZZAnalysisCppProducer(Module):
         #     self.out.fillBranch("FatJet_PNZvsQCD",FatJet_PNZvsQCD)
             phiZ2_2l2v = self.worker.Z2_met.Phi()
             pTZ2_2l2v = self.worker.Z2_met.Pt()
-            EneZ2_2l2v = self.worker.Z2_met.sumEt()
+            EneZ2_2l2v = self.worker.Z2_met.E()
             self.out.fillBranch("phiZ2_2l2v",phiZ2_2l2v)
             self.out.fillBranch("pTZ2_2l2v",pTZ2_2l2v)
             self.out.fillBranch("EneZ2_2l2v",EneZ2_2l2v)
