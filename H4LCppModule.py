@@ -52,7 +52,6 @@ class HZZAnalysisCppProducer(Module):
 
           self.worker.Initialize2l2qEvtCut(cfg['HZZ2l2q']['Leading_Lep_pT'], cfg['HZZ2l2q']['SubLeading_Lep_pT'], cfg['HZZ2l2q']['Lep_eta'], cfg['HZZ2l2q']['MZLepcut']['down'], cfg['HZZ2l2q']['MZLepcut']['up'])
 
-        self.passZZEvts = 0 #new
         self.passtrigEvts = 0
         self.noCutsEvts = 0
         self.passZZ4lEvts = 0
@@ -202,7 +201,6 @@ class HZZAnalysisCppProducer(Module):
         if isMC:
             self.worker.SetObjectNumGen(event.nGenPart)
         keepIt = False
-	keepIt_2l2q = False
         passedTrig=False
         passedFullSelection=False
         passedZ4lSelection=False
@@ -214,12 +212,65 @@ class HZZAnalysisCppProducer(Module):
         passedFiducialSelection=False
         nZXCRFailedLeptons=0
         self.noCutsEvts += 1
+
+        massZ2_2j = -999.
+        phiZ2_2j = -999.
+        etaZ2_2j = -999.
+        pTZ2_2j = -999.
+        EneZ2_2j = -999.
+
+        pTL1 = -999.
+        etaL1 = -999.
+        phiL1 = -999.
+        massL1 = -999.
+        pTL2 = -999.
+        etaL2 = -999.
+        phiL2 = -999.
+        massL2 = -999.
+        pTZ1 = -999.
+        etaZ1 = -999.
+        phiZ1 = -999.
+        massZ1 = -999.
+        pTZ2 = -999.
+        etaZ2 = -999.
+        phiZ2 = -999.
+        massZ2 = -999.
+        D_CP = -999.
+        D_0m = -999.
+        D_0hp = -999.
+        D_int = -999.
+        D_L1 = -999.
+        D_L1Zg = -999.
+        pTL3 = -999.
+        etaL3 = -999.
+        phiL3 = -999.
+        massL3 = -999.
+        pTL4 = -999.
+        etaL4 = -999.
+        phiL4 = -999.
+        massL4 = -999.
+        pTj1 = -999.
+        etaj1 = -999.
+        phij1 = -999.
+        mj1 = -999.
+        pTj2 = -999.
+        etaj2 = -999.
+        phij2 = -999.
+        mj2 = -999.
+        pT4l = -999.
+        eta4l = -999.
+        phi4l = -999.
+        mass4l = -999.
+        pT4l = -999.
+        eta4l = -999.
+        phi4l = -999.
+        mass4l = -999.
+
         passedTrig = PassTrig(event, self.cfgFile)
         if (passedTrig==True):
             self.passtrigEvts += 1
         else:
             return keepIt
-            return keepIt_2l2q
         electrons = Collection(event, "Electron")
         #electrons = Object(event, "Electron")
         muons = Collection(event, "Muon")
@@ -266,22 +317,19 @@ class HZZAnalysisCppProducer(Module):
             # 2nd part is to avoid the situation where we get 1 electron and 1 muon
             # foundZZCandidate_2l2q = False # print("Inside the 2l2q loop")
             foundZZCandidate_2l2q = self.worker.ZZSelection_2l2q()
-            foundZZCandidate_2l2nu = False
-           
             # print("Inside the 2l2q loop: END")
-            pass
+
         elif (self.worker.nTightEle + self.worker.nTightMu >= 4):
         #if (self.worker.nTightEle + self.worker.nTightMu >= 4):
             # This event should belong to 4l; nTightEle + nTightMu >= 4
             foundZZCandidate_4l = self.worker.ZZSelection_4l()
-            foundZZCandidate_2l2q = False
+
         if (foundZZCandidate_2l2q):
+            keepIt = True
             print("Hello found 2l2q candidate")
             passZZ2l2qSelection = True
             print(passZZ2l2qSelection)
             passZZ4lSelection = False
-            self.out.fillBranch("passZZ2l2qSelection",passZZ2l2qSelection)
-            keepIt_2l2q = True
             self.passZZ2l2qEvts += 1
         #     FatJet_PNZvsQCD = self.worker.FatJet_PNZvsQCD
         #     self.out.fillBranch("FatJet_PNZvsQCD",FatJet_PNZvsQCD)
@@ -290,14 +338,8 @@ class HZZAnalysisCppProducer(Module):
             etaZ2_2j = self.worker.Z2_2j.Eta()
             pTZ2_2j = self.worker.Z2_2j.Pt()
             EneZ2_2j = self.worker.Z2_2j.E()
-            self.out.fillBranch("massZ2_2j",massZ2_2j)
-            self.out.fillBranch("phiZ2_2j",phiZ2_2j)
-            self.out.fillBranch("etaZ2_2j",etaZ2_2j)
-            self.out.fillBranch("pTZ2_2j",pTZ2_2j)
-            self.out.fillBranch("EneZ2_2j",EneZ2_2j)
-        else:
-            passZZ2l2qSelection = False
-  
+
+
         if (foundZZCandidate_4l or foundZZCandidate_2l2q):
             #keepIt = True
             #print("inside loop 4l or 2l2q")
@@ -326,32 +368,11 @@ class HZZAnalysisCppProducer(Module):
             phiZ2 = self.worker.Z2.Phi()
             massZ2 = self.worker.Z2.M()
 
-            self.out.fillBranch("massL1",massL1)
-            self.out.fillBranch("pTL1",pTL1)
-            self.out.fillBranch("etaL1",etaL1)
-            self.out.fillBranch("phiL1",phiL1)
-            self.out.fillBranch("massL2",massL2)
-            self.out.fillBranch("pTL2",pTL2)
-            self.out.fillBranch("etaL2",etaL2)
-            self.out.fillBranch("phiL2",phiL2)
-
-            self.out.fillBranch("pTZ1",pTZ1)
-            self.out.fillBranch("etaZ1",etaZ1)
-            self.out.fillBranch("phiZ1",phiZ1)
-            self.out.fillBranch("massZ1",massZ1)
-            self.out.fillBranch("pTZ2",pTZ2)
-            self.out.fillBranch("etaZ2",etaZ2)
-            self.out.fillBranch("phiZ2",phiZ2)
-            self.out.fillBranch("massZ2",massZ2)
-
         if (foundZZCandidate_4l):
             keepIt = True
-            keepIt_2l2q = False
             self.passZZ4lEvts += 1
             passZZ4lSelection = True
-            print("Inside 4l loop: ",passZZ2l2qSelection)
-            self.out.fillBranch("passZZ4lSelection",passZZ4lSelection)
-            #self.passZZEvts += 1
+            # print("Inside 4l loop: ",passZZ2l2qSelection)
             D_CP = self.worker.D_CP
             D_0m = self.worker.D_0m
             D_0hp = self.worker.D_0hp
@@ -392,37 +413,65 @@ class HZZAnalysisCppProducer(Module):
                 eta4l = self.worker.ZZsystemnofsr.Eta()
                 phi4l = self.worker.ZZsystemnofsr.Phi()
                 mass4l = self.worker.ZZsystemnofsr.M()
-            self.out.fillBranch("mass4l",mass4l)
-            self.out.fillBranch("pT4l",pT4l)
-            self.out.fillBranch("eta4l",eta4l)
-            self.out.fillBranch("phi4l",phi4l)
-            self.out.fillBranch("D_CP",D_CP)
-            self.out.fillBranch("D_0m",D_0m)
-            self.out.fillBranch("D_0hp",D_0hp)
-            self.out.fillBranch("D_int",D_int)
-            self.out.fillBranch("D_L1",D_L1)
-            self.out.fillBranch("D_L1Zg",D_L1Zg)
 
-            self.out.fillBranch("massL3",massL3)
-            self.out.fillBranch("pTL3",pTL3)
-            self.out.fillBranch("etaL3",etaL3)
-            self.out.fillBranch("phiL3",phiL3)
-            self.out.fillBranch("massL4",massL4)
-            self.out.fillBranch("pTL4",pTL4)
-            self.out.fillBranch("etaL4",etaL4)
-            self.out.fillBranch("phiL4",phiL4)
 
-            self.out.fillBranch("mj1",mj1)
-            self.out.fillBranch("pTj1",pTj1)
-            self.out.fillBranch("etaj1",etaj1)
-            self.out.fillBranch("phij1",phij1)
-            self.out.fillBranch("mj2",mj2)
-            self.out.fillBranch("pTj2",pTj2)
-            self.out.fillBranch("etaj2",etaj2)
-            self.out.fillBranch("phij2",phij2)
+        self.out.fillBranch("massZ2_2j",massZ2_2j)
+        self.out.fillBranch("phiZ2_2j",phiZ2_2j)
+        self.out.fillBranch("etaZ2_2j",etaZ2_2j)
+        self.out.fillBranch("pTZ2_2j",pTZ2_2j)
+        self.out.fillBranch("EneZ2_2j",EneZ2_2j)
+
+        self.out.fillBranch("massL1",massL1)
+        self.out.fillBranch("pTL1",pTL1)
+        self.out.fillBranch("etaL1",etaL1)
+        self.out.fillBranch("phiL1",phiL1)
+        self.out.fillBranch("massL2",massL2)
+        self.out.fillBranch("pTL2",pTL2)
+        self.out.fillBranch("etaL2",etaL2)
+        self.out.fillBranch("phiL2",phiL2)
+
+        self.out.fillBranch("pTZ1",pTZ1)
+        self.out.fillBranch("etaZ1",etaZ1)
+        self.out.fillBranch("phiZ1",phiZ1)
+        self.out.fillBranch("massZ1",massZ1)
+        self.out.fillBranch("pTZ2",pTZ2)
+        self.out.fillBranch("etaZ2",etaZ2)
+        self.out.fillBranch("phiZ2",phiZ2)
+        self.out.fillBranch("massZ2",massZ2)
+
+        self.out.fillBranch("mass4l",mass4l)
+        self.out.fillBranch("pT4l",pT4l)
+        self.out.fillBranch("eta4l",eta4l)
+        self.out.fillBranch("phi4l",phi4l)
+        self.out.fillBranch("D_CP",D_CP)
+        self.out.fillBranch("D_0m",D_0m)
+        self.out.fillBranch("D_0hp",D_0hp)
+        self.out.fillBranch("D_int",D_int)
+        self.out.fillBranch("D_L1",D_L1)
+        self.out.fillBranch("D_L1Zg",D_L1Zg)
+
+        self.out.fillBranch("massL3",massL3)
+        self.out.fillBranch("pTL3",pTL3)
+        self.out.fillBranch("etaL3",etaL3)
+        self.out.fillBranch("phiL3",phiL3)
+        self.out.fillBranch("massL4",massL4)
+        self.out.fillBranch("pTL4",pTL4)
+        self.out.fillBranch("etaL4",etaL4)
+        self.out.fillBranch("phiL4",phiL4)
+
+        self.out.fillBranch("mj1",mj1)
+        self.out.fillBranch("pTj1",pTj1)
+        self.out.fillBranch("etaj1",etaj1)
+        self.out.fillBranch("phij1",phij1)
+        self.out.fillBranch("mj2",mj2)
+        self.out.fillBranch("pTj2",pTj2)
+        self.out.fillBranch("etaj2",etaj2)
+        self.out.fillBranch("phij2",phij2)
+
+        self.out.fillBranch("passZZ4lSelection",passZZ4lSelection)
+        self.out.fillBranch("passZZ2l2qSelection",passZZ2l2qSelection)
 
         return keepIt
-        return keepIt_2l2q
 
 
 
