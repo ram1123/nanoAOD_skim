@@ -405,7 +405,7 @@ void H4LTools::LeptonSelection(){
 
     for(unsigned int ae=0; ae<Eid.size();ae++){
         float RelEleIsoNoFsr;
-        RelEleIsoNoFsr = Eiso[ae];
+        RelEleIsoNoFsr = Eiso[ae]; 
         if (isFSR){
           unsigned int FsrEleidx;
           FsrEleidx = doFsrRecovery(Elelist[ae]);
@@ -417,6 +417,7 @@ void H4LTools::LeptonSelection(){
                 RelEleIsoNoFsr = RelEleIsoNoFsr - FsrPhoton_pt[FsrEleidx]/Elelist[ae].Pt();
               }
           }
+
         }
         if((Eid[ae]==true)&&(RelEleIsoNoFsr<0.35)){
             nTightEle++;
@@ -544,9 +545,7 @@ bool H4LTools::findZCandidate(){
         Zcannofsr = Zlep1nofsr + Zlep2nofsr;
         Zlistnofsr.push_back(Zcannofsr);
     }
-
-
-    Zsize = Zlist.size();
+    Zsize = Zlist.size();    
     if (Zsize>0){
         return true;
     }
@@ -561,6 +560,7 @@ bool H4LTools::findZCandidate(){
 bool H4LTools::ZZSelection_4l(){
 
     bool foundZZCandidate = false;
+    std::cout << " Inside the 4l loop in .cc file" << std::endl;
     if(!findZCandidate()){
         return foundZZCandidate;
     }
@@ -926,22 +926,11 @@ bool H4LTools::ZZSelection_4l(){
 
 bool H4LTools::ZZSelection_2l2q(){
 
-    // std::cout << " Inside the .cc file" << std::endl;
-    if (nTightEle>=2) {
-        cut2e++;
-        cut2l++;
-        flag2e = true;
-        flag2l = true;
-    }
-    else if (nTightMu>=2){
-        cut2mu++;
-        cut2l++;
-        flag2mu = true;
-        flag2l = true;
-    }
-
+     std::cout << " Inside the 2l2q loop in .cc file" << std::endl;
     bool foundZZCandidate = false;
-    
+
+
+
     if(!findZCandidate()){
         // std::cout << " Inside the .cc file => Inside findZCandidate" << std::endl;
         // std::cout << "foundZZCandidate:: " << foundZZCandidate << std::endl;
@@ -949,10 +938,24 @@ bool H4LTools::ZZSelection_2l2q(){
        
     }
     // std::cout << "==> foundZZCandidate (after findZCandidate)" << std::endl;
-    if((nTightMu+nTightEle)<2){
+    //if((nTightMu+nTightEle)<2){
+    if(!(nTightMu==2 || nTightEle == 2)){
         return foundZZCandidate;
         
     }
+    if (nTightEle==2) {
+	cut2e++;
+	cut2l++;
+	flag2e = true;
+	flag2l = true; 
+    }
+    if (nTightMu==2) {
+	cut2mu++;
+	cut2l++;
+	flag2mu = true;
+	flag2l = true; 
+    }
+
     // std::cout << "==> foundZZCandidate (after nLep Selection)" << std::endl;
     // std::cout << "==> nTightEleChgSum: " << nTightEleChgSum << "\tnTightMuChgSum: " << nTightMuChgSum << std::endl;
 
@@ -1010,6 +1013,14 @@ bool H4LTools::ZZSelection_2l2q(){
  //   if(foundZZCandidate == false){
    //     return foundZZCandidate;
   //  }
+
+    std::cout<<"H4LTools.cc#1015: MET pt, phi, sumET: " << MET_pt << "\t" << MET_phi << "\t" << MET_sumEt << std::endl;
+    if (MET_pt >= 150) {
+        std::cout << " Inside the .cc file=>metcut2l2q" << std::endl;
+        return foundZZCandidate;
+        //std::cout << foundZZCandidate << std::endl;
+    }
+    cutMETlt150++;
     jetidx = SelectedJets(tighteleforjetidx, tightmuforjetidx);
     FatJetidx = SelectedFatJets(tighteleforjetidx, tightmuforjetidx);
 
@@ -1083,6 +1094,97 @@ if(foundZZCandidate == false){
    return foundZZCandidate;
    
 }
+
+bool H4LTools::ZZSelection_2l2nu(){
+    std::cout<<"===> Start of loop" << std::endl;
+   bool foundZZCandidate = false;   
+    if(!findZCandidate()){
+        return foundZZCandidate;
+    }
+    //if((nTightMu+nTightEle)<2){
+    if(!(nTightMu==2 || nTightEle == 2)){
+        return foundZZCandidate;
+    }
+
+    if (nTightEle==2) {
+        cut2e_met++;
+        cut2l_met++;
+        flag2e_met = true;
+        flag2l_met = true;
+    }
+    if (nTightMu==2) {
+        cut2mu_met++;
+        cut2l_met++;
+        flag2mu_met = true;
+        flag2l_met = true;
+    }
+    
+    if (abs(nTightEleChgSum) != 0 and abs(nTightMuChgSum) != 0)
+    {
+        return foundZZCandidate;
+    }
+       
+    if(Zlist.size()<1){
+        return foundZZCandidate;
+    }
+    
+    if ( (Zlep1pt[0] < HZZ2l2q_Leading_Lep_pT)) {
+        return foundZZCandidate;
+
+    }
+    if ( (Zlep2pt[0] < HZZ2l2q_SubLeading_Lep_pT)) {
+       return foundZZCandidate;
+
+    }
+
+    // Find ZZ candidate
+    std::vector<int> Z1CanIndex;
+    std::vector<int> Z2CanIndex;
+    for (unsigned int m=0; m<(Zlist.size()); m++){   
+        Z1CanIndex.push_back(m);
+    }
+    
+    int Z1index,Z2index;
+    Z1index = Z1CanIndex[0];
+    Z1 = Zlist[Z1index];
+    Z1nofsr = Zlistnofsr[Z1index];
+ 
+    if (Z1.M() < 40.0 || Z1.M() > 180)
+    {     
+        return foundZZCandidate;
+    }
+
+    cut2l_met_m40_180++;
+    if (flag2e_met)
+        cut2e_met_m40_180++;
+    if (flag2mu)
+        cut2mu_met_m40_180++;
+        
+    std::cout<<"H4LTools.cc#1150: MET pt, phi, sumET: " << MET_pt << "\t" << MET_phi << "\t" << MET_sumEt << std::endl;
+    if (MET_pt < 150) {
+        std::cout << " Inside the .cc file, 2l2nu loop=>found MET < 150" << std::endl;
+        return foundZZCandidate;
+    }
+    cutMETgt150++;
+    foundZZCandidate = true;
+
+    //jetidx = SelectedJets(tighteleforjetidx, tightmuforjetidx);
+    //FatJetidx = SelectedFatJets(tighteleforjetidx, tightmuforjetidx);
+    
+    Z2_met.SetPtEtaPhiE(MET_pt, 0,  MET_phi, MET_pt);
+    cut2l1met++;
+
+    ZZ_metsystem = Z1 + Z2_met;
+    ZZ_metsystemnofsr = Z1nofsr + Z2_met;
+    
+    float METZZ_met;
+    METZZ_met = ZZ_metsystem.E();    
+    
+    
+    return foundZZCandidate;
+}
+     
+
 
 float H4LTools::getDg4Constant(float ZZMass){
     return spline_g4->Eval(ZZMass);

@@ -49,7 +49,6 @@ class HZZAnalysisCppProducer(Module):
           self.worker.InitializeFsrPhotonCut(cfg['FsrPhoton']['pTcut'],cfg['FsrPhoton']['Etacut'],cfg['FsrPhoton']['Isocut'],cfg['FsrPhoton']['dRlcut'],cfg['FsrPhoton']['dRlOverPtcut'])
           self.worker.InitializeJetcut(cfg['Jet']['pTcut'],cfg['Jet']['Etacut'])
           self.worker.InitializeEvtCut(cfg['MZ1cut'],cfg['MZZcut'],cfg['Higgscut']['down'],cfg['Higgscut']['up'],cfg['Zmass'],cfg['MZcut']['down'],cfg['MZcut']['up'])
-
           self.worker.Initialize2l2qEvtCut(cfg['HZZ2l2q']['Leading_Lep_pT'], cfg['HZZ2l2q']['SubLeading_Lep_pT'], cfg['HZZ2l2q']['Lep_eta'], cfg['HZZ2l2q']['MZLepcut']['down'], cfg['HZZ2l2q']['MZLepcut']['up'])
 
         self.passtrigEvts = 0
@@ -57,6 +56,7 @@ class HZZAnalysisCppProducer(Module):
         self.passZZ4lEvts = 0
         self.passZZ2l2qEvts = 0
         self.passZZ2l2nuEvts = 0
+        MET_sumEt = 0
         self.cfgFile = cfgFile
         self.isMC = isMC
         self.worker.isFSR = isFSR
@@ -97,12 +97,27 @@ class HZZAnalysisCppProducer(Module):
         print("{:27}:{:7} {}".format("Pass2eCut (40 < mll < 180): ", str(self.worker.cut2e_m40_180), " Events"))
         print("{:27}:{:7} {}".format("Pass2muCut (40 < mll < 180): ", str(self.worker.cut2mu_m40_180), " Events"))
         print("{:27}:{:7} {}".format("Pass2lCut (40 < mll < 180): ", str(self.worker.cut2l_m40_180), " Events"))
+        print("{:27}:{:7} {}".format("PassMETcut(gt 150): ", str(self.worker.cutMETlt150), " Events"))
         print("{:27}:{:7} {}".format("Pass2l1JCut: ", str(self.worker.cut2l1J), " Events"))
         print("{:27}:{:7} {}".format("Pass2l2jCut: ", str(self.worker.cut2l2j), " Events"))
         print("{:27}:{:7} {}".format("Pass2l1Jor2jCut: ", str(self.worker.cut2l1Jor2j), " Events"))
         print("{:27}:{:7} {}".format("passZZSelection: ", str(self.passZZ2l2qEvts), " Events"))
 
+
+        print("\n==================   2l2nu    ==============\n")
+        print("{:27}:{:7} {}".format("Total: ", str(self.noCutsEvts), " Events"))
+        print("{:27}:{:7} {}".format("PassTrig: ", str(self.passtrigEvts), " Events"))
+        print("{:27}:{:7} {}".format("Pass2e_metCut: ", str(self.worker.cut2e_met), " Events"))
+        print("{:27}:{:7} {}".format("Pass2mu_metCut: ", str(self.worker.cut2mu_met), " Events"))
+        print("{:27}:{:7} {}".format("Pass2l_metCut: ", str(self.worker.cut2l_met), " Events"))
+        print("{:27}:{:7} {}".format("Pass2e_metCut (40 < mll < 180): ", str(self.worker.cut2e_met_m40_180), " Events"))
+        print("{:27}:{:7} {}".format("Pass2mu_metCut (40 < mll < 180): ", str(self.worker.cut2mu_met_m40_180), " Events"))
+        print("{:27}:{:7} {}".format("Pass2l_metCut (40 < mll < 180): ", str(self.worker.cut2l_met_m40_180), " Events"))
+        print("{:27}:{:7} {}".format("PassMETcut(gt 150): ", str(self.worker.cutMETgt150), " Events"))
+        print("{:27}:{:7} {}".format("Pass2l1metCut: ", str(self.worker.cut2l1met), " Events"))
+        print("{:27}:{:7} {}".format("passZZSelection: ", str(self.passZZ2l2nuEvts), " Events"))
         print("\n========== END: Print Cut flow table  ====================\n")
+
         pass
 
     def beginFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
@@ -131,6 +146,9 @@ class HZZAnalysisCppProducer(Module):
         self.out.branch("etaZ2_2j",  "F")
         self.out.branch("pTZ2_2j",  "F")
         self.out.branch("EneZ2_2j",  "F")
+        self.out.branch("phiZ2_met",  "F")
+        self.out.branch("pTZ2_met",  "F")
+        self.out.branch("EneZ2_met",  "F")
         self.out.branch("D_CP",  "F")
         self.out.branch("D_0m",  "F")
         self.out.branch("D_0hp",  "F")
@@ -164,14 +182,12 @@ class HZZAnalysisCppProducer(Module):
         self.out.branch("phij2",  "F")
 
 
-        self.out.branch("Electron_Fsr_pt",  "F", lenVar = "0")
-        self.out.branch("Electron_Fsr_eta",  "F", lenVar = "0")
-        self.out.branch("Electron_Fsr_phi",  "F", lenVar = "0")
-        self.out.branch("Muon_Fsr_pt",  "F", lenVar = "0")
-        self.out.branch("Muon_Fsr_eta",  "F", lenVar = "0")
-        self.out.branch("Muon_Fsr_phi",  "F", lenVar = "0")
-
-        # Branches dedicated for 2l2q channel
+        self.out.branch("Electron_Fsr_pt",  "F", lenVar = "nElectron_Fsr")
+        self.out.branch("Electron_Fsr_eta",  "F", lenVar = "nElectron_Fsr")
+        self.out.branch("Electron_Fsr_phi",  "F", lenVar = "nElectron_Fsr")
+        self.out.branch("Muon_Fsr_pt",  "F", lenVar = "nMuon_Fsr")
+        self.out.branch("Muon_Fsr_eta",  "F", lenVar = "nMuon_Fsr")
+        self.out.branch("Muon_Fsr_phi",  "F", lenVar = "nMuon_Fsr")
 
         with open("SyncLepton2018GGH.txt", 'w') as f:
             f.write("Sync data list:"+"\n")
@@ -200,7 +216,9 @@ class HZZAnalysisCppProducer(Module):
         self.worker.SetObjectNum(event.nElectron,event.nMuon,event.nJet,event.nFsrPhoton)
         if isMC:
             self.worker.SetObjectNumGen(event.nGenPart)
+
         keepIt = False
+
         passedTrig=False
         passedFullSelection=False
         passedZ4lSelection=False
@@ -218,6 +236,9 @@ class HZZAnalysisCppProducer(Module):
         etaZ2_2j = -999.
         pTZ2_2j = -999.
         EneZ2_2j = -999.
+        phiZ2_met = -999.
+        pTZ2_met = -999.
+        EneZ2_met = -999.
 
         pTL1 = -999.
         etaL1 = -999.
@@ -276,13 +297,16 @@ class HZZAnalysisCppProducer(Module):
         muons = Collection(event, "Muon")
         fsrPhotons = Collection(event, "FsrPhoton")
         jets = Collection(event, "Jet")
+
         FatJets = Collection(event, "FatJet")
+        met = Object(event, "MET", None)
         if isMC:
             genparts = Collection(event, "GenPart")
             for xg in genparts:
                 self.worker.SetGenParts(xg.pt)
             for xm in muons:
                 self.worker.SetMuonsGen(xm.genPartIdx)
+
         for xe in electrons:
             self.worker.SetElectrons(xe.pt, xe.eta, xe.phi, xe.mass, xe.dxy,
                                       xe.dz, xe.sip3d, xe.mvaFall17V2Iso, xe.pdgId, xe.pfRelIso03_all)
@@ -294,9 +318,10 @@ class HZZAnalysisCppProducer(Module):
             self.worker.SetFsrPhotons(xf.dROverEt2,xf.eta,xf.phi,xf.pt,xf.relIso03)
         for xj in jets:
             self.worker.SetJets(xj.pt,xj.eta,xj.phi,xj.mass,xj.jetId, xj.btagCSVV2, xj.puId)
+
         for xj in FatJets:
             self.worker.SetFatJets(xj.pt, xj.eta, xj.phi, xj.msoftdrop, xj.jetId, xj.btagDeepB, xj.particleNet_ZvsQCD)
-
+        self.worker.SetMET(met.pt,met.phi,met.sumEt)
         self.worker.MuonPtCorrection(self.isMC)
         self.worker.LeptonSelection()
         foundZZCandidate_4l = False    # for 4l
@@ -305,30 +330,37 @@ class HZZAnalysisCppProducer(Module):
         passZZ2l2qSelection = False
         foundZZCandidate_2l2nu = False # for 2l2nu
         passZZ2l2nuSelection = False
+	
+	print("=="*51)
+        foundZZCandidate_2l2q = self.worker.ZZSelection_2l2q()
+        foundZZCandidate_2l2nu = self.worker.ZZSelection_2l2nu()
+        foundZZCandidate_4l = self.worker.ZZSelection_4l()
 
-        if ((self.worker.nTightEle<2)&(self.worker.nTightMu<2)):
-            pass
+        #if ((self.worker.nTightEle + self.worker.nTightMu == 2) and (not self.worker.nTightMu == 1)):
+        #    # This event should belong to either 2l2q or 2l2nu \
+        #    # nTightEle + nTightMu == 2 => 2l2q or 2l2nu => (2,0), (0,2), (1,1)
+        #    # => Reject (1,1) combination: ( (nTightEle + nTightMu == 2) and (not nTightEle == 1))
+        #    # 2nd part is to avoid the situation where we get 1 electron and 1 muon
+	#    print("====> met pt: {}, {}, {}".format(met.pt, met.phi, met.sumEt))
+        #    foundZZCandidate_2l2q = self.worker.ZZSelection_2l2q()
+        #    foundZZCandidate_2l2nu = self.worker.ZZSelection_2l2nu()
+        #    print("(2l2q, 2l2nu) = ({}, {})".format(foundZZCandidate_2l2q, foundZZCandidate_2l2nu))
+        #    #print("Inside the 2l2q loop: END")
 
-        if ((self.worker.nTightEle + self.worker.nTightMu == 2) and (not self.worker.nTightMu == 1)):
-       # if ((self.worker.nTightEle + self.worker.nTightMu <= 2)):
-            # This event should belong to either 2l2q or 2l2nu \
-            # nTightEle + nTightMu == 2 => 2l2q or 2l2nu => (2,0), (0,2), (1,1)
-            # => Reject (1,1) combination: ( (nTightEle + nTightMu == 2) and (not nTightEle == 1))
-            # 2nd part is to avoid the situation where we get 1 electron and 1 muon
-            # foundZZCandidate_2l2q = False # print("Inside the 2l2q loop")
-            foundZZCandidate_2l2q = self.worker.ZZSelection_2l2q()
-            # print("Inside the 2l2q loop: END")
-
-        elif (self.worker.nTightEle + self.worker.nTightMu >= 4):
-        #if (self.worker.nTightEle + self.worker.nTightMu >= 4):
-            # This event should belong to 4l; nTightEle + nTightMu >= 4
-            foundZZCandidate_4l = self.worker.ZZSelection_4l()
+        #elif (self.worker.nTightEle + self.worker.nTightMu >= 4):
+        ##if (self.worker.nTightEle + self.worker.nTightMu >= 4):
+        #    # This event should belong to 4l; nTightEle + nTightMu >= 4
+        #    foundZZCandidate_4l = self.worker.ZZSelection_4l()
+        ##if (foundZZCandidate_2l2q and foundZZCandidate_2l2nu ):
+        #    #print("both 2l2q and 2l2nu passed the MET selection")
+        #    #exit()
+        
 
         if (foundZZCandidate_2l2q):
             keepIt = True
-            print("Hello found 2l2q candidate")
+            #print("Hello found 2l2q candidate")
             passZZ2l2qSelection = True
-            print(passZZ2l2qSelection)
+            #print(passZZ2l2qSelection)
             passZZ4lSelection = False
             self.passZZ2l2qEvts += 1
         #     FatJet_PNZvsQCD = self.worker.FatJet_PNZvsQCD
@@ -338,10 +370,22 @@ class HZZAnalysisCppProducer(Module):
             etaZ2_2j = self.worker.Z2_2j.Eta()
             pTZ2_2j = self.worker.Z2_2j.Pt()
             EneZ2_2j = self.worker.Z2_2j.E()
-
-
-        if (foundZZCandidate_4l or foundZZCandidate_2l2q):
-            #keepIt = True
+        
+        if (foundZZCandidate_2l2nu):
+            keepIt = True
+            passZZ2l2nuSelection = True
+            self.passZZ2l2nuEvts += 1
+        #     FatJet_PNZvsQCD = self.worker.FatJet_PNZvsQCD
+        #     self.out.fillBranch("FatJet_PNZvsQCD",FatJet_PNZvsQCD)
+            phiZ2_met = self.worker.Z2_met.Phi()
+            pTZ2_met = self.worker.Z2_met.Pt()
+            EneZ2_met = self.worker.Z2_met.E()
+            print("inside 2l2nu loop")
+        #self.out.fillBranch("phiZ2_met",phiZ2_met)
+        #self.out.fillBranch("pTZ2_met",pTZ2_met)
+        #self.out.fillBranch("EneZ2_met",EneZ2_met)
+       
+        if (foundZZCandidate_4l or foundZZCandidate_2l2q or foundZZCandidate_2l2nu):
             #print("inside loop 4l or 2l2q")
             #print(passZZ2l2qSelection)
             pTL1 = self.worker.pTL1
@@ -414,7 +458,10 @@ class HZZAnalysisCppProducer(Module):
                 phi4l = self.worker.ZZsystemnofsr.Phi()
                 mass4l = self.worker.ZZsystemnofsr.M()
 
-
+        self.out.fillBranch("phiZ2_met",phiZ2_met)
+        self.out.fillBranch("pTZ2_met",pTZ2_met)
+        self.out.fillBranch("EneZ2_met",EneZ2_met)
+        
         self.out.fillBranch("massZ2_2j",massZ2_2j)
         self.out.fillBranch("phiZ2_2j",phiZ2_2j)
         self.out.fillBranch("etaZ2_2j",etaZ2_2j)
@@ -470,6 +517,7 @@ class HZZAnalysisCppProducer(Module):
 
         self.out.fillBranch("passZZ4lSelection",passZZ4lSelection)
         self.out.fillBranch("passZZ2l2qSelection",passZZ2l2qSelection)
+        self.out.fillBranch("passZZ2l2nuSelection",passZZ2l2nuSelection)
 
         return keepIt
 
@@ -478,4 +526,4 @@ class HZZAnalysisCppProducer(Module):
 # define modules using the syntax 'name = lambda : constructor' to avoid
 # having them loaded when not needed
 
-#H4LCppModule() = lambda: HZZAnalysisCppProducer(year)
+#H4LCppModulie() = lambda: HZZAnalysisCppProducer(year)

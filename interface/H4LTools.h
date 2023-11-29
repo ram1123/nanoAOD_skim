@@ -14,6 +14,7 @@
 class H4LTools {
     public:
       H4LTools(int year, std::string DATAPATH);
+
       float elePtcut, MuPtcut, eleEtacut, MuEtacut, elesip3dCut, Musip3dCut,Zmass,MZ1cut,MZcutup,MZcutdown,MZZcut,HiggscutUp,HiggscutDown;
       float eleLoosedxycut,eleLoosedzcut,MuLoosedxycut,MuLoosedzcut,MuTightdxycut,MuTightdzcut,MuTightTrackerLayercut,MuTightpTErrorcut,MuHighPtBound,eleIsocut,MuIsocut;
       float fsrphotonPtcut,fsrphotonEtacut,fsrphotonIsocut,fsrphotondRlcut,fsrphotondRlOverPtcut, JetPtcut,JetEtacut;
@@ -77,6 +78,7 @@ class H4LTools {
         MZcutdown = MZcutdown_;
         MZcutup = MZcutup_;
       }
+
       void SetElectrons(float Electron_pt_, float Electron_eta_, float Electron_phi_, float Electron_mass_, float Electron_dxy_,float Electron_dz_,
                         float Electron_sip3d_, float Electron_mvaFall17V2Iso_, int Electron_pdgId_, float Electron_pfRelIso03_all_){
         Electron_pt.push_back(Electron_pt_);
@@ -114,11 +116,20 @@ class H4LTools {
         FatJet_PNZvsQCD.push_back(Jet_PNZvsQCD_); // 1 or 0?
       }
 
+      void SetMET(float MET_pt_, float MET_phi_, float MET_sumEt_)
+      {
+        MET_pt = MET_pt_;
+        MET_phi = MET_phi_;
+        MET_sumEt = MET_sumEt_;
+	std::cout<<"Inside header file: MET_sumEt = " << MET_sumEt_ << "\t" << MET_sumEt << std::endl;
+      }
+
+      
       void SetMuons(float Muon_pt_, float Muon_eta_, float Muon_phi_, float Muon_mass_, bool Muon_isGlobal_, bool Muon_isTracker_,
                         float Muon_dxy_, float Muon_dz_,float Muon_sip3d_, float Muon_ptErr_,
                         int Muon_nTrackerLayers_, bool Muon_isPFcand_, int Muon_pdgId_,int Muon_charge_, float Muon_pfRelIso03_all_
                         ){
-        Muon_pt.push_back(Muon_pt_);
+        Muon_pt.push_back(Muon_pt_); 
         Muon_phi.push_back(Muon_phi_);
         Muon_eta.push_back(Muon_eta_);
         Muon_mass.push_back(Muon_mass_);
@@ -250,6 +261,9 @@ class H4LTools {
       bool flag2e;
       bool flag2mu;
       bool flag2l;
+      bool flag2e_met;
+      bool flag2mu_met;
+      bool flag2l_met; 
 
       void LeptonSelection();
       std::vector<unsigned int> looseEle,looseMu,bestEle,bestMu, tighteleforjetidx, tightmuforjetidx;
@@ -276,6 +290,9 @@ class H4LTools {
         Muon_nTrackerLayers.clear();Muon_genPartIdx.clear();Muon_pdgId.clear();Muon_charge.clear();
         Muon_isTracker.clear();Muon_isGlobal.clear();Muon_isPFcand.clear();
         Jet_pt.clear();Jet_phi.clear();Jet_eta.clear();Jet_mass.clear();Jet_btagDeepC.clear();
+        MET_pt = 0.0; MET_phi = 0.0;  ////new
+	MET_sumEt = 0.0;
+
         Jet_jetId.clear();Jet_puId.clear();
         FatJet_pt.clear();FatJet_phi.clear();FatJet_eta.clear();FatJet_SDmass.clear();FatJet_btagDeepB.clear(); FatJet_PNZvsQCD.clear();
 
@@ -300,8 +317,7 @@ class H4LTools {
         Electronindex.clear();  Muonindex.clear(); AllEid.clear(); AllMuid.clear(); Elelist.clear(); Mulist.clear(); ElelistFsr.clear(); Mulist.clear();
         Elechg.clear(); Muchg.clear(); Muiso.clear();Eiso.clear(); Eid.clear(); muid.clear(); TightEleindex.clear(); TightMuindex.clear();
         nElectron = 0; nMuon = 0; nJet = 0; nFsrPhoton = 0; nGenPart = 0;
-        nTightEle = 0; nTightMu = 0; nTightEleChgSum = 0; nTightMuChgSum = 0;
-
+        nTightEle = 0; nTightMu = 0; nTightEleChgSum = 0; nTightMuChgSum = 0; 
         pTL1 = -999; etaL1 = -999; phiL1 = -999; massL1 = -999;
         pTL2 = -999; etaL2 = -999; phiL2 = -999; massL2 = -999;
         pTL3 = -999; etaL3 = -999; phiL3 = -999; massL3 = -999;
@@ -311,7 +327,7 @@ class H4LTools {
         pTj2 = -99;  etaj2 = -99;  phij2 = -99;  mj2 = -99;
 
         flag4e=false; flag4mu=false; flag2e2mu=false;
-        flag2e=false; flag2mu=false; flag2l=false;
+        flag2e=false; flag2mu=false; flag2l=false; flag2e_met=false; flag2l_met=false; flag2mu_met=false;
       }
       bool isFSR=true;
       unsigned int Zsize=0;
@@ -322,15 +338,19 @@ class H4LTools {
       bool findZCandidate();
       bool ZZSelection_4l();
       bool ZZSelection_2l2q();
+      bool ZZSelection_2l2nu();
       TLorentzVector Z1;
       TLorentzVector Z1nofsr;
       TLorentzVector Z2;
       TLorentzVector Z2_2j;
+      TLorentzVector Z2_met;
       TLorentzVector Z2nofsr;
       TLorentzVector ZZsystem;
       TLorentzVector ZZsystemnofsr;
       TLorentzVector ZZ_2jsystem;
+      TLorentzVector ZZ_metsystem;
       TLorentzVector ZZ_2jsystemnofsr;
+      TLorentzVector ZZ_metsystemnofsr;
 
       RoccoR  *calibrator;
       Mela* mela;
@@ -347,9 +367,13 @@ class H4LTools {
       float getDL1Constant(float ZZMass);
       float getDL1ZgsConstant(float ZZMass);
 
-      int cut4e, cut4mu, cut2e2mu, cutZZ4e, cutZZ4mu, cutZZ2e2mu, cutm4l4e, cutm4l4mu, cutm4l2e2mu, cutghost2e2mu, cutQCD2e2mu, cutLepPt2e2mu, cutghost4e, cutQCD4e, cutLepPt4e, cutghost4mu, cutQCD4mu, cutLepPt4mu;
       int cut2e_m40_180, cut2mu_m40_180, cut2l_m40_180;
-      int cut2e, cut2mu, cut2l, cut2l1J, cut2l2j, cut2l1Jor2j;
+      int cutMETlt150;
+      int cutMETgt150;
+      int cut2l_met_m40_180, cut2e_met_m40_180, cut2mu_met_m40_180;
+      int cut2e, cut2mu, cut2l, cut2l1J, cut2l2j, cut2l1Jor2j, cut2l1met;
+      int cut2e_met, cut2mu_met, cut2l_met;
+      int cut4e, cut4mu, cut2e2mu, cutZZ4e, cutZZ4mu, cutZZ2e2mu, cutm4l4e, cutm4l4mu, cutm4l2e2mu, cutghost2e2mu, cutQCD2e2mu, cutLepPt2e2mu, cutghost4e, cutQCD4e, cutLepPt4e, cutghost4mu, cutQCD4mu, cutLepPt4mu;
       float pTL1, etaL1, phiL1, massL1, pTL2, etaL2, phiL2, massL2, pTL3, etaL3, phiL3, massL3, pTL4, etaL4, phiL4, massL4;
       float pTj1, etaj1, phij1, mj1, pTj2, etaj2, phij2, mj2;
 
@@ -362,6 +386,8 @@ class H4LTools {
 
       std::vector<float> Jet_pt,Jet_phi,Jet_eta,Jet_mass,Jet_btagDeepC;
       std::vector<int> Jet_jetId,Jet_puId;
+      float MET_pt, MET_phi;
+      float MET_sumEt; 
 
       std::vector<float> FatJet_pt, FatJet_phi, FatJet_eta, FatJet_SDmass, FatJet_btagDeepB, FatJet_PNZvsQCD;
       std::vector<int> FatJet_jetId;
@@ -421,6 +447,8 @@ H4LTools::H4LTools(int year, std::string DATAPATH){
   cutm4l2e2mu = 0;
   cutm4l4e = 0;
   cutm4l4mu = 0;
+  cutMETlt150 = 0;
+  cutMETgt150 = 0;
 
   cut2e = 0;
   cut2mu = 0;
@@ -432,6 +460,13 @@ H4LTools::H4LTools(int year, std::string DATAPATH){
   cut2mu_m40_180 = 0;
   cut2l_m40_180 = 0;
 
+  cut2e_met = 0;
+  cut2mu_met = 0;
+  cut2l_met = 0;
+  cut2l_met_m40_180 = 0;
+  cut2e_met_m40_180 = 0;
+  cut2mu_met_m40_180 = 0;
+  cut2l1met = 0;    
 }
 #endif
 
