@@ -560,7 +560,7 @@ bool H4LTools::findZCandidate(){
 bool H4LTools::ZZSelection_4l(){
 
     bool foundZZCandidate = false;
-    std::cout << " Inside the 4l loop in .cc file" << std::endl;
+    //std::cout << " Inside the 4l loop in .cc file" << std::endl;
     if(!findZCandidate()){
         return foundZZCandidate;
     }
@@ -926,7 +926,7 @@ bool H4LTools::ZZSelection_4l(){
 
 bool H4LTools::ZZSelection_2l2q(){
 
-     std::cout << " Inside the 2l2q loop in .cc file" << std::endl;
+//     std::cout << " Inside the 2l2q loop in .cc file" << std::endl;
     bool foundZZCandidate = false;
 
 
@@ -1014,9 +1014,9 @@ bool H4LTools::ZZSelection_2l2q(){
    //     return foundZZCandidate;
   //  }
 
-    std::cout<<"H4LTools.cc#1015: MET pt, phi, sumET: " << MET_pt << "\t" << MET_phi << "\t" << MET_sumEt << std::endl;
+  //  std::cout<<"H4LTools.cc#1015: MET pt, phi, sumET: " << MET_pt << "\t" << MET_phi << "\t" << MET_sumEt << std::endl;
     if (MET_pt >= 150) {
-        std::cout << " Inside the .cc file=>metcut2l2q" << std::endl;
+    //    std::cout << " Inside the .cc file=>metcut2l2q" << std::endl;
         return foundZZCandidate;
         //std::cout << foundZZCandidate << std::endl;
     }
@@ -1096,7 +1096,7 @@ if(foundZZCandidate == false){
 }
 
 bool H4LTools::ZZSelection_2l2nu(){
-    std::cout<<"===> Start of loop" << std::endl;
+ //   std::cout<<"===> Start of loop" << std::endl;
    bool foundZZCandidate = false;   
     if(!findZCandidate()){
         return foundZZCandidate;
@@ -1160,9 +1160,9 @@ bool H4LTools::ZZSelection_2l2nu(){
     if (flag2mu)
         cut2mu_met_m40_180++;
         
-    std::cout<<"H4LTools.cc#1150: MET pt, phi, sumET: " << MET_pt << "\t" << MET_phi << "\t" << MET_sumEt << std::endl;
+ //   std::cout<<"H4LTools.cc#1150: MET pt, phi, sumET: " << MET_pt << "\t" << MET_phi << "\t" << MET_sumEt << std::endl;
     if (MET_pt < 150) {
-        std::cout << " Inside the .cc file, 2l2nu loop=>found MET < 150" << std::endl;
+   //     std::cout << " Inside the .cc file, 2l2nu loop=>found MET < 150" << std::endl;
         return foundZZCandidate;
     }
     cutMETgt150++;
