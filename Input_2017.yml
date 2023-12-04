@@ -18,8 +18,6 @@ Triggers:
  - event.HLT_Ele40_WPTight_Gsf
  - event.HLT_IsoMu27
 
-RoccoRPath:
-  KalmanMuonCalibrationsProducer/data/roccor.Run2.v5/RoccoR2017UL.txt
 
 Triggers_2l2q:
   - event.HLT_Ele35_WPTight_Gsf

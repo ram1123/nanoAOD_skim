@@ -25,22 +25,11 @@ class HZZAnalysisCppProducer(Module):
                 ROOT.gSystem.Load("libPhysicsToolsNanoAODTools.so")
                 ROOT.gROOT.ProcessLine(
                     ".L %s/interface/H4LTools.h" % base)
-        if "/RoccoR_cc.so" not in ROOT.gSystem.GetLibraries():
-            base = "$CMSSW_BASE//src/PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim"
-            if base:
-                ROOT.gROOT.ProcessLine(
-                    ".L %s/src/RoccoR.cc+O" % base)
-            else:
-                base = "$CMSSW_BASE/src/PhysicsTools/NanoAODTools"
-                ROOT.gSystem.Load("libPhysicsToolsNanoAODTools.so")
-                ROOT.gROOT.ProcessLine(
-                    ".L %s/interface/RoccoR.h" % base)
         self.year = year
 	self.isMC = isMC
         with open(cfgFile, 'r') as ymlfile:
           cfg = yaml.load(ymlfile)
-          RoccoRPath = cfg['RoccoRPath']
-          self.worker = ROOT.H4LTools(self.year, RoccoRPath)
+          self.worker = ROOT.H4LTools(self.year)
           self.worker.InitializeElecut(cfg['Electron']['pTcut'],cfg['Electron']['Etacut'],cfg['Electron']['Sip3dcut'],cfg['Electron']['Loosedxycut'],cfg['Electron']['Loosedzcut'],
                                        cfg['Electron']['Isocut'],cfg['Electron']['BDTWP']['LowEta']['LowPT'],cfg['Electron']['BDTWP']['MedEta']['LowPT'],cfg['Electron']['BDTWP']['HighEta']['LowPT'],
                                        cfg['Electron']['BDTWP']['LowEta']['HighPT'],cfg['Electron']['BDTWP']['MedEta']['HighPT'],cfg['Electron']['BDTWP']['HighEta']['HighPT'])
@@ -311,7 +300,7 @@ class HZZAnalysisCppProducer(Module):
             self.worker.SetElectrons(xe.pt, xe.eta, xe.phi, xe.mass, xe.dxy,
                                       xe.dz, xe.sip3d, xe.mvaFall17V2Iso, xe.pdgId, xe.pfRelIso03_all)
         for xm in muons:
-            self.worker.SetMuons(xm.pt, xm.eta, xm.phi, xm.mass, xm.isGlobal, xm.isTracker,
+            self.worker.SetMuons(xm.corrected_pt, xm.eta, xm.phi, xm.mass, xm.isGlobal, xm.isTracker,
                                 xm.dxy, xm.dz, xm.sip3d, xm.ptErr, xm.nTrackerLayers, xm.isPFcand,
                                  xm.pdgId, xm.charge, xm.pfRelIso03_all)
         for xf in fsrPhotons:
@@ -322,7 +311,6 @@ class HZZAnalysisCppProducer(Module):
         for xj in FatJets:
             self.worker.SetFatJets(xj.pt, xj.eta, xj.phi, xj.msoftdrop, xj.jetId, xj.btagDeepB, xj.particleNet_ZvsQCD)
         self.worker.SetMET(met.pt,met.phi,met.sumEt)
-        self.worker.MuonPtCorrection(self.isMC)
         self.worker.LeptonSelection()
         foundZZCandidate_4l = False    # for 4l
         passZZ4lSelection = False
@@ -330,7 +318,7 @@ class HZZAnalysisCppProducer(Module):
         passZZ2l2qSelection = False
         foundZZCandidate_2l2nu = False # for 2l2nu
         passZZ2l2nuSelection = False
-	
+
 	#print("=="*51)
         foundZZCandidate_2l2q = self.worker.ZZSelection_2l2q()
         foundZZCandidate_2l2nu = self.worker.ZZSelection_2l2nu()
@@ -354,7 +342,7 @@ class HZZAnalysisCppProducer(Module):
         ##if (foundZZCandidate_2l2q and foundZZCandidate_2l2nu ):
         #    #print("both 2l2q and 2l2nu passed the MET selection")
         #    #exit()
-        
+
 
         if (foundZZCandidate_2l2q):
             keepIt = True
@@ -370,7 +358,7 @@ class HZZAnalysisCppProducer(Module):
             etaZ2_2j = self.worker.Z2_2j.Eta()
             pTZ2_2j = self.worker.Z2_2j.Pt()
             EneZ2_2j = self.worker.Z2_2j.E()
-        
+
         if (foundZZCandidate_2l2nu):
             keepIt = True
             passZZ2l2nuSelection = True
@@ -384,7 +372,7 @@ class HZZAnalysisCppProducer(Module):
         #self.out.fillBranch("phiZ2_met",phiZ2_met)
         #self.out.fillBranch("pTZ2_met",pTZ2_met)
         #self.out.fillBranch("EneZ2_met",EneZ2_met)
-       
+
         if (foundZZCandidate_4l or foundZZCandidate_2l2q or foundZZCandidate_2l2nu):
             #print("inside loop 4l or 2l2q")
             #print(passZZ2l2qSelection)
@@ -461,7 +449,7 @@ class HZZAnalysisCppProducer(Module):
         self.out.fillBranch("phiZ2_met",phiZ2_met)
         self.out.fillBranch("pTZ2_met",pTZ2_met)
         self.out.fillBranch("EneZ2_met",EneZ2_met)
-        
+
         self.out.fillBranch("massZ2_2j",massZ2_2j)
         self.out.fillBranch("phiZ2_2j",phiZ2_2j)
         self.out.fillBranch("etaZ2_2j",etaZ2_2j)

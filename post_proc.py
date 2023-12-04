@@ -4,6 +4,7 @@ import sys
 import argparse
 
 from PhysicsTools.NanoAODTools.postprocessing.framework.postprocessor import PostProcessor
+from PhysicsTools.NanoAODTools.postprocessing.modules.common.muonScaleResProducer import *
 from PhysicsTools.NanoAODTools.postprocessing.modules.jme.jetmetHelperRun2 import createJMECorrector
 from PhysicsTools.NanoAODTools.postprocessing.modules.btv.btagSFProducer import btagSFProducer
 from PhysicsTools.NanoAODTools.postprocessing.modules.common.puWeightProducer import *
@@ -69,18 +70,18 @@ def main():
         cfgFile = "Input_2018.yml"
         jsonFileName = "golden_Json/Cert_314472-325175_13TeV_Legacy2018_Collisions18_JSON.txt"
         sfFileName = "DeepCSV_102XSF_V2.csv"
-
+        modulesToRun.extend([muonScaleRes2018()])
     if "UL17" in first_file or "UL2017" in first_file:
         year = 2017
         cfgFile = "Input_2017.yml"
         jsonFileName="golden_Json/Cert_294927-306462_13TeV_UL2017_Collisions17_GoldenJSON.txt"
         sfFileName = "DeepCSV_102XSF_V2.csv"
-
+        modulesToRun.extend([muonScaleRes2017()])
     if "UL16" in first_file or "UL2016" in first_file:
         year = 2016
         jsonFileName = "golden_Json/Cert_271036-284044_13TeV_Legacy2016_Collisions16_JSON.txt"
         sfFileName = "DeepCSV_102XSF_V2.csv"
-
+        modulesToRun.extend([muonScaleRes2016()])
     H4LCppModule = lambda: HZZAnalysisCppProducer(year,cfgFile, isMC, isFSR)
     modulesToRun.extend([H4LCppModule()])
 

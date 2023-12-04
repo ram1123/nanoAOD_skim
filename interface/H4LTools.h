@@ -8,13 +8,11 @@
 #include <TSpline.h>
 #include <vector>
 #include "yaml-cpp/yaml.h"
-#include "RoccoR.h"
 #include "../JHUGenMELA/MELA/interface/Mela.h"
 
 class H4LTools {
     public:
-      H4LTools(int year, std::string DATAPATH);
-
+      H4LTools(int year);
       float elePtcut, MuPtcut, eleEtacut, MuEtacut, elesip3dCut, Musip3dCut,Zmass,MZ1cut,MZcutup,MZcutdown,MZZcut,HiggscutUp,HiggscutDown;
       float eleLoosedxycut,eleLoosedzcut,MuLoosedxycut,MuLoosedzcut,MuTightdxycut,MuTightdzcut,MuTightTrackerLayercut,MuTightpTErrorcut,MuHighPtBound,eleIsocut,MuIsocut;
       float fsrphotonPtcut,fsrphotonEtacut,fsrphotonIsocut,fsrphotondRlcut,fsrphotondRlOverPtcut, JetPtcut,JetEtacut;
@@ -124,12 +122,12 @@ class H4LTools {
 //	std::cout<<"Inside header file: MET_sumEt = " << MET_sumEt_ << "\t" << MET_sumEt << std::endl;
       }
 
-      
+
       void SetMuons(float Muon_pt_, float Muon_eta_, float Muon_phi_, float Muon_mass_, bool Muon_isGlobal_, bool Muon_isTracker_,
                         float Muon_dxy_, float Muon_dz_,float Muon_sip3d_, float Muon_ptErr_,
                         int Muon_nTrackerLayers_, bool Muon_isPFcand_, int Muon_pdgId_,int Muon_charge_, float Muon_pfRelIso03_all_
                         ){
-        Muon_pt.push_back(Muon_pt_); 
+        Muon_pt.push_back(Muon_pt_);
         Muon_phi.push_back(Muon_phi_);
         Muon_eta.push_back(Muon_eta_);
         Muon_mass.push_back(Muon_mass_);
@@ -263,7 +261,7 @@ class H4LTools {
       bool flag2l;
       bool flag2e_met;
       bool flag2mu_met;
-      bool flag2l_met; 
+      bool flag2l_met;
 
       void LeptonSelection();
       std::vector<unsigned int> looseEle,looseMu,bestEle,bestMu, tighteleforjetidx, tightmuforjetidx;
@@ -291,7 +289,7 @@ class H4LTools {
         Muon_isTracker.clear();Muon_isGlobal.clear();Muon_isPFcand.clear();
         Jet_pt.clear();Jet_phi.clear();Jet_eta.clear();Jet_mass.clear();Jet_btagDeepC.clear();
         MET_pt = 0.0; MET_phi = 0.0;  ////new
-	MET_sumEt = 0.0;
+        MET_sumEt = 0.0;
 
         Jet_jetId.clear();Jet_puId.clear();
         FatJet_pt.clear();FatJet_phi.clear();FatJet_eta.clear();FatJet_SDmass.clear();FatJet_btagDeepB.clear(); FatJet_PNZvsQCD.clear();
@@ -312,12 +310,9 @@ class H4LTools {
         jetidx.clear();
         FatJetidx.clear();
 
-        Muon_Pt_Corrected.clear();
-        looseEle.clear(); looseMu.clear(); bestEle.clear(); bestMu.clear();  tighteleforjetidx.clear();  tightmuforjetidx.clear();
-        Electronindex.clear();  Muonindex.clear(); AllEid.clear(); AllMuid.clear(); Elelist.clear(); Mulist.clear(); ElelistFsr.clear(); Mulist.clear();
         Elechg.clear(); Muchg.clear(); Muiso.clear();Eiso.clear(); Eid.clear(); muid.clear(); TightEleindex.clear(); TightMuindex.clear();
         nElectron = 0; nMuon = 0; nJet = 0; nFsrPhoton = 0; nGenPart = 0;
-        nTightEle = 0; nTightMu = 0; nTightEleChgSum = 0; nTightMuChgSum = 0; 
+        nTightEle = 0; nTightMu = 0; nTightEleChgSum = 0; nTightMuChgSum = 0;
         pTL1 = -999; etaL1 = -999; phiL1 = -999; massL1 = -999;
         pTL2 = -999; etaL2 = -999; phiL2 = -999; massL2 = -999;
         pTL3 = -999; etaL3 = -999; phiL3 = -999; massL3 = -999;
@@ -352,11 +347,7 @@ class H4LTools {
       TLorentzVector ZZ_2jsystemnofsr;
       TLorentzVector ZZ_metsystemnofsr;
 
-      RoccoR  *calibrator;
       Mela* mela;
-      float ApplyRoccoR(bool isMC, int charge, float pt, float eta, float phi, float genPt, float nLayers);
-      std::vector<float> Muon_Pt_Corrected;
-      void MuonPtCorrection(bool isMC);
       float me_0plus_JHU, me_qqZZ_MCFM, p0plus_m4l, bkg_m4l;
       float D_bkg_kin, D_bkg, D_g4, D_g1g4, D_0m, D_CP, D_0hp, D_int, D_L1, D_L1_int, D_L1Zg, D_L1Zgint;
       float D_bkg_kin_vtx_BS;
@@ -387,7 +378,7 @@ class H4LTools {
       std::vector<float> Jet_pt,Jet_phi,Jet_eta,Jet_mass,Jet_btagDeepC;
       std::vector<int> Jet_jetId,Jet_puId;
       float MET_pt, MET_phi;
-      float MET_sumEt; 
+      float MET_sumEt;
 
       std::vector<float> FatJet_pt, FatJet_phi, FatJet_eta, FatJet_SDmass, FatJet_btagDeepB, FatJet_PNZvsQCD;
       std::vector<int> FatJet_jetId;
@@ -407,9 +398,8 @@ class H4LTools {
 
 };
 
-H4LTools::H4LTools(int year, std::string DATAPATH){
+H4LTools::H4LTools(int year){
   std::cout<<"year"<<" "<<year<<std::endl;
-  calibrator = new RoccoR(DATAPATH);
   mela = new Mela(13.0, 125.0, TVar::SILENT);
   mela->setCandidateDecayMode(TVar::CandidateDecay_ZZ);
   TFile *gConstant_g4 = TFile::Open("CoupleConstantsForMELA/gConstant_HZZ2e2mu_g4.root");
@@ -466,7 +456,7 @@ H4LTools::H4LTools(int year, std::string DATAPATH){
   cut2l_met_m40_180 = 0;
   cut2e_met_m40_180 = 0;
   cut2mu_met_m40_180 = 0;
-  cut2l1met = 0;    
+  cut2l1met = 0;
 }
 #endif
 
