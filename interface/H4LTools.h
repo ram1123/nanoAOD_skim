@@ -17,6 +17,10 @@ class H4LTools {
       float eleLoosedxycut,eleLoosedzcut,MuLoosedxycut,MuLoosedzcut,MuTightdxycut,MuTightdzcut,MuTightTrackerLayercut,MuTightpTErrorcut,MuHighPtBound,eleIsocut,MuIsocut;
       float fsrphotonPtcut,fsrphotonEtacut,fsrphotonIsocut,fsrphotondRlcut,fsrphotondRlOverPtcut, JetPtcut,JetEtacut;
       float eleBDTWPLELP,eleBDTWPMELP,eleBDTWPHELP,eleBDTWPLEHP,eleBDTWPMEHP,eleBDTWPHEHP;
+      float mass3l;
+      bool passedZ1LSelection, passedFullSelection, passedZXCRSelection;
+      bool isFiducialAna = false;
+      int nfailedleptons;
       void InitializeElecut(float elePtcut_,float eleEtacut_,float elesip3dCut_,float eleLoosedxycut_,float eleLoosedzcut_,float eleIsocut_,float eleBDTWPLELP_,float eleBDTWPMELP_, float eleBDTWPHELP_,float eleBDTWPLEHP_,float eleBDTWPMEHP_,float eleBDTWPHEHP_){
         elePtcut = elePtcut_;
         eleEtacut = eleEtacut_;
@@ -114,28 +118,6 @@ class H4LTools {
       void SetMuonsGen(int Muon_genPartIdx_){
         Muon_genPartIdx.push_back(Muon_genPartIdx_);
       }
-      /*void SetMuons(TTreeReaderArray<float> *Muon_pt_, TTreeReaderArray<float> *Muon_eta_,
-                        TTreeReaderArray<float> *Muon_phi_, TTreeReaderArray<float> *Muon_mass_, TTreeReaderArray<bool> *Muon_isGlobal_, TTreeReaderArray<bool> *Muon_isTracker_,
-                        TTreeReaderArray<float> *Muon_dxy_, TTreeReaderArray<float> *Muon_dz_,TTreeReaderArray<float> *Muon_sip3d_, TTreeReaderArray<float> *Muon_ptErr_,
-                        TTreeReaderArray<int> *Muon_nTrackerLayers_, TTreeReaderArray<bool> *Muon_isPFcand_, TTreeReaderArray<int> *Muon_pdgId_,TTreeReaderArray<int> *Muon_charge_, TTreeReaderArray<float> *Muon_pfRelIso03_all_,
-                        TTreeReaderArray<int> *Muon_genPartIdx_){
-        Muon_pt = Muon_pt_; 
-        Muon_phi = Muon_phi_;
-        Muon_eta = Muon_eta_;
-        Muon_mass = Muon_mass_;
-        Muon_isGlobal = Muon_isGlobal_;
-        Muon_isTracker = Muon_isTracker_;
-        Muon_dxy = Muon_dxy_;
-        Muon_dz = Muon_dz_;
-        Muon_sip3d = Muon_sip3d_;
-        Muon_ptErr = Muon_ptErr_;
-        Muon_nTrackerLayers = Muon_nTrackerLayers_;
-        Muon_isPFcand = Muon_isPFcand_;
-        Muon_pdgId = Muon_pdgId_;
-        Muon_charge = Muon_charge_;
-        Muon_pfRelIso03_all = Muon_pfRelIso03_all_;
-        Muon_genPartIdx = Muon_genPartIdx_;
-      }*/
       void SetFsrPhotons(float FsrPhoton_dROverEt2_, float FsrPhoton_eta_,
                         float FsrPhoton_phi_, float FsrPhoton_pt_, float FsrPhoton_relIso03_){
         FsrPhoton_dROverEt2.push_back(FsrPhoton_dROverEt2_); 
@@ -144,22 +126,9 @@ class H4LTools {
         FsrPhoton_pt.push_back(FsrPhoton_pt_);
         FsrPhoton_relIso03.push_back(FsrPhoton_relIso03_);
       }
-      /*void SetFsrPhotons(TTreeReaderArray<float> *FsrPhoton_dROverEt2_, TTreeReaderArray<float> *FsrPhoton_eta_,
-                        TTreeReaderArray<float> *FsrPhoton_phi_, TTreeReaderArray<float> *FsrPhoton_pt_, 
-                        TTreeReaderArray<float> *FsrPhoton_relIso03_){
-        FsrPhoton_dROverEt2 = FsrPhoton_dROverEt2_; 
-        FsrPhoton_phi = FsrPhoton_phi_;
-        FsrPhoton_eta = FsrPhoton_eta_;
-        FsrPhoton_pt = FsrPhoton_pt_;
-        FsrPhoton_relIso03 = FsrPhoton_relIso03_;
-        
-      }*/
       void SetGenParts(float GenPart_pt_){
         GenPart_pt.push_back(GenPart_pt_);
       }
-      /*void SetGenParts(TTreeReaderArray<float> *GenPart_pt_){
-        GenPart_pt = GenPart_pt_;
-      }*/
       void SetObjectNum(unsigned nElectron_,unsigned nMuon_,unsigned nJet_,unsigned nFsrPhoton_){
         nElectron = nElectron_; 
         nMuon = nMuon_;
@@ -192,6 +161,7 @@ class H4LTools {
       std::vector<TLorentzVector> Zlist;
       std::vector<TLorentzVector> Zlistnofsr;
       std::vector<int> Zflavor; //mu->13, e->11
+      std::vector<bool> Zistight;
       std::vector<int> Zlep1index;
       std::vector<int> Zlep2index;
       std::vector<float> Zlep1pt;
@@ -212,18 +182,24 @@ class H4LTools {
       std::vector<float> Zlep2etaNoFsr;
       std::vector<float> Zlep2phiNoFsr;
       std::vector<float> Zlep2massNoFsr;
+      std::vector<bool> Zlep1istight;
+      std::vector<bool> Zlep2istight;
       std::vector<unsigned int> jetidx;
 
       int nTightEle;
       int nTightMu;
       int nTightEleChgSum;
       int nTightMuChgSum;
+      int nTightZ;
+
+      unsigned int Z1LZ1index;
     
       bool flag4e;
       bool flag4mu;
       bool flag2e2mu;
 
       void LeptonSelection();
+      void findZ1LCandidate();
       std::vector<unsigned int> looseEle,looseMu,bestEle,bestMu, tighteleforjetidx, tightmuforjetidx;
       std::vector<unsigned int> Electronindex;
       std::vector<unsigned int> Muonindex;
@@ -238,6 +214,8 @@ class H4LTools {
       std::vector<float> Muiso,Eiso;
       std::vector<bool> Eid;
       std::vector<bool> muid;
+      std::vector<bool> istightele;
+      std::vector<bool> istightmu;
       
       std::vector<int> TightEleindex;
       std::vector<int> TightMuindex;
@@ -261,12 +239,14 @@ class H4LTools {
         Zlep1chg.clear(); Zlep2chg.clear();
         Zlep1ptNoFsr.clear(); Zlep1etaNoFsr.clear(); Zlep1phiNoFsr.clear(); Zlep1massNoFsr.clear();
         Zlep2ptNoFsr.clear(); Zlep2etaNoFsr.clear(); Zlep2phiNoFsr.clear(); Zlep2massNoFsr.clear();
+        Zlep1istight.clear(); Zlep2istight.clear();
         jetidx.clear();
         looseEle.clear(); looseMu.clear(); bestEle.clear(); bestMu.clear();  tighteleforjetidx.clear();  tightmuforjetidx.clear(); 
         Electronindex.clear();  Muonindex.clear(); AllEid.clear(); AllMuid.clear(); Elelist.clear(); Mulist.clear(); ElelistFsr.clear(); Mulist.clear(); 
-        Elechg.clear(); Muchg.clear(); Muiso.clear();Eiso.clear(); Eid.clear(); muid.clear(); TightEleindex.clear(); TightMuindex.clear();
-        nElectron = 0; nMuon = 0; nJet = 0; nFsrPhoton = 0; nGenPart = 0;
-        nTightEle = 0; nTightMu = 0; nTightEleChgSum = 0; nTightMuChgSum = 0;
+        Elechg.clear(); Muchg.clear(); Muiso.clear();Eiso.clear(); Eid.clear(); muid.clear(); istightele.clear(); istightmu.clear(); TightEleindex.clear(); TightMuindex.clear();
+        nElectron = 0; nMuon = 0; nJet = 0; nFsrPhoton = 0; nGenPart = 0; mass3l = -99;
+        nTightEle = 0; nTightMu = 0; nTightEleChgSum = 0; nTightMuChgSum = 0; nTightZ = 0; nfailedleptons=0;
+        Z1LZ1index = -1;
         
         pTL1 = -999; etaL1 = -999; phiL1 = -999; massL1 = -999;
         pTL2 = -999; etaL2 = -999; phiL2 = -999; massL2 = -999;
@@ -277,6 +257,7 @@ class H4LTools {
         pTj2 = -99;  etaj2 = -99;  phij2 = -99;  mj2 = -99;
 
         flag4e=false; flag4mu=false; flag2e2mu=false;
+        passedZ1LSelection = false; passedFullSelection = false; passedZXCRSelection = false;
       }
       bool isFSR=true;
       unsigned int Zsize=0;
