@@ -61,7 +61,15 @@ def main():
     # Determine the year and type (MC or Data)
     first_file = testfilelist[0]
     isMC = "/data/" not in first_file
-
+    
+    if "22" in first_file or "postEE" in first_file:
+        """UL2018 for identification of 2018 UL data and UL18 for identification of 2018 UL MC
+        """
+        year = 2018
+        cfgFile = "Input_2018.yml"
+        jsonFileName = "golden_Json/Cert_314472-325175_13TeV_Legacy2018_Collisions18_JSON.txt"
+        sfFileName = "DeepCSV_102XSF_V2.csv"
+        modulesToRun.extend([muonScaleRes2018()])
     if "UL18" in first_file or "UL2018" in first_file:
         """UL2018 for identification of 2018 UL data and UL18 for identification of 2018 UL MC
         """

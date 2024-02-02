@@ -23,6 +23,9 @@ keep *L3
 keep *L4
 keep *j1
 keep *j2
+keep pass*
+keep GEN*
+keep njet*
 keep D_*
 # keep nPhoton
 # keep Photon*
@@ -84,5 +87,6 @@ keep SV*
 keep Electron_gen*
 keep FatJet_*
 keep Gen*
+keep genWeight
 keep Jet_*
 keep Muon*

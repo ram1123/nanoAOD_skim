@@ -133,7 +133,7 @@ std::vector<unsigned int> H4LTools::SelectedJets(std::vector<unsigned int> ele, 
             }
         }
     } 
-    
+    njets_pt30_eta4p7 = goodJets.size();
     return goodJets;
 }
 
@@ -335,6 +335,10 @@ void H4LTools::LeptonSelection(){
             nTightEle++;
             TightEleindex.push_back(ae);
             nTightEleChgSum += Elechg[ae];
+            TightElelep_index.push_back(Lepointer);
+            Lepointer++;
+            if (isMC) lep_genindex.push_back(Electron_genPartIdx[Electronindex[ae]]);
+            else lep_genindex.push_back(-1);
         }
         
     }
@@ -358,6 +362,10 @@ void H4LTools::LeptonSelection(){
             nTightMu++;
             TightMuindex.push_back(amu);
             nTightMuChgSum += Muchg[amu];
+            TightMulep_index.push_back(Lepointer);
+            Lepointer++;
+            if (isMC) lep_genindex.push_back(Muon_genPartIdx[Muonindex[amu]]);
+            else lep_genindex.push_back(-1);
         }
     }
     
@@ -391,6 +399,8 @@ bool H4LTools::findZCandidate(){
                         Zlist.push_back(Zcan);
                         Zlep1index.push_back(TightEleindex[ke]);
                         Zlep2index.push_back(TightEleindex[je]);
+                        Zlep1lepindex.push_back(TightElelep_index[ke]);
+                        Zlep2lepindex.push_back(TightElelep_index[je]);
                         Zflavor.push_back(11);
                         Zlep1pt.push_back(ElelistFsr[TightEleindex[ke]].Pt());
                         Zlep2pt.push_back(ElelistFsr[TightEleindex[je]].Pt());
@@ -426,6 +436,8 @@ bool H4LTools::findZCandidate(){
                         Zlist.push_back(Zcan);
                         Zlep1index.push_back(TightMuindex[kmu]);
                         Zlep2index.push_back(TightMuindex[jmu]);
+                        Zlep1lepindex.push_back(TightMulep_index[kmu]);
+                        Zlep2lepindex.push_back(TightMulep_index[jmu]);
                         Zflavor.push_back(13);
                         Zlep1pt.push_back(MulistFsr[TightMuindex[kmu]].Pt());
                         Zlep2pt.push_back(MulistFsr[TightMuindex[jmu]].Pt());
@@ -730,7 +742,10 @@ bool H4LTools::ZZSelection(){
     Lep3.SetPtEtaPhiM(Zlep1pt[Z2index],Zlep1eta[Z2index],Zlep1phi[Z2index],Zlep1mass[Z2index]);
     Lep4.SetPtEtaPhiM(Zlep2pt[Z2index],Zlep2eta[Z2index],Zlep2phi[Z2index],Zlep2mass[Z2index]);
    
-
+    lep_Hindex[0] = Zlep1lepindex[Z1index];
+    lep_Hindex[1] = Zlep2lepindex[Z1index];
+    lep_Hindex[2] = Zlep1lepindex[Z2index];
+    lep_Hindex[3] = Zlep2lepindex[Z2index];
     pTL1 = Lep1.Pt();
     etaL1 = Lep1.Eta();
     phiL1 = Lep1.Phi();

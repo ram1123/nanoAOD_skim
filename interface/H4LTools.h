@@ -12,7 +12,7 @@
 
 class H4LTools {
     public:
-      H4LTools(int year);
+      H4LTools(int year, bool isMC_);
       float elePtcut, MuPtcut, eleEtacut, MuEtacut, elesip3dCut, Musip3dCut,Zmass,MZ1cut,MZcutup,MZcutdown,MZZcut,HiggscutUp,HiggscutDown;
       float eleLoosedxycut,eleLoosedzcut,MuLoosedxycut,MuLoosedzcut,MuTightdxycut,MuTightdzcut,MuTightTrackerLayercut,MuTightpTErrorcut,MuHighPtBound,eleIsocut,MuIsocut;
       float fsrphotonPtcut,fsrphotonEtacut,fsrphotonIsocut,fsrphotondRlcut,fsrphotondRlOverPtcut, JetPtcut,JetEtacut;
@@ -114,6 +114,9 @@ class H4LTools {
       void SetMuonsGen(int Muon_genPartIdx_){
         Muon_genPartIdx.push_back(Muon_genPartIdx_);
       }
+      void SetElectronsGen(int Electron_genPartIdx_){
+        Electron_genPartIdx.push_back(Electron_genPartIdx_);
+      }
       /*void SetMuons(TTreeReaderArray<float> *Muon_pt_, TTreeReaderArray<float> *Muon_eta_,
                         TTreeReaderArray<float> *Muon_phi_, TTreeReaderArray<float> *Muon_mass_, TTreeReaderArray<bool> *Muon_isGlobal_, TTreeReaderArray<bool> *Muon_isTracker_,
                         TTreeReaderArray<float> *Muon_dxy_, TTreeReaderArray<float> *Muon_dz_,TTreeReaderArray<float> *Muon_sip3d_, TTreeReaderArray<float> *Muon_ptErr_,
@@ -169,7 +172,7 @@ class H4LTools {
       void SetObjectNumGen(unsigned nGenPart_){
         nGenPart = nGenPart_;
       }
-
+      bool isMC;
       std::vector<unsigned int> goodLooseElectrons2012();
       std::vector<unsigned int> goodLooseMuons2012();
       std::vector<unsigned int> goodMuons2015_noIso_noPf(std::vector<unsigned int> Muonindex);
@@ -194,6 +197,8 @@ class H4LTools {
       std::vector<int> Zflavor; //mu->13, e->11
       std::vector<int> Zlep1index;
       std::vector<int> Zlep2index;
+      std::vector<int> Zlep1lepindex;
+      std::vector<int> Zlep2lepindex;
       std::vector<float> Zlep1pt;
       std::vector<float> Zlep1eta;
       std::vector<float> Zlep1phi;
@@ -213,11 +218,12 @@ class H4LTools {
       std::vector<float> Zlep2phiNoFsr;
       std::vector<float> Zlep2massNoFsr;
       std::vector<unsigned int> jetidx;
-
       int nTightEle;
       int nTightMu;
       int nTightEleChgSum;
       int nTightMuChgSum;
+      int njets_pt30_eta4p7;
+      int Lepointer;
     
       bool flag4e;
       bool flag4mu;
@@ -238,12 +244,16 @@ class H4LTools {
       std::vector<float> Muiso,Eiso;
       std::vector<bool> Eid;
       std::vector<bool> muid;
+      std::vector<int> lep_genindex;
+      std::vector<int> TightElelep_index;
+      std::vector<int> TightMulep_index;
+      int lep_Hindex[4];
       
       std::vector<int> TightEleindex;
       std::vector<int> TightMuindex;
       void Initialize(){
         Electron_pt.clear();Electron_phi.clear();Electron_eta.clear();Electron_mass.clear();Electron_dxy.clear();Electron_dz.clear();Electron_sip3d.clear();
-        Electron_mvaFall17V2Iso.clear();Electron_pdgId.clear();Electron_pfRelIso03_all.clear();
+        Electron_mvaFall17V2Iso.clear();Electron_pdgId.clear();Electron_genPartIdx.clear();Electron_pfRelIso03_all.clear();
         Muon_pt.clear();Muon_phi.clear();Muon_eta.clear();Muon_mass.clear();Muon_dxy.clear();Muon_dz.clear();Muon_sip3d.clear();Muon_ptErr.clear();Muon_pfRelIso03_all.clear();
         Muon_nTrackerLayers.clear();Muon_genPartIdx.clear();Muon_pdgId.clear();Muon_charge.clear();
         Muon_isTracker.clear();Muon_isGlobal.clear();Muon_isPFcand.clear();
@@ -261,12 +271,14 @@ class H4LTools {
         Zlep1chg.clear(); Zlep2chg.clear();
         Zlep1ptNoFsr.clear(); Zlep1etaNoFsr.clear(); Zlep1phiNoFsr.clear(); Zlep1massNoFsr.clear();
         Zlep2ptNoFsr.clear(); Zlep2etaNoFsr.clear(); Zlep2phiNoFsr.clear(); Zlep2massNoFsr.clear();
-        jetidx.clear();
+        jetidx.clear(); lep_genindex.clear(); TightElelep_index.clear();TightMulep_index.clear();
         looseEle.clear(); looseMu.clear(); bestEle.clear(); bestMu.clear();  tighteleforjetidx.clear();  tightmuforjetidx.clear(); 
         Electronindex.clear();  Muonindex.clear(); AllEid.clear(); AllMuid.clear(); Elelist.clear(); Mulist.clear(); ElelistFsr.clear(); Mulist.clear(); 
         Elechg.clear(); Muchg.clear(); Muiso.clear();Eiso.clear(); Eid.clear(); muid.clear(); TightEleindex.clear(); TightMuindex.clear();
+        
         nElectron = 0; nMuon = 0; nJet = 0; nFsrPhoton = 0; nGenPart = 0;
         nTightEle = 0; nTightMu = 0; nTightEleChgSum = 0; nTightMuChgSum = 0;
+        Lepointer = 0; 
         
         pTL1 = -999; etaL1 = -999; phiL1 = -999; massL1 = -999;
         pTL2 = -999; etaL2 = -999; phiL2 = -999; massL2 = -999;
@@ -275,6 +287,7 @@ class H4LTools {
 
         pTj1 = -99;  etaj1 = -99;  phij1 = -99;  mj1 = -99;
         pTj2 = -99;  etaj2 = -99;  phij2 = -99;  mj2 = -99;
+        njets_pt30_eta4p7 = -1;
 
         flag4e=false; flag4mu=false; flag2e2mu=false;
       }
@@ -313,7 +326,7 @@ class H4LTools {
     private:
       std::vector<float> Electron_pt,Electron_phi,Electron_eta,Electron_mass,Electron_dxy,Electron_dz,Electron_sip3d;
       std::vector<float> Electron_mvaFall17V2Iso,Electron_pfRelIso03_all;
-      std::vector<int> Electron_pdgId;
+      std::vector<int> Electron_pdgId,Electron_genPartIdx;
 
       std::vector<float> Jet_pt,Jet_phi,Jet_eta,Jet_mass,Jet_btagDeepC;
       std::vector<int> Jet_jetId,Jet_puId;
@@ -333,7 +346,8 @@ class H4LTools {
 
 };
 
-H4LTools::H4LTools(int year){
+H4LTools::H4LTools(int year, bool isMC_){
+  isMC = isMC_;
   std::cout<<"year"<<" "<<year<<std::endl;
   mela = new Mela(13.0, 125.0, TVar::SILENT);
   mela->setCandidateDecayMode(TVar::CandidateDecay_ZZ);  
