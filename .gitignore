@@ -1,5 +1,9 @@
 # Ignore root files
 *.rst
+*.swp
+*.swm
+*.swn
+*.swo
 *.bkup
 *.patch
 summary.dat
