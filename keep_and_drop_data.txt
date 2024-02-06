@@ -53,21 +53,21 @@ keep CorrT1METJet*
 keep DeepMET*
 keep nFatJet
 keep FatJet*
-keep nGenJetAK8
-keep GenJetAK8*
-keep nGenJet
-keep GenJet*
-keep nGenPart
-keep GenPart*
-keep nSubGenJetAK8
-keep SubGenJetAK8*
-keep Generator*
-keep GenV*
-keep gen*
-keep LHE*
-keep nLHE*
-keep nPSWeight
-keep PSWeight*
+# keep nGenJetAK8
+# keep GenJetAK8*
+# keep nGenJet
+# keep GenJet*
+# keep nGenPart
+# keep GenPart*
+# keep nSubGenJetAK8
+# keep SubGenJetAK8*
+# keep Generator*
+# keep GenV*
+# keep gen*
+# keep LHE*
+# keep nLHE*
+# keep nPSWeight
+# keep PSWeight*
 keep nIsoTrack
 keep IsoTrack*
 keep nJet
@@ -75,7 +75,7 @@ keep Jet*
 keep L1*
 keep nLowPtElectron
 keep LowPtElectron*
-keep GenMET*
+# keep GenMET*
 keep MET*
 keep Pileup*
 keep PuppiMET*
@@ -83,22 +83,22 @@ keep RawMET*
 keep RawPuppiMET*
 keep fixedGridRho*
 keep Rho_*
-keep nGenDressedLepton
-keep GenDressedLepton*
+# keep nGenDressedLepton
+# keep GenDressedLepton*
 keep nSubJet
 keep SubJet*
 keep TkMET*
-keep genTtbarId
+# keep genTtbarId
 keep nOtherPV
 keep OtherPV*
 keep PV*
 keep nSV
 keep SV*
-keep Electron_gen*
+# keep Electron_gen*
 keep FatJet_*
-keep Gen*
+# keep Gen*
 keep Jet_*
 keep Muon*
 keep pass*
 keep higgs*
-keep genVPt
+# keep genVPt
