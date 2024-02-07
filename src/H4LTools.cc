@@ -1027,43 +1027,66 @@ bool H4LTools::ZZSelection_2l2q(){
 
     if (FatJetidx.size() > 0 || jetidx.size()>=2)
     {
-       foundZZCandidate = true;
-
-
-        // std::cout << "Zlist size: " << Zlist.size() << std::endl;
-        // std::cout << "jetidx size: " << jetidx.size() << std::endl;
-        // std::cout << "FatJetidx size: " << FatJetidx.size() << std::endl;
-
         if (FatJetidx.size() > 0)
         {
-
-            Z2.SetPtEtaPhiM(FatJet_pt[0], FatJet_eta[0], FatJet_phi[0], FatJet_SDmass[0]);
-
-            TLorentzVector Z2_1;//AV
-            TLorentzVector Z2_2;//AV
-            if (jetidx.size() >= 1)
+            for (unsigned int i = 0; i < FatJetidx.size(); i++)
             {
-                Z2_1.SetPtEtaPhiM(Jet_pt[0], Jet_eta[0], Jet_phi[0], Jet_mass[0]);
-                Z2_2.SetPtEtaPhiM(0.0, 0.0, 0.0, 0.0);
-            }
-            if (jetidx.size() >= 2)
-            {
-                Z2_2.SetPtEtaPhiM(Jet_pt[1], Jet_eta[1], Jet_phi[1], Jet_mass[1]);
-            }
-            Z2_2j = Z2_1 + Z2_2;
+                if (FatJet_PNZvsQCD[FatJetidx[i]] < 0.9) continue;
+                if (FatJet_pt[FatJetidx[i]] < 200.0) continue;
+                // if (FatJet_msoftdrop[FatJetidx[i]] < 40.0) continue;
+                // if (FatJet_msoftdrop[FatJetidx[i]] > 180.0) continue;
 
-            cut2l1J++;
-            cut2l1Jor2j++;
+                foundZZCandidate = true;
+                isBoosted2l2q = true;
+                cut2l1J++;
+                cut2l1Jor2j++;
+
+                boostedJet_PNScore = FatJet_PNZvsQCD[FatJetidx[i]];
+                boostedJet_Index = FatJetidx[i];
+
+                Z2.SetPtEtaPhiM(FatJet_pt[FatJetidx[i]], FatJet_eta[FatJetidx[i]], FatJet_phi[FatJetidx[i]], FatJet_SDmass[FatJetidx[i]]);
+            }
         }
-        else
+
+        // if (jetidx.size() >= 2 && isBoosted2l2q == false) // FIXME: Only for testing purposes; comment this line and uncomment the next line for real analysis
+        if (jetidx.size() >= 2)
         {
+            foundZZCandidate = true;
+            if (Z2.M() < 40.0 || Z2.M() > 180)
+            {
+                cut2l2j++;
+            }
+            cut2l1Jor2j++;
+
             TLorentzVector Z2_1;
             TLorentzVector Z2_2;
             Z2_1.SetPtEtaPhiM(Jet_pt[0], Jet_eta[0], Jet_phi[0], Jet_mass[0]);
             Z2_2.SetPtEtaPhiM(Jet_pt[1], Jet_eta[1], Jet_phi[1], Jet_mass[1]);
             Z2_2j = Z2_1 + Z2_2;
-            cut2l2j++;
-            cut2l1Jor2j++;
+
+            // Select the two jets with mass closest to Z-boson mass
+            float mass_diff = 999.0;
+            for (unsigned int i = 0; i < jetidx.size(); i++)
+            {
+                for (unsigned int j = i+1; j < jetidx.size()+1; j++)
+                {
+                    TLorentzVector Z2_1;
+                    TLorentzVector Z2_2;
+                    Z2_1.SetPtEtaPhiM(Jet_pt[i], Jet_eta[i], Jet_phi[i], Jet_mass[i]);
+                    Z2_2.SetPtEtaPhiM(Jet_pt[j], Jet_eta[j], Jet_phi[j], Jet_mass[j]);
+                    TLorentzVector Z2_2j_temp = Z2_1 + Z2_2;
+
+                    if (fabs(Z2_2j_temp.M() - Zmass) < mass_diff)
+                    {
+                        mass_diff = fabs(Z2_2j_temp.M() - Zmass);
+                        Z2 = Z2_2j_temp;
+                        resolvedJet1_Index = i;
+                        resolvedJet2_Index = j;
+                    }
+                }
+            }
+
+            std::cout << "Z2: Mass based, pT based: " << Z2.Pt() << ",  " << Z2_2j.Pt() << std::endl;
         }
 
         ZZsystem = Z1 + Z2;

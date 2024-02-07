@@ -258,12 +258,18 @@ class H4LTools {
       bool flag4mu;
       bool flag2e2mu;
 
+      bool isBoosted2l2q;
       bool flag2e;
       bool flag2mu;
       bool flag2l;
       bool flag2e_met;
       bool flag2mu_met;
       bool flag2l_met;
+
+      float boostedJet_PNScore;
+      int boostedJet_Index; // Contains the inded of 2l2q case; the boosted jet index that satisfies the P/N score and pT cut>200 GeV; No mass cut
+      int resolvedJet1_Index; // Contains the index of 2l2q case; when paired using mass close to Z-boson mass
+      int resolvedJet2_Index; // Contains the index of 2l2q case; when paired using mass close to Z-boson mass
 
       void LeptonSelection();
       std::vector<unsigned int> looseEle,looseMu,bestEle,bestMu, tighteleforjetidx, tightmuforjetidx;
@@ -431,7 +437,12 @@ class H4LTools {
         phij2 = -99;
         mj2 = -99;
 
+        boostedJet_PNScore = -999.0;
+        boostedJet_Index = -999;
+        resolvedJet1_Index = -999;
+        resolvedJet2_Index = -999;
         // Flags for various final states
+        isBoosted2l2q = false;
         flag4e = false;
         flag4mu = false;
         flag2e2mu = false;

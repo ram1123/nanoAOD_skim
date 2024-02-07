@@ -21,6 +21,9 @@ keep HLT*
 keep Flag*
 #
 #
+keep is*
+keep *Index
+keep boosted*
 keep *4l
 keep *Z1
 keep *Z2
