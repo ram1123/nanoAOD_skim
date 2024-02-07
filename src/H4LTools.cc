@@ -1086,7 +1086,8 @@ bool H4LTools::ZZSelection_2l2q(){
                 }
             }
 
-            std::cout << "Z2: Mass based, pT based: " << Z2.Pt() << ",  " << Z2_2j.Pt() << std::endl;
+            if (DEBUG)
+                std::cout << "Z2: Mass based, pT based: " << Z2.Pt() << ",  " << Z2_2j.Pt() << std::endl;
         }
 
         ZZsystem = Z1 + Z2;

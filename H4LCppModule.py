@@ -364,7 +364,6 @@ class HZZAnalysisCppProducer(Module):
         resolvedJet2_Index = self.worker.resolvedJet2_Index
         if self.DEBUG: print("isBoosted2l2q: ", isBoosted2l2q)
 
-
         if (foundZZCandidate_4l or foundZZCandidate_2l2q or foundZZCandidate_2l2nu):
             #print("inside loop 4l or 2l2q")
             #print(passZZ2l2qSelection)
