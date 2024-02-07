@@ -386,7 +386,8 @@ void H4LTools::LeptonSelection(){
           if(FsrEleidx<900){
               TLorentzVector fsrele;
               fsrele.SetPtEtaPhiM(FsrPhoton_pt[FsrEleidx],FsrPhoton_eta[FsrEleidx],FsrPhoton_phi[FsrEleidx],0);
-              std::cout<<"Ele correction: "<< std::endl;
+              if (DEBUG)
+                std::cout<<"Ele correction: "<< std::endl;
               if(Elelist[ae].DeltaR(fsrele)>0.01){
                 RelEleIsoNoFsr = RelEleIsoNoFsr - FsrPhoton_pt[FsrEleidx]/Elelist[ae].Pt();
               }
@@ -410,7 +411,8 @@ void H4LTools::LeptonSelection(){
           if(FsrMuonidx<900){
               TLorentzVector fsrmuon;
               fsrmuon.SetPtEtaPhiM(FsrPhoton_pt[FsrMuonidx],FsrPhoton_eta[FsrMuonidx],FsrPhoton_phi[FsrMuonidx],0);
-              std::cout<<"muon FSR recovered"<<endl;
+              if (DEBUG)
+                std::cout<<"muon FSR recovered"<<endl;
               if(Mulist[amu].DeltaR(fsrmuon)>0.01){
                 RelIsoNoFsr = RelIsoNoFsr - FsrPhoton_pt[FsrMuonidx]/Mulist[amu].Pt();
               }
@@ -1039,8 +1041,15 @@ bool H4LTools::ZZSelection_2l2q(){
 
             TLorentzVector Z2_1;//AV
             TLorentzVector Z2_2;//AV
-            Z2_1.SetPtEtaPhiM(Jet_pt[0], Jet_eta[0], Jet_phi[0], Jet_mass[0]);
-            Z2_2.SetPtEtaPhiM(Jet_pt[1], Jet_eta[1], Jet_phi[1], Jet_mass[1]);
+            if (jetidx.size() >= 1)
+            {
+                Z2_1.SetPtEtaPhiM(Jet_pt[0], Jet_eta[0], Jet_phi[0], Jet_mass[0]);
+                Z2_2.SetPtEtaPhiM(0.0, 0.0, 0.0, 0.0);
+            }
+            if (jetidx.size() >= 2)
+            {
+                Z2_2.SetPtEtaPhiM(Jet_pt[1], Jet_eta[1], Jet_phi[1], Jet_mass[1]);
+            }
             Z2_2j = Z2_1 + Z2_2;
 
             cut2l1J++;

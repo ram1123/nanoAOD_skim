@@ -441,8 +441,18 @@ class H4LTools {
         flag2e_met = false;
         flag2l_met = false;
         flag2mu_met = false;
-        Z1.SetPtEtaPhiM(0,0,0,0);
-        Z1nofsr.SetPtEtaPhiM(0,0,0,0);
+        Z1.SetPtEtaPhiM(0.0, 0.0, 0.0, 0.0);
+        Z1nofsr.SetPtEtaPhiM(0.0, 0.0, 0.0, 0.0);
+        Z2.SetPtEtaPhiM(0.0, 0.0, 0.0, 0.0);
+        Z2_2j.SetPtEtaPhiM(0.0, 0.0, 0.0, 0.0);
+        Z2_met.SetPtEtaPhiM(0.0, 0.0, 0.0, 0.0);
+        Z2nofsr.SetPtEtaPhiM(0.0, 0.0, 0.0, 0.0);
+        ZZsystem.SetPtEtaPhiM(0.0, 0.0, 0.0, 0.0);
+        ZZsystemnofsr.SetPtEtaPhiM(0.0, 0.0, 0.0, 0.0);
+        ZZ_2jsystem.SetPtEtaPhiM(0.0, 0.0, 0.0, 0.0);
+        ZZ_metsystem.SetPtEtaPhiM(0.0, 0.0, 0.0, 0.0);
+        ZZ_2jsystemnofsr.SetPtEtaPhiM(0.0, 0.0, 0.0, 0.0);
+        ZZ_metsystemnofsr.SetPtEtaPhiM(0.0, 0.0, 0.0, 0.0);
       }
 
       bool isFSR=true;

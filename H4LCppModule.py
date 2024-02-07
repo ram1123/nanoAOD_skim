@@ -475,10 +475,15 @@ class HZZAnalysisCppProducer(Module):
                 mass4l = self.worker.ZZsystemnofsr.M()
 
         if self.DEBUG:
-            print("{:22}, {:5}, {:22}, {:5}, {:22}, {:5}, pT4l: {}, \t pTZ1: {}, \t pTZ2: {}".format("foundZZCandidate_2l2q", foundZZCandidate_2l2q, "foundZZCandidate_2l2nu", foundZZCandidate_2l2nu, "foundZZCandidate_4l", foundZZCandidate_4l, pT4l, pTZ1, pTZ2))
+            print("(found candidates: 2l2q, 2l2nu, 4l): ({:1}, {:1}, {:1}), pTL1: {:7.3f}, pTL2: {:7.3f}, pTZ1: {:7.3f}, pTZ2: {:7.3f}, pTZ2_2j: {:7.3f}, pTZ2_met: {:7.3f}".format(foundZZCandidate_2l2q, foundZZCandidate_2l2nu, foundZZCandidate_4l, pTL1, pTL2, pTZ1, pTZ2, pTZ2_2j, pTZ2_met))
             if (foundZZCandidate_2l2q):
                 print("==> pTL1: {}, \t pTL2: {}".format(pTL1, pTL2))
 
+        # if (foundZZCandidate_2l2q or foundZZCandidate_2l2nu or foundZZCandidate_4l):
+            # print("(found candidates: 2l2q, 2l2nu, 4l): ({:1}, {:1}, {:1}), pTL1: {:7.3f}, pTL2: {:7.3f}, pTZ1: {:7.3f}, pTZ2: {:7.3f}, pTZ2_2j: {:7.3f}, pTZ2_met: {:7.3f}".format(foundZZCandidate_2l2q, foundZZCandidate_2l2nu, foundZZCandidate_4l, pTL1, pTL2, pTZ1, pTZ2, pTZ2_2j, pTZ2_met))
+
+        # if foundZZCandidate_2l2q == True:
+            # exit()
         self.out.fillBranch("phiZ2_met",phiZ2_met)
         self.out.fillBranch("pTZ2_met",pTZ2_met)
         self.out.fillBranch("EneZ2_met",EneZ2_met)
