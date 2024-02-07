@@ -3,9 +3,12 @@
 #include <TRandom3.h>
 #include <vector>
 
+
 std::vector<unsigned int> H4LTools::goodLooseElectrons2012(){
     std::vector<unsigned int> LooseElectronindex;
     for (unsigned int i=0; i<Electron_pt.size(); i++){
+        if (DEBUG)
+            std::cout << "Inside goodLooseElectrons2012:: Electron_pt[" << i << "] = " << Electron_pt[i] << std::endl;
         if ((Electron_pt[i]>elePtcut)&&(fabs(Electron_eta[i])<eleEtacut)){
             LooseElectronindex.push_back(i);
             //std::cout << nElectron << std::endl;
@@ -18,6 +21,8 @@ std::vector<unsigned int> H4LTools::goodLooseElectrons2012(){
 std::vector<unsigned int> H4LTools::goodLooseMuons2012(){
     std::vector<unsigned int> LooseMuonindex;
     for (unsigned int i=0; i<Muon_eta.size(); i++){
+        if (DEBUG)
+            std::cout << "Inside goodLooseMuons2012:: Muon_pt[" << i << "] = " << Muon_pt[i] << std::endl;
         if ((Muon_pt[i]>MuPtcut)&&(fabs(Muon_eta[i])<MuEtacut)&&((Muon_isGlobal[i]||Muon_isTracker[i]||Muon_isPFcand[i]))){
             LooseMuonindex.push_back(i);
       //      std::cout << nMuon << std::endl;
@@ -136,9 +141,9 @@ std::vector<unsigned int> H4LTools::SelectedJets(std::vector<unsigned int> ele, 
                 if(overlaptag==0) goodJets.push_back(i);
             }
         }
-      }
-    return goodJets;
     }
+    return goodJets;
+}
 
 // Pre-selection for Fat-jets
 std::vector<unsigned int> H4LTools::SelectedFatJets(std::vector<unsigned int> ele, std::vector<unsigned int> mu)
@@ -228,6 +233,9 @@ std::vector<TLorentzVector> H4LTools::BatchFsrRecovery(std::vector<TLorentzVecto
         TLorentzVector LepFsrRecovery;
         LepFsrRecovery = FsrPhoton + LepList[i];
         LepFsrList.push_back(LepFsrRecovery);
+
+        if (DEBUG)
+            std::cout << "Inside BatchFsrRecovery:: LepFsrRecovery.Pt() = " << LepFsrRecovery.Pt() << "\t before fsr recovery: " << LepList[i].Pt() << std::endl;
     }
     return LepFsrList;
 }
@@ -342,6 +350,8 @@ void H4LTools::LeptonSelection(){
             Elechg.push_back(1);
         }
         TLorentzVector Ele;
+        if (DEBUG)
+            std::cout << "Inside LeptonSelection:: Electron_pt[" << Electronindex[ie] << "] = " << Electron_pt[Electronindex[ie]] << std::endl;
         Ele.SetPtEtaPhiM(Electron_pt[Electronindex[ie]],Electron_eta[Electronindex[ie]],Electron_phi[Electronindex[ie]],Electron_mass[Electronindex[ie]]);
         Elelist.push_back(Ele);
         Eiso.push_back(Electron_pfRelIso03_all[Electronindex[ie]]);
@@ -356,6 +366,8 @@ void H4LTools::LeptonSelection(){
             Muchg.push_back(1);
         }
         TLorentzVector Mu;
+        if (DEBUG)
+            std::cout << "Inside LeptonSelection:: Muon_pt[" << Muonindex[imu] << "] = " << Muon_pt[Muonindex[imu]] << std::endl;
         Mu.SetPtEtaPhiM(Muon_pt[Muonindex[imu]],Muon_eta[Muonindex[imu]],Muon_phi[Muonindex[imu]],Muon_mass[Muonindex[imu]]);
         Mulist.push_back(Mu);
         muid.push_back(AllMuid[Muonindex[imu]]);
@@ -430,6 +442,20 @@ bool H4LTools::findZCandidate(){
         flag2e2mu = true;
     }
 
+    if (DEBUG)
+    {
+        std::cout << "nTightEle: " << nTightEle << ", nTightMu: " << nTightMu << std::endl;
+
+        for (unsigned int ke = 0; ke < (TightEleindex.size()); ke++)
+        {
+            std::cout << "Test: ElelistFsr[TightEleindex[ke]].Pt() = " << ElelistFsr[TightEleindex[ke]].Pt() << std::endl;
+        }
+
+        for (unsigned int kmu = 0; kmu < (TightMuindex.size()); kmu++)
+        {
+            std::cout << "Test: MulistFsr[TightMuindex[kmu]].Pt() = " << MulistFsr[TightMuindex[kmu]].Pt() << std::endl;
+        }
+    }
 
     if(TightEleindex.size()>1){
         for(unsigned int ke=0; ke<(TightEleindex.size()-1);ke++){
@@ -508,14 +534,25 @@ bool H4LTools::findZCandidate(){
         Zlistnofsr.push_back(Zcannofsr);
     }
     Zsize = Zlist.size();
-    if (Zsize>0){
+
+    if (DEBUG)
+    {
+        std::cout << "Zlep1pt size: " << Zlep1pt.size() << std::endl;
+        std::cout << "Zlep2pt size: " << Zlep2pt.size() << std::endl;
+        // if size is greater than 0, cout the Zlep1pt and Zlep2pt
+        if (Zlep1pt.size() > 0)
+            std::cout << "Zlep1pt: " << Zlep1pt[0] << std::endl;
+        if (Zlep2pt.size() > 0)
+            std::cout << "Zlep2pt: " << Zlep2pt[0] << std::endl;
+    }
+
+    if (Zsize > 0)
+    {
         return true;
     }
     else{
         return false;
     }
-
-
 }
 
 

@@ -9,7 +9,7 @@ ROOT.PyConfig.IgnoreCommandLineOptions = True
 
 
 class HZZAnalysisCppProducer(Module):
-    def __init__(self,year,cfgFile,isMC,isFSR):
+    def __init__(self,year,cfgFile,isMC,isFSR, DEBUG=False):
         base = "$CMSSW_BASE/src/PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim"
         ROOT.gSystem.Load("%s/JHUGenMELA/MELA/data/slc7_amd64_gcc700/libJHUGenMELAMELA.so" % base)
         ROOT.gSystem.Load("%s/JHUGenMELA/MELA/data/slc7_amd64_gcc700/libjhugenmela.so" % base)
@@ -28,9 +28,10 @@ class HZZAnalysisCppProducer(Module):
                     ".L %s/interface/H4LTools.h" % base)
         self.year = year
         self.isMC = isMC
+        self.DEBUG = DEBUG
         with open(cfgFile, 'r') as ymlfile:
           cfg = yaml.load(ymlfile)
-          self.worker = ROOT.H4LTools(self.year)
+          self.worker = ROOT.H4LTools(self.year, self.DEBUG)
           self.worker.InitializeElecut(cfg['Electron']['pTcut'],cfg['Electron']['Etacut'],cfg['Electron']['Sip3dcut'],cfg['Electron']['Loosedxycut'],cfg['Electron']['Loosedzcut'],
                                        cfg['Electron']['Isocut'],cfg['Electron']['BDTWP']['LowEta']['LowPT'],cfg['Electron']['BDTWP']['MedEta']['LowPT'],cfg['Electron']['BDTWP']['HighEta']['LowPT'],
                                        cfg['Electron']['BDTWP']['LowEta']['HighPT'],cfg['Electron']['BDTWP']['MedEta']['HighPT'],cfg['Electron']['BDTWP']['HighEta']['HighPT'])
@@ -211,6 +212,8 @@ class HZZAnalysisCppProducer(Module):
     def analyze(self, event):
         """process event, return True (go to next module) or False (fail,
         go to next event)"""
+        if self.DEBUG:
+            print("======       Inside analyze function     ==========")
         # do this check at every event, as other modules might have read
         # further branches
         #if event._tree._ttreereaderversion > self._ttreereaderversion:
@@ -320,10 +323,14 @@ class HZZAnalysisCppProducer(Module):
         for xe in electrons:
             self.worker.SetElectrons(xe.pt, xe.eta, xe.phi, xe.mass, xe.dxy,
                                       xe.dz, xe.sip3d, xe.mvaFall17V2Iso, xe.pdgId, xe.pfRelIso03_all)
+            if self.DEBUG:
+                print("Electrons: pT, eta: {}, {}".format(xe.pt, xe.eta))
         for xm in muons:
             self.worker.SetMuons(xm.corrected_pt, xm.eta, xm.phi, xm.mass, xm.isGlobal, xm.isTracker,
                                 xm.dxy, xm.dz, xm.sip3d, xm.ptErr, xm.nTrackerLayers, xm.isPFcand,
                                  xm.pdgId, xm.charge, xm.pfRelIso03_all)
+            if self.DEBUG:
+                print("Muons: pT, eta: {}, {}".format(xm.corrected_pt, xm.eta))
         for xf in fsrPhotons:
             self.worker.SetFsrPhotons(xf.dROverEt2,xf.eta,xf.phi,xf.pt,xf.relIso03)
         for xj in jets:
@@ -466,6 +473,11 @@ class HZZAnalysisCppProducer(Module):
                 eta4l = self.worker.ZZsystemnofsr.Eta()
                 phi4l = self.worker.ZZsystemnofsr.Phi()
                 mass4l = self.worker.ZZsystemnofsr.M()
+
+        if self.DEBUG:
+            print("{:22}, {:5}, {:22}, {:5}, {:22}, {:5}, pT4l: {}, \t pTZ1: {}, \t pTZ2: {}".format("foundZZCandidate_2l2q", foundZZCandidate_2l2q, "foundZZCandidate_2l2nu", foundZZCandidate_2l2nu, "foundZZCandidate_4l", foundZZCandidate_4l, pT4l, pTZ1, pTZ2))
+            if (foundZZCandidate_2l2q):
+                print("==> pTL1: {}, \t pTL2: {}".format(pTL1, pTL2))
 
         self.out.fillBranch("phiZ2_met",phiZ2_met)
         self.out.fillBranch("pTZ2_met",pTZ2_met)

@@ -78,6 +78,9 @@ def main(args):
         outjdl_file.write("WhenToTransferOutput = ON_EXIT\n")
         outjdl_file.write("Transfer_Input_Files = "+Transfer_Input_Files + ",  " + post_proc_to_run+"\n")
         outjdl_file.write("x509userproxy = $ENV(X509_USER_PROXY)\n")
+        outjdl_file.write("requirements = TARGET.OpSysAndVer =?= \"AlmaLinux9\"\n")
+        # MY.WantOS = "el7"
+        outjdl_file.write("MY.WantOS = \"el7\"\n")
         count = 0
         count_jobs = 0
         for lines in in_file:

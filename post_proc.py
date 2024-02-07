@@ -2,6 +2,7 @@
 import os
 import sys
 import argparse
+import glob
 
 from PhysicsTools.NanoAODTools.postprocessing.framework.postprocessor import PostProcessor
 from PhysicsTools.NanoAODTools.postprocessing.modules.common.muonScaleResProducer import *
@@ -22,6 +23,7 @@ def parse_arguments():
     parser.add_argument("-n", "--entriesToRun", default=100, type=int, help="Set  to 0 if need to run over all entries else put number of entries to run")
     parser.add_argument("-d", "--DownloadFileToLocalThenRun", default=True, type=bool, help="Download file to local then run")
     parser.add_argument("--NOsyst", default=False, action="store_true", help="Do not run systematics")
+    parser.add_argument("--DEBUG", default=False, action="store_true", help="Print debug information")
     return parser.parse_args()
 
 def getListFromFile(filename):
@@ -36,7 +38,7 @@ def main():
     testfilelist = []
     modulesToRun = []
     isMC = True
-    isFSR = False
+    isFSR = True
     year = None
     cfgFile = None
     jsonFileName = None
@@ -81,7 +83,7 @@ def main():
         jsonFileName = "golden_Json/Cert_271036-284044_13TeV_Legacy2016_Collisions16_JSON.txt"
         sfFileName = "DeepCSV_102XSF_V2.csv"
         modulesToRun.extend([muonScaleRes2016()])
-    H4LCppModule = lambda: HZZAnalysisCppProducer(year,cfgFile, isMC, isFSR)
+    H4LCppModule = lambda: HZZAnalysisCppProducer(year,cfgFile, isMC, isFSR, args.DEBUG)
     # GenVarModule = lambda : GenVarsProducer() # FIXME: Gen variable producer module is not working
     modulesToRun.extend([H4LCppModule()])
     # modulesToRun.extend([H4LCppModule(), GenVarModule()])
@@ -107,14 +109,24 @@ def main():
         if year == 2017: modulesToRun.extend([puAutoWeight_2017()])
         if year == 2016: modulesToRun.extend([puAutoWeight_2016()])
 
-        p=PostProcessor(".",testfilelist, None, None,modules = modulesToRun, provenance=True,fwkJobReport=False,haddFileName="skimmed_nano_mc.root", maxEntries=entriesToRun, prefetch=DownloadFileToLocalThenRun, outputbranchsel="keep_and_drop.txt")
+        p=PostProcessor(".",testfilelist, None, None,modules = modulesToRun,
+                        provenance=True,fwkJobReport=False,
+                        haddFileName="skimmed_nano_mc.root",
+                        maxEntries=entriesToRun,
+                        prefetch=DownloadFileToLocalThenRun, longTermCache= True,   # prefetch: download file to local then run, longTermCache: keep the file in local after running so that if it is present use local instead of downloading again
+                        outputbranchsel="keep_and_drop.txt")
     else:
         if (not args.NOsyst):
             jetmetCorrector = createJMECorrector(isMC=isMC, dataYear=year, jesUncert="All", jetType = "AK4PFchs")
             fatJetCorrector = createJMECorrector(isMC=isMC, dataYear=year, jesUncert="All", jetType = "AK8PFPuppi")
             modulesToRun.extend([jetmetCorrector(), fatJetCorrector()])
 
-        p=PostProcessor(".",testfilelist, None, None, modules = modulesToRun, provenance=True, fwkJobReport=False,haddFileName="skimmed_nano_data.root", jsonInput=jsonFileName, maxEntries=entriesToRun, prefetch=DownloadFileToLocalThenRun, outputbranchsel="keep_and_drop_data.txt")
+        p=PostProcessor(".",testfilelist, None, None, modules = modulesToRun,
+                        provenance=True, fwkJobReport=False,
+                        haddFileName="skimmed_nano_data.root",
+                        jsonInput=jsonFileName,
+                        maxEntries=entriesToRun, prefetch=DownloadFileToLocalThenRun, longTermCache= True,
+                        outputbranchsel="keep_and_drop_data.txt")
 
     p.run()
 

@@ -12,12 +12,14 @@
 
 class H4LTools {
     public:
-      H4LTools(int year);
+      H4LTools(int year, bool DEBUG_Main);
       float elePtcut, MuPtcut, eleEtacut, MuEtacut, elesip3dCut, Musip3dCut,Zmass,MZ1cut,MZcutup,MZcutdown,MZZcut,HiggscutUp,HiggscutDown;
       float eleLoosedxycut,eleLoosedzcut,MuLoosedxycut,MuLoosedzcut,MuTightdxycut,MuTightdzcut,MuTightTrackerLayercut,MuTightpTErrorcut,MuHighPtBound,eleIsocut,MuIsocut;
       float fsrphotonPtcut,fsrphotonEtacut,fsrphotonIsocut,fsrphotondRlcut,fsrphotondRlOverPtcut, JetPtcut,JetEtacut;
       float eleBDTWPLELP,eleBDTWPMELP,eleBDTWPHELP,eleBDTWPLEHP,eleBDTWPMEHP,eleBDTWPHEHP;
       float HZZ2l2q_Leading_Lep_pT, HZZ2l2q_SubLeading_Lep_pT, HZZ2l2q_Lep_eta, HZZ2l2q_MZLepcutdown, HZZ2l2q_MZLepcutup;
+      bool DEBUG;
+
 
       void InitializeElecut(float elePtcut_,float eleEtacut_,float elesip3dCut_,float eleLoosedxycut_,float eleLoosedzcut_,float eleIsocut_,float eleBDTWPLELP_,float eleBDTWPMELP_, float eleBDTWPHELP_,float eleBDTWPLEHP_,float eleBDTWPMEHP_,float eleBDTWPHEHP_){
         elePtcut = elePtcut_;
@@ -227,12 +229,12 @@ class H4LTools {
       std::vector<int> Zflavor; //mu->13, e->11
       std::vector<int> Zlep1index;
       std::vector<int> Zlep2index;
-      std::vector<float> Zlep1pt;
+      std::vector<float> Zlep1pt; // leading lepton from each Z boson
       std::vector<float> Zlep1eta;
       std::vector<float> Zlep1phi;
       std::vector<float> Zlep1mass;
       std::vector<float> Zlep1chg;
-      std::vector<float> Zlep2pt;
+      std::vector<float> Zlep2pt; // subleading lepton from each Z boson
       std::vector<float> Zlep2eta;
       std::vector<float> Zlep2phi;
       std::vector<float> Zlep2mass;
@@ -283,6 +285,21 @@ class H4LTools {
       std::vector<int> TightMuindex;
       void Initialize()
       {
+          looseEle.clear();
+          looseMu.clear();
+          bestEle.clear();
+          bestMu.clear();
+          tighteleforjetidx.clear();
+          tightmuforjetidx.clear();
+          Electronindex.clear();
+          Muonindex.clear();
+          AllEid.clear();
+          AllMuid.clear();
+          Elelist.clear();
+          Mulist.clear();
+          ElelistFsr.clear();
+          MulistFsr.clear();
+
         // Electron related variables
         nElectron = 0;
         Electron_pt.clear();
@@ -424,6 +441,8 @@ class H4LTools {
         flag2e_met = false;
         flag2l_met = false;
         flag2mu_met = false;
+        Z1.SetPtEtaPhiM(0,0,0,0);
+        Z1nofsr.SetPtEtaPhiM(0,0,0,0);
       }
 
       bool isFSR=true;
@@ -500,7 +519,8 @@ class H4LTools {
 
 };
 
-H4LTools::H4LTools(int year){
+H4LTools::H4LTools(int year, bool DEBUG_Main){
+  DEBUG = DEBUG_Main;
   std::cout<<"year"<<" "<<year<<std::endl;
   mela = new Mela(13.0, 125.0, TVar::SILENT);
   mela->setCandidateDecayMode(TVar::CandidateDecay_ZZ);
