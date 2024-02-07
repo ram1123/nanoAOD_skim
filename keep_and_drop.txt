@@ -5,6 +5,13 @@ drop * # start with all
 keep run
 keep event
 keep lumi*
+keep BeamSpot*
+#   Others
+keep LowPtElectron*
+keep nLowPtElectron*
+keep OtherPV*
+keep nOtherPV*
+keep PV*
 #
 #
 #     Trigger
@@ -26,14 +33,17 @@ keep *L4
 keep *j1
 keep *j2
 keep D_*
-# keep nPhoton
-# keep Photon*
+keep lep*
+keep *Weight
+keep *Weight*
+keep nPhoton
+keep Photon*
 keep nElectron
 keep Electron*
 keep nMuon
 keep Muon*
-# keep nTau
-# keep Tau*
+keep nTau
+keep Tau*
 keep HTXS*
 keep btag*
 keep CaloMET*
@@ -72,6 +82,7 @@ keep PuppiMET*
 keep RawMET*
 keep RawPuppiMET*
 keep fixedGridRho*
+keep Rho_*
 keep nGenDressedLepton
 keep GenDressedLepton*
 keep nSubJet
@@ -89,3 +100,5 @@ keep Gen*
 keep Jet_*
 keep Muon*
 keep pass*
+keep higgs*
+keep genVPt

@@ -13,6 +13,7 @@ from PhysicsTools.NanoAODTools.postprocessing.modules.common.puWeightProducer im
 from H4Lmodule import *
 from H4LCppModule import *
 from JetSFMaker import *
+# from GenVarsProducer import *
 
 def parse_arguments():
     """Parse command line arguments."""
@@ -23,12 +24,10 @@ def parse_arguments():
     parser.add_argument("--NOsyst", default=False, action="store_true", help="Do not run systematics")
     return parser.parse_args()
 
-
 def getListFromFile(filename):
     """Read file list from a text file."""
     with open(filename, "r") as file:
         return ["root://cms-xrd-global.cern.ch/" + line.strip() for line in file]
-
 
 def main():
     args = parse_arguments()
@@ -83,7 +82,10 @@ def main():
         sfFileName = "DeepCSV_102XSF_V2.csv"
         modulesToRun.extend([muonScaleRes2016()])
     H4LCppModule = lambda: HZZAnalysisCppProducer(year,cfgFile, isMC, isFSR)
+    # GenVarModule = lambda : GenVarsProducer() # FIXME: Gen variable producer module is not working
     modulesToRun.extend([H4LCppModule()])
+    # modulesToRun.extend([H4LCppModule(), GenVarModule()])
+    # modulesToRun.extend([ GenVarModule()])
 
     print("systematic info: {}".format(args.NOsyst))
     print("Input json file: {}".format(jsonFileName))
@@ -92,25 +94,24 @@ def main():
     print("isFSR: {}".format(isFSR))
 
     if isMC:
-        jetmetCorrector = createJMECorrector(isMC=isMC, dataYear=year, jesUncert="All", jetType = "AK4PFchs")
-        fatJetCorrector = createJMECorrector(isMC=isMC, dataYear=year, jesUncert="All", jetType = "AK8PFPuppi")
-        # btagSF = lambda: btagSFProducer("UL"+str(year), algo="deepjet",selectedWPs=['L','M','T','shape_corr'], sfFileName=sfFileName)
-        btagSF = lambda: btagSFProducer(era = "UL"+str(year), algo = "deepcsv")
-        puidSF = lambda: JetSFMaker("%s" % year)
         if (not args.NOsyst):
+            jetmetCorrector = createJMECorrector(isMC=isMC, dataYear=year, jesUncert="All", jetType = "AK4PFchs")
+            fatJetCorrector = createJMECorrector(isMC=isMC, dataYear=year, jesUncert="All", jetType = "AK8PFPuppi")
+            # btagSF = lambda: btagSFProducer("UL"+str(year), algo="deepjet",selectedWPs=['L','M','T','shape_corr'], sfFileName=sfFileName)
+            btagSF = lambda: btagSFProducer(era = "UL"+str(year), algo = "deepcsv")
+            puidSF = lambda: JetSFMaker("%s" % year)
             modulesToRun.extend([jetmetCorrector(), fatJetCorrector(), puidSF()])
         # # modulesToRun.extend([jetmetCorrector(), fatJetCorrector(), btagSF(), puidSF()])
 
-        if (not args.NOsyst):
-            if year == 2018: modulesToRun.extend([puAutoWeight_2018()])
-            if year == 2017: modulesToRun.extend([puAutoWeight_2017()])
-            if year == 2016: modulesToRun.extend([puAutoWeight_2016()])
+        if year == 2018: modulesToRun.extend([puAutoWeight_2018()])
+        if year == 2017: modulesToRun.extend([puAutoWeight_2017()])
+        if year == 2016: modulesToRun.extend([puAutoWeight_2016()])
 
         p=PostProcessor(".",testfilelist, None, None,modules = modulesToRun, provenance=True,fwkJobReport=False,haddFileName="skimmed_nano_mc.root", maxEntries=entriesToRun, prefetch=DownloadFileToLocalThenRun, outputbranchsel="keep_and_drop.txt")
     else:
-        jetmetCorrector = createJMECorrector(isMC=isMC, dataYear=year, jesUncert="All", jetType = "AK4PFchs")
-        fatJetCorrector = createJMECorrector(isMC=isMC, dataYear=year, jesUncert="All", jetType = "AK8PFPuppi")
         if (not args.NOsyst):
+            jetmetCorrector = createJMECorrector(isMC=isMC, dataYear=year, jesUncert="All", jetType = "AK4PFchs")
+            fatJetCorrector = createJMECorrector(isMC=isMC, dataYear=year, jesUncert="All", jetType = "AK8PFPuppi")
             modulesToRun.extend([jetmetCorrector(), fatJetCorrector()])
 
         p=PostProcessor(".",testfilelist, None, None, modules = modulesToRun, provenance=True, fwkJobReport=False,haddFileName="skimmed_nano_data.root", jsonInput=jsonFileName, maxEntries=entriesToRun, prefetch=DownloadFileToLocalThenRun, outputbranchsel="keep_and_drop_data.txt")

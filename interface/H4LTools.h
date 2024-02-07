@@ -281,49 +281,151 @@ class H4LTools {
 
       std::vector<int> TightEleindex;
       std::vector<int> TightMuindex;
-      void Initialize(){
-        Electron_pt.clear();Electron_phi.clear();Electron_eta.clear();Electron_mass.clear();Electron_dxy.clear();Electron_dz.clear();Electron_sip3d.clear();
-        Electron_mvaFall17V2Iso.clear();Electron_pdgId.clear();Electron_pfRelIso03_all.clear();
-        Muon_pt.clear();Muon_phi.clear();Muon_eta.clear();Muon_mass.clear();Muon_dxy.clear();Muon_dz.clear();Muon_sip3d.clear();Muon_ptErr.clear();Muon_pfRelIso03_all.clear();
-        Muon_nTrackerLayers.clear();Muon_genPartIdx.clear();Muon_pdgId.clear();Muon_charge.clear();
-        Muon_isTracker.clear();Muon_isGlobal.clear();Muon_isPFcand.clear();
-        Jet_pt.clear();Jet_phi.clear();Jet_eta.clear();Jet_mass.clear();Jet_btagDeepC.clear();
-        MET_pt = 0.0; MET_phi = 0.0;  ////new
+      void Initialize()
+      {
+        // Electron related variables
+        nElectron = 0;
+        Electron_pt.clear();
+        Electron_phi.clear();
+        Electron_eta.clear();
+        Electron_mass.clear();
+        Electron_dxy.clear();
+        Electron_dz.clear();
+        Electron_sip3d.clear();
+        Electron_mvaFall17V2Iso.clear();
+        Electron_pdgId.clear();
+        Electron_pfRelIso03_all.clear();
+        Elechg.clear();
+        Eiso.clear();
+        Eid.clear();
+        TightEleindex.clear();
+        nTightEle = 0;
+        nTightEleChgSum = 0;
+
+        // Muon related variables
+        nMuon = 0;
+        Muon_pt.clear();
+        Muon_phi.clear();
+        Muon_eta.clear();
+        Muon_mass.clear();
+        Muon_dxy.clear();
+        Muon_dz.clear();
+        Muon_sip3d.clear();
+        Muon_ptErr.clear();
+        Muon_pfRelIso03_all.clear();
+        Muon_nTrackerLayers.clear();
+        Muon_genPartIdx.clear();
+        Muon_pdgId.clear();
+        Muon_charge.clear();
+        Muon_isTracker.clear();
+        Muon_isGlobal.clear();
+        Muon_isPFcand.clear();
+        Muchg.clear();
+        Muiso.clear();
+        muid.clear();
+        TightMuindex.clear();
+        nTightMu = 0;
+        nTightMuChgSum = 0;
+
+        // Jet related variables
+        nJet = 0;
+        Jet_pt.clear();
+        Jet_phi.clear();
+        Jet_eta.clear();
+        Jet_mass.clear();
+        Jet_btagDeepC.clear();
+        Jet_jetId.clear();
+        Jet_puId.clear();
+        FatJet_pt.clear();
+        FatJet_phi.clear();
+        FatJet_eta.clear();
+        FatJet_SDmass.clear();
+        FatJet_btagDeepB.clear();
+        FatJet_PNZvsQCD.clear();
+        FatJet_jetId.clear();
+        jetidx.clear();
+        FatJetidx.clear();
+
+        // MET related variables
+        MET_pt = 0.0;
+        MET_phi = 0.0; ////new
         MET_sumEt = 0.0;
 
-        Jet_jetId.clear();Jet_puId.clear();
-        FatJet_pt.clear();FatJet_phi.clear();FatJet_eta.clear();FatJet_SDmass.clear();FatJet_btagDeepB.clear(); FatJet_PNZvsQCD.clear();
+        // FsrPhoton related variables
+        nFsrPhoton = 0;
+        FsrPhoton_dROverEt2.clear();
+        FsrPhoton_phi.clear();
+        FsrPhoton_eta.clear();
+        FsrPhoton_pt.clear();
+        FsrPhoton_relIso03.clear();
 
-        FatJet_jetId.clear();
-        FsrPhoton_dROverEt2.clear();FsrPhoton_phi.clear();FsrPhoton_eta.clear();FsrPhoton_pt.clear();FsrPhoton_relIso03.clear();
+        // Generator  related variables
+        nGenPart = 0;
         GenPart_pt.clear();
+
+        // Reconstructed variables
         Zlist.clear();
         Zlistnofsr.clear();
         Zflavor.clear();
         Zlep1index.clear();
         Zlep2index.clear();
-        Zlep1pt.clear(); Zlep1eta.clear(); Zlep1phi.clear(); Zlep1mass.clear();
-        Zlep2pt.clear(); Zlep2eta.clear(); Zlep2phi.clear(); Zlep2mass.clear();
-        Zlep1chg.clear(); Zlep2chg.clear();
-        Zlep1ptNoFsr.clear(); Zlep1etaNoFsr.clear(); Zlep1phiNoFsr.clear(); Zlep1massNoFsr.clear();
-        Zlep2ptNoFsr.clear(); Zlep2etaNoFsr.clear(); Zlep2phiNoFsr.clear(); Zlep2massNoFsr.clear();
-        jetidx.clear();
-        FatJetidx.clear();
+        Zlep1pt.clear();
+        Zlep1eta.clear();
+        Zlep1phi.clear();
+        Zlep1mass.clear();
+        Zlep2pt.clear();
+        Zlep2eta.clear();
+        Zlep2phi.clear();
+        Zlep2mass.clear();
+        Zlep1chg.clear();
+        Zlep2chg.clear();
+        Zlep1ptNoFsr.clear();
+        Zlep1etaNoFsr.clear();
+        Zlep1phiNoFsr.clear();
+        Zlep1massNoFsr.clear();
+        Zlep2ptNoFsr.clear();
+        Zlep2etaNoFsr.clear();
+        Zlep2phiNoFsr.clear();
+        Zlep2massNoFsr.clear();
 
-        Elechg.clear(); Muchg.clear(); Muiso.clear();Eiso.clear(); Eid.clear(); muid.clear(); TightEleindex.clear(); TightMuindex.clear();
-        nElectron = 0; nMuon = 0; nJet = 0; nFsrPhoton = 0; nGenPart = 0;
-        nTightEle = 0; nTightMu = 0; nTightEleChgSum = 0; nTightMuChgSum = 0;
-        pTL1 = -999; etaL1 = -999; phiL1 = -999; massL1 = -999;
-        pTL2 = -999; etaL2 = -999; phiL2 = -999; massL2 = -999;
-        pTL3 = -999; etaL3 = -999; phiL3 = -999; massL3 = -999;
-        pTL4 = -999; etaL4 = -999; phiL4 = -999; massL4 = -999;
+        pTL1 = -999;
+        etaL1 = -999;
+        phiL1 = -999;
+        massL1 = -999;
+        pTL2 = -999;
+        etaL2 = -999;
+        phiL2 = -999;
+        massL2 = -999;
+        pTL3 = -999;
+        etaL3 = -999;
+        phiL3 = -999;
+        massL3 = -999;
+        pTL4 = -999;
+        etaL4 = -999;
+        phiL4 = -999;
+        massL4 = -999;
 
-        pTj1 = -99;  etaj1 = -99;  phij1 = -99;  mj1 = -99;
-        pTj2 = -99;  etaj2 = -99;  phij2 = -99;  mj2 = -99;
+        pTj1 = -99;
+        etaj1 = -99;
+        phij1 = -99;
+        mj1 = -99;
+        pTj2 = -99;
+        etaj2 = -99;
+        phij2 = -99;
+        mj2 = -99;
 
-        flag4e=false; flag4mu=false; flag2e2mu=false;
-        flag2e=false; flag2mu=false; flag2l=false; flag2e_met=false; flag2l_met=false; flag2mu_met=false;
+        // Flags for various final states
+        flag4e = false;
+        flag4mu = false;
+        flag2e2mu = false;
+        flag2e = false;
+        flag2mu = false;
+        flag2l = false;
+        flag2e_met = false;
+        flag2l_met = false;
+        flag2mu_met = false;
       }
+
       bool isFSR=true;
       unsigned int Zsize=0;
       TSpline *spline_g4;

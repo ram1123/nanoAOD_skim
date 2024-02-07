@@ -1,4 +1,6 @@
 # Ignore root files
+crab_project*/
+*.rst
 *.swp
 *.swm
 *.swn

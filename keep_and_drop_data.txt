@@ -1,0 +1,104 @@
+# this is a comment
+drop * # start with all
+#
+#
+keep run
+keep event
+keep lumi*
+keep BeamSpot*
+#   Others
+keep LowPtElectron*
+keep nLowPtElectron*
+keep OtherPV*
+keep nOtherPV*
+keep PV*
+#
+#
+#     Trigger
+#
+keep HLT*
+#
+keep Flag*
+#
+#
+keep *4l
+keep *Z1
+keep *Z2
+keep *Z2_2j
+keep *Z2_met
+keep *L1
+keep *L2
+keep *L3
+keep *L4
+keep *j1
+keep *j2
+keep D_*
+keep lep*
+keep *Weight
+keep *Weight*
+keep nPhoton
+keep Photon*
+keep nElectron
+keep Electron*
+keep nMuon
+keep Muon*
+keep nTau
+keep Tau*
+keep HTXS*
+keep btag*
+keep CaloMET*
+keep ChsMET*
+keep nCorrT1METJet
+keep CorrT1METJet*
+keep DeepMET*
+keep nFatJet
+keep FatJet*
+# keep nGenJetAK8
+# keep GenJetAK8*
+# keep nGenJet
+# keep GenJet*
+# keep nGenPart
+# keep GenPart*
+# keep nSubGenJetAK8
+# keep SubGenJetAK8*
+# keep Generator*
+# keep GenV*
+# keep gen*
+# keep LHE*
+# keep nLHE*
+# keep nPSWeight
+# keep PSWeight*
+keep nIsoTrack
+keep IsoTrack*
+keep nJet
+keep Jet*
+keep L1*
+keep nLowPtElectron
+keep LowPtElectron*
+# keep GenMET*
+keep MET*
+keep Pileup*
+keep PuppiMET*
+keep RawMET*
+keep RawPuppiMET*
+keep fixedGridRho*
+keep Rho_*
+# keep nGenDressedLepton
+# keep GenDressedLepton*
+keep nSubJet
+keep SubJet*
+keep TkMET*
+# keep genTtbarId
+keep nOtherPV
+keep OtherPV*
+keep PV*
+keep nSV
+keep SV*
+# keep Electron_gen*
+keep FatJet_*
+# keep Gen*
+keep Jet_*
+keep Muon*
+keep pass*
+keep higgs*
+# keep genVPt
