@@ -18,20 +18,20 @@ def main(args):
     use_custom_eos_cmd = args.use_custom_eos_cmd
     InputFileFromWhereReadDASNames = args.input_file
     EOS_Output_path = args.eos_output_path
-    condor_file_name = args.condor_file_name
-    condor_queue = args.condor_queue
-    condor_log_path = args.condor_log_path
-    DontCreateTarFile = args.DontCreateTarFile
-
-    # Get top-level directory name from PWD
-    TOP_LEVEL_DIR_NAME = os.path.basename(os.getcwd())
-
     if EOS_Output_path == "":
         # Get the username and its initial and set the path as /eos/user/<UserInitials>/<UserName>/nanoAOD_ntuples
         username = os.environ['USER']
         user_initials = username[0:1]
         EOS_Output_path = '/eos/user/'+user_initials+'/'+username+'/nanoAOD_ntuples'
-    EOS_Output_path += submission_name
+    if submission_name != "":
+        EOS_Output_path = EOS_Output_path + '/' + submission_name
+    condor_log_path = args.condor_log_path
+
+    # Get top-level directory name from PWD
+    TOP_LEVEL_DIR_NAME = os.path.basename(os.getcwd())
+    condor_file_name = args.condor_file_name
+    condor_queue = args.condor_queue
+    DontCreateTarFile = args.DontCreateTarFile
     condor_file_name = 'submit_condor_jobs_lnujj_'+submission_name
 
     # Create log files
@@ -78,47 +78,48 @@ def main(args):
         outjdl_file.write("WhenToTransferOutput = ON_EXIT\n")
         outjdl_file.write("Transfer_Input_Files = "+Transfer_Input_Files + ",  " + post_proc_to_run+"\n")
         outjdl_file.write("x509userproxy = $ENV(X509_USER_PROXY)\n")
+        outjdl_file.write("requirements = TARGET.OpSysAndVer =?= \"AlmaLinux9\"\n")
+        outjdl_file.write("MY.WantOS = \"el7\"\n")
         count = 0
         count_jobs = 0
-        for lines in in_file:
-            if lines[0] == "#": continue
+        for SampleDASName in in_file:
+            if SampleDASName[0] == "#": continue
             count = count +1
             #if count > 1: break
             print(style.RED +"="*51+style.RESET+"\n")
             print ("==> Sample : ",count)
-            sample_name = lines.split('/')[1]
-            campaign = lines.split('/')[2].split('-')[0]
+            sample_name = SampleDASName.split('/')[1]
             print("==> sample_name = ",sample_name)
+            campaign = SampleDASName.split('/')[2].split('-')[0]
             print("==> campaign = ",campaign)
             ########################################
             #
             #      Create output directory
             #
             ########################################
-            if sample_name.find("SingleMuon") != -1 or sample_name.find("SingleElectron") != -1 or sample_name.find("EGamma") != -1 or sample_name.find("DoubleMuon") != -1 or sample_name.find("MuonEG") != -1 or sample_name.find("DoubleEG") != -1:
+            if (SampleDASName.strip()).endswith("/NANOAOD"): # if the sample name ends with /NANOAOD, then it is a data if it ends with /NANOAODSIM then it is a MC. As the line contain the "\n" at the end, so we need to use the strip() function.
                 output_string = sample_name + os.sep + campaign + os.sep + dirName
                 output_path = EOS_Output_path + os.sep + output_string
-                os.system("mkdir "+EOS_Output_path + os.sep + sample_name)
-                os.system("mkdir "+EOS_Output_path + os.sep + sample_name + os.sep + campaign)
-                os.system("mkdir "+ EOS_Output_path + os.sep + sample_name + os.sep + campaign + os.sep + dirName)
-                infoLogFiles.send_git_log_and_patch_to_eos(EOS_Output_path + os.sep + sample_name + os.sep + campaign + os.sep + dirName)
+                print("==> output_path = ",output_path)
+                os.system("mkdir -p "+ output_path)
+                infoLogFiles.send_git_log_and_patch_to_eos(output_path)
             else:
-                output_string = sample_name+os.sep+dirName
+                output_string = campaign + os.sep + sample_name + os.sep + dirName
                 output_path = EOS_Output_path+ os.sep + output_string
-                os.system("mkdir "+EOS_Output_path + os.sep + sample_name)
-                os.system("mkdir "+EOS_Output_path + os.sep + sample_name+os.sep+dirName)
-                infoLogFiles.send_git_log_and_patch_to_eos(EOS_Output_path + os.sep + sample_name + os.sep + dirName)
+                print("==> output_path = ",output_path)
+                os.system("mkdir -p "+output_path)
+                infoLogFiles.send_git_log_and_patch_to_eos(output_path)
             #  print "==> output_path = ",output_path
 
             ########################################
-            #print 'dasgoclient --query="file dataset='+lines.strip()+'"'
+            #print 'dasgoclient --query="file dataset='+SampleDASName.strip()+'"'
             #print "..."
             if use_custom_eos:
                 xrd_redirector = 'root://cms-xrd-global.cern.ch/'
-                output = os.popen(use_custom_eos_cmd + lines.strip()).read()
+                output = os.popen(use_custom_eos_cmd + SampleDASName.strip()).read()
             else:
                 xrd_redirector = 'root://cms-xrd-global.cern.ch/'
-                output = os.popen('dasgoclient --query="file dataset='+lines.strip()+'"').read()
+                output = os.popen('dasgoclient --query="file dataset='+SampleDASName.strip()+'"').read()
 
             count_root_files = 0
             for root_file in output.split():
@@ -128,7 +129,7 @@ def main(args):
                 outjdl_file.write("Output = "+output_log_path+"/"+sample_name+"_$(Process).stdout\n")
                 outjdl_file.write("Error  = "+output_log_path+"/"+sample_name+"_$(Process).err\n")
                 outjdl_file.write("Log  = "+output_log_path+"/"+sample_name+"_$(Process).log\n")
-                outjdl_file.write("Arguments = "+(xrd_redirector+root_file)+" "+output_path+"  "+EOS_Output_path+"\n")
+                outjdl_file.write("Arguments = "+(xrd_redirector+root_file)+" "+output_path+"  "+EOS_Output_path+ " " + (root_file.split('/')[-1]).split('.')[0] + "\n")
                 outjdl_file.write("Queue \n")
             print("Number of files: ",count_root_files)
             print("Number of jobs (till now): ",count_jobs)
@@ -163,14 +164,14 @@ def main(args):
     outScript.write("\n"+'echo "====> List root files : " ');
     outScript.write("\n"+'ls *.root');
     outScript.write("\n"+'echo "====> copying *.root file to stores area..." ');
-    outScript.write("\n"+'if ls *_Skim.root 1> /dev/null 2>&1; then');
-    outScript.write("\n"+'    echo "File *_Skim.root exists. Copy this."');
-    outScript.write("\n"+'    echo "cp *_Skim.root ${2}"');
-    outScript.write("\n"+'    cp  *_Skim.root ${2}');
+    outScript.write("\n"+'if ls skimmed_nano.root 1> /dev/null 2>&1; then');
+    outScript.write("\n"+'    echo "File skimmed_nano.root exists. Copy this."');
+    outScript.write("\n"+'    echo "cp skimmed_nano.root ${2}/${4}_Skim.root"');
+    outScript.write("\n"+'    cp  skimmed_nano.root ${2}/${4}_Skim.root');
     outScript.write("\n"+'else');
-    outScript.write("\n"+'    echo "file *_Skim.root does not exists, so copy *.root file."');
-    outScript.write("\n"+'    echo "cp *.root ${2}"');
-    outScript.write("\n"+'    cp  *.root ${2}');
+    outScript.write("\n"+'    echo "file skimmed_nano.root does not exists, so copy *.root file."');
+    outScript.write("\n"+'    echo "cp *.root ${2}/${4}_Skim.root"');
+    outScript.write("\n"+'    cp  *.root ${2}/${4}_Skim.root');
     outScript.write("\n"+'fi');
     outScript.write("\n"+'rm *.root');
     outScript.write("\n"+'cd ${_CONDOR_SCRATCH_DIR}');
@@ -194,16 +195,16 @@ class PreserveWhitespaceFormatter(argparse.RawTextHelpFormatter, argparse.Argume
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Condor Job Submission", formatter_class=PreserveWhitespaceFormatter)
-    parser.add_argument("--submission_name", default="Run2018_v9", help="String to be changed by user.")
+    parser.add_argument("--submission_name", default="SkimNanoAOD", help="String to be changed by user.")
     parser.add_argument("--use_custom_eos", default=False, action='store_true', help="Use custom EOS.")
     parser.add_argument("--DontCreateTarFile", default=False, action='store_true', help="Create tar file of CMSSW directory.")
     parser.add_argument("--use_custom_eos_cmd", default='eos root://cmseos.fnal.gov find -name "*.root" /store/group/lnujj/VVjj_aQGC/custom_nanoAOD', help="Custom EOS command.")
     # input_file mandatory
     parser.add_argument("--input_file", default='', required=True,  help="Input file from where to read DAS names.")
-    parser.add_argument("--eos_output_path", default='', help="Initial path for operations.")
+    parser.add_argument("--eos_output_path", default='', help="EOS path for output files. By default it is `/eos/user/<UserInitials>/<UserName>/nanoAOD_ntuples`")
     parser.add_argument("--condor_log_path", default='./', help="Path where condor log should be saved. By default is the current working directory")
     parser.add_argument("--condor_file_name", default='submit_condor_jobs_lnujj_', help="Name for the condor file.")
-    parser.add_argument("--condor_queue", default="microcentury", help="""
+    parser.add_argument("--condor_queue", default="testmatch", help="""
                         Condor queue options: (Reference: https://twiki.cern.ch/twiki/bin/view/ABPComputing/LxbatchHTCondor#Queue_Flavours)
 
                         name            Duration
@@ -222,3 +223,4 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     main(args)
+#condor_setup_lxplus.py

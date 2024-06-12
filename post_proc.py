@@ -20,6 +20,7 @@ def parse_arguments():
     parser.add_argument("-i", "--inputFile", default="", type=str, help="Input file name")
     parser.add_argument("-n", "--entriesToRun", default=100, type=int, help="Set  to 0 if need to run over all entries else put number of entries to run")
     parser.add_argument("-d", "--DownloadFileToLocalThenRun", default=True, type=bool, help="Download file to local then run")
+    parser.add_argument("--NOsyst", default=False, action="store_true", help="Do not run systematics")
     return parser.parse_args()
 
 
@@ -58,10 +59,21 @@ def main():
         print("ERROR: No input files found. Exiting.")
         exit(1)
 
-    # Determine the year and type (MC or Data)
+    """Determine the year and type (MC or Data) of input ROOT file:
+    For data the string "/data/" is always there. So, we take this
+    as handle to decide if the root file is MC or data.
+    """
     first_file = testfilelist[0]
     isMC = "/data/" not in first_file
 
+    if "Summer22" in first_file or "Run2022" in first_file:
+        """Summer22 and Run2022 for identification of 2022 MC and data respectiverly
+        """
+        year = 2022
+        cfgFile = "Input_2022.yml"
+        jsonFileName = "golden_Json/Cert_Collisions2022_355100_362760_Golden.json"
+        sfFileName = "DeepCSV_102XSF_V2.csv" # FIXME: Update for year 2022
+        modulesToRun.extend([muonScaleRes2018()]) # FIXME: Update for year 2022
     if "UL18" in first_file or "UL2018" in first_file:
         """UL2018 for identification of 2018 UL data and UL18 for identification of 2018 UL MC
         """
@@ -81,6 +93,7 @@ def main():
         jsonFileName = "golden_Json/Cert_271036-284044_13TeV_Legacy2016_Collisions16_JSON.txt"
         sfFileName = "DeepCSV_102XSF_V2.csv"
         modulesToRun.extend([muonScaleRes2016()])
+
     H4LCppModule = lambda: HZZAnalysisCppProducer(year,cfgFile, isMC, isFSR)
     modulesToRun.extend([H4LCppModule()])
 
@@ -90,25 +103,32 @@ def main():
     print("isFSR: {}".format(isFSR))
 
     if isMC:
-        jetmetCorrector = createJMECorrector(isMC=isMC, dataYear=year, jesUncert="All", jetType = "AK4PFchs")
-        fatJetCorrector = createJMECorrector(isMC=isMC, dataYear=year, jesUncert="All", jetType = "AK8PFPuppi")
-        # btagSF = lambda: btagSFProducer("UL"+str(year), algo="deepjet",selectedWPs=['L','M','T','shape_corr'], sfFileName=sfFileName)
-        btagSF = lambda: btagSFProducer(era = "UL"+str(year), algo = "deepcsv")
-        puidSF = lambda: JetSFMaker("%s" % year)
-        modulesToRun.extend([jetmetCorrector(), fatJetCorrector(), puidSF()])
-        # # modulesToRun.extend([jetmetCorrector(), fatJetCorrector(), btagSF(), puidSF()])
+        if (not args.NOsyst):
+            # FIXME: JES not used properly
+            #jetmetCorrector = createJMECorrector(isMC=isMC, dataYear=year, jesUncert="All", jetType = "AK4PFchs")
+            #fatJetCorrector = createJMECorrector(isMC=isMC, dataYear=year, jesUncert="All", jetType = "AK8PFPuppi")
+            # btagSF = lambda: btagSFProducer("UL"+str(year), algo="deepjet",selectedWPs=['L','M','T','shape_corr'], sfFileName=sfFileName)
+            btagSF = lambda: btagSFProducer(era = "UL"+str(year), algo = "deepcsv")
+            puidSF = lambda: JetSFMaker("%s" % year)
+            #modulesToRun.extend([jetmetCorrector(), fatJetCorrector()])#, puidSF()
+            # # modulesToRun.extend([jetmetCorrector(), fatJetCorrector(), btagSF(), puidSF()])
 
+        # FIXME: No PU weight for 2022
         if year == 2018: modulesToRun.extend([puAutoWeight_2018()])
         if year == 2017: modulesToRun.extend([puAutoWeight_2017()])
         if year == 2016: modulesToRun.extend([puAutoWeight_2016()])
 
-        p=PostProcessor(".",testfilelist, None, None,modules = modulesToRun, provenance=True,fwkJobReport=False,haddFileName="skimmed_nano_mc.root", maxEntries=entriesToRun, prefetch=DownloadFileToLocalThenRun, outputbranchsel="keep_and_drop.txt")
+        # INFO: Keep the `fwkJobReport=False` to trigger `haddnano.py`
+        #            otherwise the output file will have larger size then expected. Reference: https://github.com/cms-nanoAOD/nanoAOD-tools/issues/249
+        p=PostProcessor(".",testfilelist, None, None,modules = modulesToRun, provenance=True,fwkJobReport=True,haddFileName="skimmed_nano.root", maxEntries=entriesToRun, prefetch=DownloadFileToLocalThenRun, outputbranchsel="keep_and_drop.txt")
     else:
-        jetmetCorrector = createJMECorrector(isMC=isMC, dataYear=year, jesUncert="All", jetType = "AK4PFchs")
-        fatJetCorrector = createJMECorrector(isMC=isMC, dataYear=year, jesUncert="All", jetType = "AK8PFPuppi")
-        modulesToRun.extend([jetmetCorrector(), fatJetCorrector()])
+        #if (not args.NOsyst):
+            # FIXME: JES not used properly
+            #jetmetCorrector = createJMECorrector(isMC=isMC, dataYear=year, jesUncert="All", jetType = "AK4PFchs")
+            #fatJetCorrector = createJMECorrector(isMC=isMC, dataYear=year, jesUncert="All", jetType = "AK8PFPuppi")
+            #modulesToRun.extend([jetmetCorrector(), fatJetCorrector()])
 
-        p=PostProcessor(".",testfilelist, None, None, modules = modulesToRun, provenance=True, fwkJobReport=False,haddFileName="skimmed_nano_data.root", jsonInput=jsonFileName, maxEntries=entriesToRun, prefetch=DownloadFileToLocalThenRun, outputbranchsel="keep_and_drop_data.txt")
+        p=PostProcessor(".",testfilelist, None, None, modules = modulesToRun, provenance=True, fwkJobReport=True,haddFileName="skimmed_nano.root", jsonInput=jsonFileName, maxEntries=entriesToRun, prefetch=DownloadFileToLocalThenRun, outputbranchsel="keep_and_drop_data.txt")
 
     p.run()
 

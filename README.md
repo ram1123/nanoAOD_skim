@@ -25,7 +25,7 @@ nanoAOD skiming code for H->ZZ->2l2Q studies.
    cd $CMSSW_BASE/src
    git clone git@github.com:ram1123/nanoAOD_skim.git PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim
    cd PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim
-   git checkout HZZ_Analysis
+   git checkout HZZ_Analysis_Run3
    cd -
    cmsenv
    # patch PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim/nanoAOD_tools.patch
@@ -64,7 +64,7 @@ nanoAOD skiming code for H->ZZ->2l2Q studies.
          ```bash
          cd $CMSSW_BASE/src/PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim
          # Use the arguments that you need.
-         python condor_setup_lxplus.py --input-file sample_list_v9.dat
+         python condor_setup_lxplus.py --input-file sample_list_v12_2022.dat
          # Set proxy before submitting the condor jobs.
          voms-proxy-init -voms cms --valid 200:00
          condor_submit <Files-created-from-above-command>.jdl
@@ -83,7 +83,7 @@ nanoAOD skiming code for H->ZZ->2l2Q studies.
 1. [condor_setup_lxplus.py](condor_setup_lxplus.py): This script can be used to setup the condor jobs. It takes the input text file (present inside directory [input_data_Files](input_data_Files)) from which you need to take input NanoAOD DAS names. Also, updated the output EOS path. Then do the following:
 
    ```bash
-   python condor_setup_lxplus.py --input-file sample_list_v9.dat
+   python condor_setup_lxplus.py --input-file sample_list_v12_2022.dat
    ```
    This will create the condor job files and the condor log files.
 

@@ -14,8 +14,19 @@ class HZZAnalysisCppProducer(Module):
         ROOT.gSystem.Load("%s/JHUGenMELA/MELA/data/slc7_amd64_gcc700/libjhugenmela.so" % base)
         ROOT.gSystem.Load("%s/JHUGenMELA/MELA/data/slc7_amd64_gcc700/libmcfm_707.so" % base)
         ROOT.gSystem.Load("%s/JHUGenMELA/MELA/data/slc7_amd64_gcc700/libcollier.so" % base)
+        if "/GenAnalysis_cc.so" not in ROOT.gSystem.GetLibraries():
+            print("Load GenAnalysis C++ module")
+            base = "$CMSSW_BASE/src/PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim"
+            if base:
+                ROOT.gROOT.ProcessLine(
+                    ".L %s/src/GenAnalysis.cc+O" % base)
+            else:
+                base = "$CMSSW_BASE//src/PhysicsTools/NanoAODTools"
+                ROOT.gSystem.Load("libPhysicsToolsNanoAODTools.so")
+                ROOT.gROOT.ProcessLine(
+                    ".L %s/interface/GenAnalysis.h" % base)
         if "/H4LTools_cc.so" not in ROOT.gSystem.GetLibraries():
-            print("Load C++ module")
+            print("Load H4LTools C++ module")
             base = "$CMSSW_BASE/src/PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim"
             if base:
                 ROOT.gROOT.ProcessLine(
@@ -26,9 +37,11 @@ class HZZAnalysisCppProducer(Module):
                 ROOT.gROOT.ProcessLine(
                     ".L %s/interface/H4LTools.h" % base)
         self.year = year
+        self.isMC = isMC
+        self.genworker = ROOT.GenAnalysis()
         with open(cfgFile, 'r') as ymlfile:
           cfg = yaml.load(ymlfile)
-          self.worker = ROOT.H4LTools(self.year)
+          self.worker = ROOT.H4LTools(self.year,self.isMC)
           self.worker.InitializeElecut(cfg['Electron']['pTcut'],cfg['Electron']['Etacut'],cfg['Electron']['Sip3dcut'],cfg['Electron']['Loosedxycut'],cfg['Electron']['Loosedzcut'],
                                        cfg['Electron']['Isocut'],cfg['Electron']['BDTWP']['LowEta']['LowPT'],cfg['Electron']['BDTWP']['MedEta']['LowPT'],cfg['Electron']['BDTWP']['HighEta']['LowPT'],
                                        cfg['Electron']['BDTWP']['LowEta']['HighPT'],cfg['Electron']['BDTWP']['MedEta']['HighPT'],cfg['Electron']['BDTWP']['HighEta']['HighPT'])
@@ -37,11 +50,17 @@ class HZZAnalysisCppProducer(Module):
           self.worker.InitializeFsrPhotonCut(cfg['FsrPhoton']['pTcut'],cfg['FsrPhoton']['Etacut'],cfg['FsrPhoton']['Isocut'],cfg['FsrPhoton']['dRlcut'],cfg['FsrPhoton']['dRlOverPtcut'])
           self.worker.InitializeJetcut(cfg['Jet']['pTcut'],cfg['Jet']['Etacut'])
           self.worker.InitializeEvtCut(cfg['MZ1cut'],cfg['MZZcut'],cfg['Higgscut']['down'],cfg['Higgscut']['up'],cfg['Zmass'],cfg['MZcut']['down'],cfg['MZcut']['up'])
-
+          self.PUweightfile = cfg["outputdataNPV"]
+          self.PUweighthisto = cfg["PUweightHistoName"]
+        PUinput_file = ROOT.TFile.Open(self.PUweightfile)
+        PUinput_hist = PUinput_file.Get(self.PUweighthisto)
+        self.PUweight_list = []
+        for i in range(1, PUinput_hist.GetNbinsX() + 1):
+            self.PUweight_list.append(PUinput_hist.GetBinContent(i))
+        PUinput_file.Close()
         self.passtrigEvts = 0
         self.passZZEvts = 0
         self.cfgFile = cfgFile
-        self.isMC = isMC
         self.worker.isFSR = isFSR
         pass
     def beginJob(self):
@@ -68,13 +87,33 @@ class HZZAnalysisCppProducer(Module):
         print("PassmZ1mZ2Cut_2e2mu: "+str(self.worker.cutZZ2e2mu)+" Events")
         print("Passm4l_105_160_Cut_2e2mu: "+str(self.worker.cutm4l2e2mu)+" Events")
         print("PassZZSelection: "+str(self.passZZEvts)+" Events")
+        if self.isMC:
+            print("PassGEN4eCut: "+str(self.genworker.nGEN4e)+" Events")
+            print("PassGEN4eZ1Cut: "+str(self.genworker.nGEN4epassZ1)+" Events")
+            print("PassGEN4efidCut: "+str(self.genworker.nGEN4epassFid)+" Events")
+            print("PassGEN2e2muCut: "+str(self.genworker.nGEN2e2mu)+" Events")
+            print("PassGEN2e2muZ1Cut: "+str(self.genworker.nGEN2e2mupassZ1)+" Events")
+            print("PassGEN2e2mufidCut: "+str(self.genworker.nGEN2e2mupassFid)+" Events")
+            print("PassGEN4muCut: "+str(self.genworker.nGEN4mu)+" Events")
+            print("PassGEN4muZ1Cut: "+str(self.genworker.nGEN4mupassZ1)+" Events")
+            print("PassGEN4mufidCut: "+str(self.genworker.nGEN4mupassFid)+" Events")
         pass
 
     def beginFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
         self.initReaders(inputTree)  # initReaders must be called in beginFile
         self.out = wrappedOutputTree
         self.out.branch("mass4l",  "F")
+        self.out.branch("GENmass4l",  "F")
+        self.out.branch("mass4e",  "F")
+        self.out.branch("mass4mu",  "F")
+        self.out.branch("mass2e2mu",  "F")
         self.out.branch("pT4l",  "F")
+        self.out.branch("GENpT4l",  "F")
+        self.out.branch("rapidity4l",  "F")
+        self.out.branch("njets_pt30_eta4p7", "I")
+        self.out.branch("finalState", "I")
+        self.out.branch("GENnjets_pt30_eta4p7", "I")
+        self.out.branch("GENrapidity4l",  "F")
         self.out.branch("eta4l",  "F")
         self.out.branch("phi4l",  "F")
         self.out.branch("massZ1",  "F")
@@ -112,12 +151,32 @@ class HZZAnalysisCppProducer(Module):
         self.out.branch("pTj1",  "F")
         self.out.branch("etaj1",  "F")
         self.out.branch("phij1",  "F")
-        self.out.branch("mj2",  "F")
         self.out.branch("pTj2",  "F")
         self.out.branch("etaj2",  "F")
         self.out.branch("phij2",  "F")
-
-
+        self.out.branch("mj2",  "F")
+        self.out.branch("EvtNum",  "I")
+        self.out.branch("Weight",  "F")
+        self.out.branch("pileupWeight",  "F")
+        self.out.branch("dataMCWeight_new",  "F")
+        self.out.branch("prefiringWeight",  "F")
+        self.out.branch("passedTrig",  "O")
+        self.out.branch("passedFullSelection",  "O")
+        self.out.branch("passedZ4lSelection",  "O")
+        self.out.branch("passedZ4lZ1LSelection",  "O")
+        self.out.branch("passedZ4lZXCRSelection",  "O")
+        self.out.branch("passedZXCRSelection",  "O")
+        self.out.branch("passedFiducialSelection",  "O")
+        GENHlepNum = 4
+        GENZNum = 2
+        self.out.branch("GENlep_MomId",  "I", lenVar = "nGenPart")
+        self.out.branch("GENlep_MomMomId",  "I", lenVar = "nGenPart")
+        self.out.branch("GENZ_MomId",  "I", lenVar = "nVECZ")
+        self.out.branch("GENZ_DaughtersId",  "I", lenVar = "GENZNum")
+        self.out.branch("GENlep_Hindex",  "I", lenVar = "GENHlepNum")
+        self.out.branch("lep_Hindex",  "I", lenVar = "GENHlepNum")
+        self.out.branch("GENlep_id",  "I", lenVar = "nGENLeptons")
+        self.out.branch("lep_genindex",  "I", lenVar = "Lepointer")
         self.out.branch("Electron_Fsr_pt",  "F", lenVar = "nElectron_Fsr")
         self.out.branch("Electron_Fsr_eta",  "F", lenVar = "nElectron_Fsr")
         self.out.branch("Electron_Fsr_phi",  "F", lenVar = "nElectron_Fsr")
@@ -152,8 +211,12 @@ class HZZAnalysisCppProducer(Module):
         self.worker.SetObjectNum(event.nElectron,event.nMuon,event.nJet,event.nFsrPhoton)
         if isMC:
             self.worker.SetObjectNumGen(event.nGenPart)
+            self.genworker.Initialize()
+            self.genworker.SetObjectNumGen(event.nGenPart, event.nGenJet)
         keepIt = False
-
+        Lepointer = 0
+        EvtNum = 0
+        Weight = 1
         passedTrig=False
         passedFullSelection=False
         passedZ4lSelection=False
@@ -164,37 +227,82 @@ class HZZAnalysisCppProducer(Module):
         passedZXCRSelection=False
         passedFiducialSelection=False
         nZXCRFailedLeptons=0
+        prefiringWeight = 1
+        dataMCWeight_new = 1
+        pileupWeight = 1
+        mass4e=0
+        mass2e2mu=0
+        mass4mu=0
+        finalState=-1
+        GENmass4l = -99
+        GENpT4l = -99
+        nVECZ = 2
+        GENrapidity4l = -99
+        GENnjets_pt30_eta4p7 = -1
+        nGENLeptons = 0
+        nGenPart = 0
+        pTZ1 = -99
+        etaZ1 = -99
+        phiZ1 = -99
+        massZ1 = 0
+        pTZ2 = -99
+        etaZ2 = -99
+        phiZ2 = -99
+        massZ2 = -99
+        pT4l = -99
+        eta4l = -99
+        phi4l = -99
+        mass4l = 0
+        rapidity4l = -99
         passedTrig = PassTrig(event, self.cfgFile)
         if (passedTrig==True):
             self.passtrigEvts += 1
         else:
             return keepIt
+        if(isMC):
+            pileupWeight = self.PUweight_list[event.Pileup_nPU]
         electrons = Collection(event, "Electron")
         muons = Collection(event, "Muon")
         fsrPhotons = Collection(event, "FsrPhoton")
         jets = Collection(event, "Jet")
         if isMC:
+            nGenPart = event.nGenPart
             genparts = Collection(event, "GenPart")
+            genjets = Collection(event, "GenJet")
+            for xj in genjets:
+                self.genworker.SetGenJets(xj.pt,xj.eta,xj.phi,xj.mass)
             for xg in genparts:
                 self.worker.SetGenParts(xg.pt)
+                self.genworker.SetGenParts(xg.pt,xg.eta,xg.phi,xg.mass,xg.pdgId,xg.status,xg.statusFlags,xg.genPartIdxMother)
             for xm in muons:
                 self.worker.SetMuonsGen(xm.genPartIdx)
+            for xe in electrons:
+                self.worker.SetElectronsGen(xe.genPartIdx)
         for xe in electrons:
             self.worker.SetElectrons(xe.pt, xe.eta, xe.phi, xe.mass, xe.dxy,
-                                      xe.dz, xe.sip3d, xe.mvaFall17V2Iso, xe.pdgId, xe.pfRelIso03_all)
+                                      xe.dz, xe.sip3d, xe.mvaHZZIso, xe.pdgId, xe.pfRelIso03_all)
         for xm in muons:
             self.worker.SetMuons(xm.corrected_pt, xm.eta, xm.phi, xm.mass, xm.isGlobal, xm.isTracker,
                                 xm.dxy, xm.dz, xm.sip3d, xm.ptErr, xm.nTrackerLayers, xm.isPFcand,
                                  xm.pdgId, xm.charge, xm.pfRelIso03_all)
         for xf in fsrPhotons:
-            self.worker.SetFsrPhotons(xf.dROverEt2,xf.eta,xf.phi,xf.pt,xf.relIso03)
+            self.worker.SetFsrPhotons(xf.dROverEt2,xf.eta,xf.phi,xf.pt,xf.relIso03,xf.electronIdx,xf.muonIdx)
         for xj in jets:
-            self.worker.SetJets(xj.pt,xj.eta,xj.phi,xj.mass,xj.jetId, xj.btagCSVV2, xj.puId)
-
+            self.worker.SetJets(xj.pt,xj.eta,xj.phi,xj.mass,xj.jetId, 0.8, 7)
+        self.worker.BatchFsrRecovery_Run3()
+        
         self.worker.LeptonSelection()
         if ((self.worker.nTightEle<2)&(self.worker.nTightMu<2)):
             pass
-
+        if isMC:
+            self.genworker.SetGenVariables()
+            GENmass4l = self.genworker.GENmass4l
+            GENpT4l = self.genworker.GENpT4l
+            GENrapidity4l = self.genworker.GENrapidity4l
+            GENnjets_pt30_eta4p7 = self.genworker.GENnjets_pt30_eta4p7
+            nGENLeptons = self.genworker.nGENLeptons
+        
+        passedFiducialSelection = self.genworker.passedFiducialSelection
 
         Electron_Fsr_pt_vec = self.worker.ElectronFsrPt()
         Electron_Fsr_eta_vec = self.worker.ElectronFsrEta()
@@ -202,14 +310,14 @@ class HZZAnalysisCppProducer(Module):
         Muon_Fsr_pt_vec = self.worker.MuonFsrPt()
         Muon_Fsr_eta_vec = self.worker.MuonFsrEta()
         Muon_Fsr_phi_vec = self.worker.MuonFsrPhi()
-
-
+        
         Electron_Fsr_pt = []
         Electron_Fsr_eta = []
         Electron_Fsr_phi = []
         Muon_Fsr_pt = []
         Muon_Fsr_eta = []
         Muon_Fsr_phi = []
+        
         if len(Electron_Fsr_pt_vec)>0:
             for i in range(len(Electron_Fsr_pt_vec)):
                 Electron_Fsr_pt.append(Electron_Fsr_pt_vec[i])
@@ -220,128 +328,215 @@ class HZZAnalysisCppProducer(Module):
                 Muon_Fsr_pt.append(Muon_Fsr_pt_vec[i])
                 Muon_Fsr_eta.append(Muon_Fsr_eta_vec[i])
                 Muon_Fsr_phi.append(Muon_Fsr_phi_vec[i])
+        GENlep_id = []
+        GENlep_Hindex = []
+        GENZ_DaughtersId = []
+        GENZ_MomId = []
+        GENlep_MomId = []
+        GENlep_MomMomId = []
+        if isMC:
+            GENlep_id_vec = self.genworker.GENlep_id
+            if len(GENlep_id_vec)>0:
+                for i in range(len(GENlep_id_vec)):
+                    GENlep_id.append(GENlep_id_vec[i])
+            GENlep_Hindex_vec = self.genworker.GENlep_Hindex
+            if len(GENlep_Hindex_vec)>0:
+                for i in range(len(GENlep_Hindex_vec)):
+                    GENlep_Hindex.append(GENlep_Hindex_vec[i])   
+            GENZ_DaughtersId_vec = self.genworker.GENZ_DaughtersId
+            if len(GENZ_DaughtersId_vec)>0:
+                for i in range(len(GENZ_DaughtersId_vec)):
+                    GENZ_DaughtersId.append(GENZ_DaughtersId_vec[i])
+            nVECZ = self.genworker.nVECZ
+            GENZ_MomId_vec = self.genworker.GENZ_MomId
+            if len(GENZ_MomId_vec)>0:
+                for i in range(len(GENZ_MomId_vec)):
+                    GENZ_MomId.append(GENZ_MomId_vec[i])
+            GENlep_MomId_vec = self.genworker.GENlep_MomId
+            if len(GENlep_MomId_vec)>0:
+                for i in range(len(GENlep_MomId_vec)):
+                    GENlep_MomId.append(GENlep_MomId_vec[i])
+            GENlep_MomMomId_vec = self.genworker.GENlep_MomMomId
+            if len(GENlep_MomMomId_vec)>0:
+                for i in range(len(GENlep_MomMomId_vec)):
+                    GENlep_MomMomId.append(GENlep_MomMomId_vec[i])
 
         foundZZCandidate = self.worker.ZZSelection()
-
+        passedFullSelection=foundZZCandidate
+        Lepointer = self.worker.Lepointer
+        lep_Hindex = []
+        lep_Hindex_vec = self.worker.lep_Hindex
+        if len(lep_Hindex_vec)>0:
+            for i in range(len(lep_Hindex_vec)):
+                lep_Hindex.append(lep_Hindex_vec[i])
+        lep_genindex = []
+        if isMC:
+            lep_genindex_vec = self.worker.lep_genindex
+            if len(lep_genindex_vec)>0:
+                for i in range(len(lep_genindex_vec)):
+                    lep_genindex.append(lep_genindex_vec[i])
         if (foundZZCandidate):
-            keepIt = True
             self.passZZEvts += 1
-            pTZ1 = self.worker.Z1.Pt()
-            etaZ1 = self.worker.Z1.Eta()
-            phiZ1 = self.worker.Z1.Phi()
-            massZ1 = self.worker.Z1.M()
-            pTZ2 = self.worker.Z2.Pt()
-            etaZ2 = self.worker.Z2.Eta()
-            phiZ2 = self.worker.Z2.Phi()
-            massZ2 = self.worker.Z2.M()
-            D_CP = self.worker.D_CP
-            D_0m = self.worker.D_0m
-            D_0hp = self.worker.D_0hp
-            D_int = self.worker.D_int
-            D_L1 = self.worker.D_L1
-            D_L1Zg = self.worker.D_L1Zg
+        if (foundZZCandidate |passedFiducialSelection ):
+            EvtNum += 1
+            keepIt = True
+        if self.worker.RecoFourMuEvent: finalState = 1
+        if self.worker.RecoFourEEvent: finalState = 2
+        if self.worker.RecoTwoETwoMuEvent: finalState = 3
+        if self.worker.RecoTwoMuTwoEEvent: finalState = 4
+        pTZ1 = self.worker.Z1.Pt()
+        etaZ1 = self.worker.Z1.Eta()
+        phiZ1 = self.worker.Z1.Phi()
+        massZ1 = self.worker.Z1.M()
+        pTZ2 = self.worker.Z2.Pt()
+        etaZ2 = self.worker.Z2.Eta()
+        phiZ2 = self.worker.Z2.Phi()
+        massZ2 = self.worker.Z2.M()
+        D_CP = self.worker.D_CP
+        D_0m = self.worker.D_0m
+        D_0hp = self.worker.D_0hp
+        D_int = self.worker.D_int
+        D_L1 = self.worker.D_L1
+        D_L1Zg = self.worker.D_L1Zg
 
-            pTL1 = self.worker.pTL1
-            etaL1 = self.worker.etaL1
-            phiL1 = self.worker.phiL1
-            massL1 = self.worker.massL1
-            pTL2 = self.worker.pTL2
-            etaL2 = self.worker.etaL2
-            phiL2 = self.worker.phiL2
-            massL2 = self.worker.massL2
-            pTL3 = self.worker.pTL3
-            etaL3 = self.worker.etaL3
-            phiL3 = self.worker.phiL3
-            massL3 = self.worker.massL3
-            pTL4 = self.worker.pTL4
-            etaL4 = self.worker.etaL4
-            phiL4 = self.worker.phiL4
-            massL4 = self.worker.massL4
-            pTj1 = self.worker.pTj1
-            etaj1 = self.worker.etaj1
-            phij1 = self.worker.phij1
-            mj1 = self.worker.mj1
-            pTj2 = self.worker.pTj2
-            etaj2 = self.worker.etaj2
-            phij2 = self.worker.phij2
-            mj2 = self.worker.mj2
+        pTL1 = self.worker.pTL1
+        etaL1 = self.worker.etaL1
+        phiL1 = self.worker.phiL1
+        massL1 = self.worker.massL1
+        pTL2 = self.worker.pTL2
+        etaL2 = self.worker.etaL2
+        phiL2 = self.worker.phiL2
+        massL2 = self.worker.massL2
+        pTL3 = self.worker.pTL3
+        etaL3 = self.worker.etaL3
+        phiL3 = self.worker.phiL3
+        massL3 = self.worker.massL3
+        pTL4 = self.worker.pTL4
+        etaL4 = self.worker.etaL4
+        phiL4 = self.worker.phiL4
+        massL4 = self.worker.massL4
+        pTj1 = self.worker.pTj1
+        etaj1 = self.worker.etaj1
+        phij1 = self.worker.phij1
+        mj1 = self.worker.mj1
+        pTj2 = self.worker.pTj2
+        etaj2 = self.worker.etaj2
+        phij2 = self.worker.phij2
+        mj2 = self.worker.mj2
 
-            if pTL2>pTL1:
-                pTL1, pTl2 = pTL2, pTL1
-                etaL1, etaL2 = etaL2, etaL1
-                phiL1, phiL2 = phiL2, phiL1
-                massL1,massL2 = massL2, massL1
-            if pTL4>pTL3:
-                pTL3, pTL4 = pTL4, pTL3
-                etaL3, etaL4 = etaL4, etaL3
-                phiL3, phiL4 = phiL4, phiL3
-                massL3, massL4 = massL4, massL3
-
-
+        if pTL2>pTL1:
+            pTL1, pTl2 = pTL2, pTL1
+            etaL1, etaL2 = etaL2, etaL1
+            phiL1, phiL2 = phiL2, phiL1
+            massL1,massL2 = massL2, massL1
+        if pTL4>pTL3:
+            pTL3, pTL4 = pTL4, pTL3
+            etaL3, etaL4 = etaL4, etaL3
+            phiL3, phiL4 = phiL4, phiL3
+            massL3, massL4 = massL4, massL3
+        if passedFullSelection: 
             pT4l = self.worker.ZZsystem.Pt()
             eta4l = self.worker.ZZsystem.Eta()
             phi4l = self.worker.ZZsystem.Phi()
             mass4l = self.worker.ZZsystem.M()
-            if self.worker.isFSR==False:
-                pT4l = self.worker.ZZsystemnofsr.Pt()
-                eta4l = self.worker.ZZsystemnofsr.Eta()
-                phi4l = self.worker.ZZsystemnofsr.Phi()
-                mass4l = self.worker.ZZsystemnofsr.M()
-            self.out.fillBranch("mass4l",mass4l)
-            self.out.fillBranch("pT4l",pT4l)
-            self.out.fillBranch("eta4l",eta4l)
-            self.out.fillBranch("phi4l",phi4l)
-            self.out.fillBranch("massZ1",massZ1)
-            self.out.fillBranch("pTZ1",pTZ1)
-            self.out.fillBranch("etaZ1",etaZ1)
-            self.out.fillBranch("phiZ1",phiZ1)
-            self.out.fillBranch("massZ2",massZ2)
-            self.out.fillBranch("pTZ2",pTZ2)
-            self.out.fillBranch("etaZ2",etaZ2)
-            self.out.fillBranch("phiZ2",phiZ2)
-            self.out.fillBranch("D_CP",D_CP)
-            self.out.fillBranch("D_0m",D_0m)
-            self.out.fillBranch("D_0hp",D_0hp)
-            self.out.fillBranch("D_int",D_int)
-            self.out.fillBranch("D_L1",D_L1)
-            self.out.fillBranch("D_L1Zg",D_L1Zg)
+            rapidity4l = self.worker.ZZsystem.Rapidity()
+        njets_pt30_eta4p7 = self.worker.njets_pt30_eta4p7
+        if self.worker.flag4e:
+            mass4e = mass4l
+        if self.worker.flag2e2mu:
+            mass4e = mass4l
+        if self.worker.flag4mu:
+            mass4mu = mass4l
+        if (self.worker.isFSR==False & passedFullSelection):
+            pT4l = self.worker.ZZsystemnofsr.Pt()
+            eta4l = self.worker.ZZsystemnofsr.Eta()
+            phi4l = self.worker.ZZsystemnofsr.Phi()
+            mass4l = self.worker.ZZsystemnofsr.M()
+            rapidity4l = self.worker.ZZsystemnofsr.Rapidity()
+        Weight = event.genWeight * pileupWeight * dataMCWeight_new * prefiringWeight
+        self.out.fillBranch("mass4l",mass4l)
+        self.out.fillBranch("GENmass4l",GENmass4l)
+        self.out.fillBranch("mass4e",mass4e)
+        self.out.fillBranch("mass2e2mu",mass2e2mu)
+        self.out.fillBranch("mass4mu",mass4mu)
+        self.out.fillBranch("pT4l",pT4l)
+        self.out.fillBranch("GENpT4l",GENpT4l)
+        self.out.fillBranch("rapidity4l",rapidity4l)
+        self.out.fillBranch("GENrapidity4l",GENrapidity4l)
+        self.out.fillBranch("njets_pt30_eta4p7",njets_pt30_eta4p7)
+        self.out.fillBranch("finalState",finalState)
+        self.out.fillBranch("GENnjets_pt30_eta4p7",GENnjets_pt30_eta4p7)
+        self.out.fillBranch("eta4l",eta4l)
+        self.out.fillBranch("phi4l",phi4l)
+        self.out.fillBranch("massZ1",massZ1)
+        self.out.fillBranch("pTZ1",pTZ1)
+        self.out.fillBranch("etaZ1",etaZ1)
+        self.out.fillBranch("phiZ1",phiZ1)
+        self.out.fillBranch("massZ2",massZ2)
+        self.out.fillBranch("pTZ2",pTZ2)
+        self.out.fillBranch("etaZ2",etaZ2)
+        self.out.fillBranch("phiZ2",phiZ2)
+        self.out.fillBranch("D_CP",D_CP)
+        self.out.fillBranch("D_0m",D_0m)
+        self.out.fillBranch("D_0hp",D_0hp)
+        self.out.fillBranch("D_int",D_int)
+        self.out.fillBranch("D_L1",D_L1)
+        self.out.fillBranch("D_L1Zg",D_L1Zg)
+        self.out.fillBranch("passedTrig",  passedTrig)
+        self.out.fillBranch("passedFullSelection",  passedFullSelection)
+        self.out.fillBranch("passedZ4lSelection", passedZ4lSelection)
+        self.out.fillBranch("passedZ4lZ1LSelection",  passedZ4lZ1LSelection)
+        self.out.fillBranch("passedZ4lZXCRSelection",  passedZ4lZXCRSelection)
+        self.out.fillBranch("passedZXCRSelection",  passedZXCRSelection)
+        self.out.fillBranch("passedFiducialSelection",  passedFiducialSelection)
+        self.out.fillBranch("EvtNum",EvtNum)
+        self.out.fillBranch("massL1",massL1)
+        self.out.fillBranch("pTL1",pTL1)
+        self.out.fillBranch("etaL1",etaL1)
+        self.out.fillBranch("phiL1",phiL1)
+        self.out.fillBranch("massL2",massL2)
+        self.out.fillBranch("pTL2",pTL2)
+        self.out.fillBranch("etaL2",etaL2)
+        self.out.fillBranch("phiL2",phiL2)
+        self.out.fillBranch("massL3",massL3)
+        self.out.fillBranch("pTL3",pTL3)
+        self.out.fillBranch("etaL3",etaL3)
+        self.out.fillBranch("phiL3",phiL3)
+        self.out.fillBranch("massL4",massL4)
+        self.out.fillBranch("pTL4",pTL4)
+        self.out.fillBranch("etaL4",etaL4)
+        self.out.fillBranch("phiL4",phiL4)
 
-            self.out.fillBranch("massL1",massL1)
-            self.out.fillBranch("pTL1",pTL1)
-            self.out.fillBranch("etaL1",etaL1)
-            self.out.fillBranch("phiL1",phiL1)
-            self.out.fillBranch("massL2",massL2)
-            self.out.fillBranch("pTL2",pTL2)
-            self.out.fillBranch("etaL2",etaL2)
-            self.out.fillBranch("phiL2",phiL2)
-            self.out.fillBranch("massL3",massL3)
-            self.out.fillBranch("pTL3",pTL3)
-            self.out.fillBranch("etaL3",etaL3)
-            self.out.fillBranch("phiL3",phiL3)
-            self.out.fillBranch("massL4",massL4)
-            self.out.fillBranch("pTL4",pTL4)
-            self.out.fillBranch("etaL4",etaL4)
-            self.out.fillBranch("phiL4",phiL4)
+        self.out.fillBranch("mj1",mj1)
+        self.out.fillBranch("pTj1",pTj1)
+        self.out.fillBranch("etaj1",etaj1)
+        self.out.fillBranch("phij1",phij1)
+        self.out.fillBranch("mj2",mj2)
+        self.out.fillBranch("pTj2",pTj2)
+        self.out.fillBranch("etaj2",etaj2)
+        self.out.fillBranch("phij2",phij2)
+        self.out.fillBranch("pileupWeight",pileupWeight)
+        self.out.fillBranch("dataMCWeight_new",dataMCWeight_new)
+        self.out.fillBranch("prefiringWeight",prefiringWeight)
+        self.out.fillBranch("Weight",Weight)
+        # self.out.fillBranch("nElectron_Fsr", len(electrons))
+        # self.out.fillBranch("nMuon_Fsr", len(muons))
+        
+        self.out.fillBranch("GENlep_id",GENlep_id)
+        self.out.fillBranch("GENlep_Hindex",GENlep_Hindex)
+        self.out.fillBranch("GENZ_DaughtersId",GENZ_DaughtersId)
+        self.out.fillBranch("GENZ_MomId",GENZ_MomId)
+        self.out.fillBranch("GENlep_MomId",GENlep_MomId)
+        self.out.fillBranch("GENlep_MomMomId",GENlep_MomMomId)
+        self.out.fillBranch("Electron_Fsr_pt",Electron_Fsr_pt)
+        self.out.fillBranch("Electron_Fsr_eta",Electron_Fsr_eta)
+        self.out.fillBranch("Electron_Fsr_phi",Electron_Fsr_phi)
 
-            self.out.fillBranch("mj1",mj1)
-            self.out.fillBranch("pTj1",pTj1)
-            self.out.fillBranch("etaj1",etaj1)
-            self.out.fillBranch("phij1",phij1)
-            self.out.fillBranch("mj2",mj2)
-            self.out.fillBranch("pTj2",pTj2)
-            self.out.fillBranch("etaj2",etaj2)
-            self.out.fillBranch("phij2",phij2)
-
-            # self.out.fillBranch("nElectron_Fsr", len(electrons))
-            # self.out.fillBranch("nMuon_Fsr", len(muons))
-
-            self.out.fillBranch("Electron_Fsr_pt",Electron_Fsr_pt)
-            self.out.fillBranch("Electron_Fsr_eta",Electron_Fsr_eta)
-            self.out.fillBranch("Electron_Fsr_phi",Electron_Fsr_phi)
-
-            self.out.fillBranch("Muon_Fsr_pt",Muon_Fsr_pt)
-            self.out.fillBranch("Muon_Fsr_eta",Muon_Fsr_eta)
-            self.out.fillBranch("Muon_Fsr_phi",Muon_Fsr_phi)
+        self.out.fillBranch("lep_Hindex",lep_Hindex)
+        self.out.fillBranch("lep_genindex",lep_genindex)
+        self.out.fillBranch("Muon_Fsr_pt",Muon_Fsr_pt)
+        self.out.fillBranch("Muon_Fsr_eta",Muon_Fsr_eta)
+        self.out.fillBranch("Muon_Fsr_phi",Muon_Fsr_phi)
 
         """with open("SyncLepton2018GGH.txt", 'a') as f:
             if(foundZZCandidate):

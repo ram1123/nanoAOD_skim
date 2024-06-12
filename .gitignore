@@ -1,4 +1,5 @@
 # Ignore root files
+crab_project*/
 *.bkup
 *.patch
 summary.dat

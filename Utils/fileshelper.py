@@ -44,7 +44,7 @@ class FileHelper:
             string -- Path of the created directory in the store area
         """
         # Reference:https://cernbox.docs.cern.ch/desktop/other-access-methods/eos_xrootd/
-        os.system('eos root://eosuser.cern.ch mkdir {path}'.format(path = path))
+        os.system('eos root://eosuser.cern.ch mkdir -p {path}'.format(path = path))
         print("==> Created directory at eos path: {path}".format(path = path))
         # Add a check to see if the directory was created
         print("==> Checking if the directory was created...")

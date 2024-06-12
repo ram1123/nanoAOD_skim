@@ -1,0 +1,26 @@
+diff --git a/python/postprocessing/modules/jme/fatJetUncertainties.py b/python/postprocessing/modules/jme/fatJetUncertainties.py
+index d0b5b89..2ada36f 100644
+--- a/python/postprocessing/modules/jme/fatJetUncertainties.py
++++ b/python/postprocessing/modules/jme/fatJetUncertainties.py
+@@ -112,7 +112,7 @@ class fatJetUncertaintiesProducer(Module):
+                 self.doGroomed = False
+         else:
+             raise ValueError("ERROR: Invalid jet type = '%s'!" % jetType)
+-        self.rhoBranchName = "fixedGridRhoFastjetAll"
++        self.rhoBranchName = "Rho_fixedGridRhoFastjetAll"
+         self.lenVar = "n" + self.jetBranchName
+ 
+         # jet mass scale
+diff --git a/python/postprocessing/modules/jme/jetmetUncertainties.py b/python/postprocessing/modules/jme/jetmetUncertainties.py
+index cb31351..71e840a 100644
+--- a/python/postprocessing/modules/jme/jetmetUncertainties.py
++++ b/python/postprocessing/modules/jme/jetmetUncertainties.py
+@@ -46,7 +46,7 @@ class jetmetUncertaintiesProducer(Module):
+         else:
+             self.splitJERIDs = [""]  # "empty" ID for the overall JER
+         self.metBranchName = metBranchName
+-        self.rhoBranchName = "fixedGridRhoFastjetAll"
++        self.rhoBranchName = "Rho_fixedGridRhoFastjetAll"
+         # --------------------------------------------------------------------
+         # CV: globalTag and jetType not yet used in the jet smearer, as there
+         # is no consistent set of txt files for JES uncertainties and JER scale
