@@ -95,7 +95,7 @@ class GenVarsProducer(Module):
                     n = len(v1_daughters)        
                     if len(v1_daughters) == 2:
                         for i in range(n):
-                            if abs(v1_daughters[i].pdgId) in [11, 13] or abs(v1_daughters[i].pdgId) in [12, 14]:
+                            if abs(v1_daughters[i].pdgId) in [11, 13] or abs(v1_daughters[i].pdgId) in [12, 14, 16]:
                                 v1_decay_products = v1_daughters
                                 print("DEBUG - line 92 ( 2 daughters of Z1 boson): Index: {}, Particle ID: {}, Parent ID: {}, MotherIdx: {},  Status: {}".format(idx, v1_decay_products[i].pdgId, self.getParentID(v1_decay_products[i], genParticles), v1_decay_products[i].genPartIdxMother,  v1_decay_products[i].statusFlags >> 13 & 1))
                         
@@ -124,7 +124,7 @@ class GenVarsProducer(Module):
                     n = len(v2_daughters)
                     if len(v2_daughters) == 2:
                         for i in range(n):
-                            if abs(v2_daughters[i].pdgId) in [12, 14] or abs(v2_daughters[i].pdgId) in [11, 13]:
+                            if abs(v2_daughters[i].pdgId) in [12, 14, 16] or abs(v2_daughters[i].pdgId) in [11, 13]:
                                 v2_decay_products = v2_daughters
                                 print("DEBUG - line 130 ( 2 daughters of Z2 boson): Index: {}, Particle ID: {}, Parent ID: {}, MotherIdx: {}, Status: {}".format(idx, v2_decay_products[i].pdgId, self.getParentID(v2_decay_products[i], genParticles), v2_decay_products[i].genPartIdxMother, v2_decay_products[i].statusFlags >> 13 & 1))
                             elif abs(v2_daughters[0].pdgId) in [1, 2, 3, 4, 5] and abs(v2_daughters[1].pdgId) in [1, 2, 3, 4, 5]:
