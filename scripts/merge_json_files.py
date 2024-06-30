@@ -42,4 +42,5 @@ for file in files:
     # print("command = ", command)
 
 print("command = {}".format(command))
+#os.system(command + " --output=total.json")
 os.system(command + " --output=total.json")
