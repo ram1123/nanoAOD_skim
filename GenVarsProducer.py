@@ -1,6 +1,7 @@
 # Reference: https://github.com/latinos/LatinoAnalysis/blob/fae8e13044e23b44961394113a25a8685c4e401b/NanoGardener/python/modules/HiggsGenVarsProducer.py
 
 import ROOT
+import math
 ROOT.PyConfig.IgnoreCommandLineOptions = True
 
 from PhysicsTools.NanoAODTools.postprocessing.framework.datamodel import Collection,Object
@@ -35,10 +36,13 @@ class GenVarsProducer(Module):
         self.out.branch("genV2DaughterEta", "F", lenVar="nGenV2Daughters")
         self.out.branch("genV2DaughterPhi", "F", lenVar="nGenV2Daughters")
         self.out.branch("genV2DaughterMass", "F", lenVar="nGenV2Daughters")
-        self.out.branch("Boostdiff", "F")
         self.out.branch("BoostZ1", "F")
         self.out.branch("BoostZ2", "F")
-        self.out.branch("Pz_neutrino", "F")
+        self.out.branch("Boostdiff", "F")
+        self.out.branch("Pz_neutrino1", "F")
+        self.out.branch("Pz_neutrino2", "F")
+        #self.out.branch("Pz_neutrino", "F")
+        self.out.branch("delta_pz_neutrino", "F")
 
     def endFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
         pass
@@ -74,6 +78,9 @@ class GenVarsProducer(Module):
         boost_Z1_mag = 0.0
         boost_Z2_mag = 0.0
         boost_diff_mag = 0.0
+        neutrino1_pz = 0.0
+        neutrino2_pz = 0.0
+        delta_pz_neutrino = 0.0
         
         print("length of genParticles: {}".format(len(genParticles)))
         for idx, particle in enumerate(genParticles):
@@ -150,7 +157,6 @@ class GenVarsProducer(Module):
             v1_eta = v1.eta
             v1_phi = v1.phi
             v1_mass = v1.mass
-            found = 2
             
             #Z1 = ROOT.TLorentzVector()
             #Z1.SetPtEtaPhiM(v1_pt, v1_eta, v1_phi, v1_mass)
@@ -162,19 +168,29 @@ class GenVarsProducer(Module):
             v1_eta = 0.
             v1_phi = 0.
             v1_mass = -1.
-            found = 0.
 
         if len(v1_decay_products) == 2:
+            #v1_decay_products[0] = ROOT.TLorentzVector()
+            #v1_decay_products[1] = ROOT.TLorentzVector()
             v1_decay_products_pt = [daughter.pt for daughter in v1_decay_products]
             v1_decay_products_eta = [daughter.eta for daughter in v1_decay_products]
             v1_decay_products_phi = [daughter.phi for daughter in v1_decay_products]
             v1_decay_products_mass = [daughter.mass for daughter in v1_decay_products]
             print("v1_decay_products_pt:", v1_decay_products_pt, type(v1_decay_products_pt))
+            #pz = v1_decay_products_pt[0] * math.sinh(v1_decay_products_eta[0])
+            #print("pz of neutrino1:", pz, type(pz))
+            #for i in range(2):
+                 #v1_decay_products[i] = ROOT.TLorentzVector()
+                 #v1_decay_products[i].SetPxPyPzE(0.0, 0.0, 0.0, 0.0)
+                 #neutrino1_pz = v1_decay_products[0].Pz()
+                 #neutrino2_pz = v1_decay_products[1].Pz()
+            #print("neutrino1_pz:", neutrino1_pz, type(neutrino1_pz))     
         else:
             v1_decay_products_pt = [-1.]
             v1_decay_products_eta = [0.]
             v1_decay_products_phi = [0.]
             v1_decay_products_mass = [-1.]
+
 
         if v2 is not None:
             v2_pt = v2.pt
@@ -182,7 +198,6 @@ class GenVarsProducer(Module):
             v2_phi = v2.phi
             v2_mass = v2.mass
             print("v2_mass:", v2_mass, type(v2_mass))
-            found = 2
             
             #Z2 = ROOT.TLorentzVector()
             #Z2.SetPtEtaPhiM(v2_pt, v2_eta, v2_phi, v2_mass)
@@ -202,36 +217,51 @@ class GenVarsProducer(Module):
             v2_decay_products_phi = [daughter.phi for daughter in v2_decay_products]
             v2_decay_products_mass = [daughter.mass for daughter in v2_decay_products]
             print("v2_decay_products_pt:", v2_decay_products_pt, type(v2_decay_products_pt))
+            pz1 = v2_decay_products_pt[0] * math.sinh(v2_decay_products_eta[0])
+            neutrino1_pz = abs(pz1) 
+            print("pz of neutrino1:", neutrino1_pz, type(neutrino1_pz))
+            pz2 = v2_decay_products_pt[1] * math.sinh(v2_decay_products_eta[1])
+            neutrino2_pz = abs(pz2)
+            print("pz of neutrino2:", neutrino2_pz, type(neutrino2_pz))
+            delta_pz_neutrino = neutrino1_pz - neutrino2_pz
+            print("delta_pz_neutrino:", delta_pz_neutrino, type(delta_pz_neutrino))
+
+            ###defining Pz of neutrino as a lorentz vector
+            v2_decay_products[0] = ROOT.TLorentzVector()
+            v2_decay_products[0].SetPtEtaPhiM(v2_decay_products_pt[0], v2_decay_products_eta[0], v2_decay_products_phi[0], v2_decay_products_mass[0])
+            v2_decay_products[1] = ROOT.TLorentzVector()
+            v2_decay_products[1].SetPtEtaPhiM(v2_decay_products_pt[1], v2_decay_products_eta[1], v2_decay_products_phi[1], v2_decay_products_mass[1])
+            pz1 = v2_decay_products[0].Pz()
+            print("pz of neutrino1_new:", pz1, type(pz1))
+            pz2 = v2_decay_products[1].Pz()
+            print("pz of neutrino2_new:", pz2, type(pz2)) 
         else:
             v2_decay_products_pt = [-1.]
             v2_decay_products_eta = [0.]
             v2_decay_products_phi = [0.]
             v2_decay_products_mass = [-1.]
         ##Calculating Pz of neutrino
-        Pz_list = []
-        Pz = ROOT.TMath.Sqrt((v2_mass ** 2) / 4 - GenMET_pt)
-        Pz_list.append(Pz)
-        print("Pz:", Pz_list)
-        #Pz = ROOT.TMath.Sqrt(((v2_mass * v2_mass)/4) - (v2_decay_products_pt * v2_decay_products_pt))
-        #print("Pz of neutrino in lab frame (MC): {}".format(Pz))
+        #Pz_list = []
+        #Pz = ROOT.TMath.Sqrt((v2_mass ** 2) / 4 - GenMET_pt)
+        #Pz_list.append(Pz)
+        #print("Pz:", Pz_list)
         
 
         ## Calculating Boost
-        #print("V1 particle: all details: Index: {}, Particle ID: {}, Parent ID: {}, MotherIdx: {}, Status: {}".format(idx, v1.pdgId, self.getParentID(v1, genParticles), v1.genPartIdxMother, v1.statusFlags >> 13 & 1))
         if found_Z1 == True and found_Z2 == True:
-            #Z1 = ROOT.TLorentzVector()
             Z1.SetPtEtaPhiM(v1_pt, v1_eta, v1_phi, v1_mass)
             boost_Z1 = Z1.BoostVector()
             boost_Z1_mag = boost_Z1.Mag()
-            #Z2 = ROOT.TLorentzVector()
             Z2.SetPtEtaPhiM(v2_pt, v2_eta, v2_phi, v2_mass)
             boost_Z2 = Z2.BoostVector()
             boost_Z2_mag = boost_Z2.Mag() 
-            ##boost_diff = boost_Z1 - boost_Z2
             boost_diff_mag = boost_Z1_mag - boost_Z2_mag
             print("delta boost: {}".format(boost_diff_mag))
+            #self.out.fillBranch("Boostdiff", boost_diff_mag)
             
-        self.out.fillBranch("Pz_neutrino", Pz)
+        #self.out.fillBranch("Pz_neutrino", Pz)
+        self.out.fillBranch("Pz_neutrino1", neutrino1_pz)
+        self.out.fillBranch("delta_pz_neutrino", delta_pz_neutrino)
         self.out.fillBranch("BoostZ1", boost_Z1_mag)
         self.out.fillBranch("BoostZ2", boost_Z2_mag)
         self.out.fillBranch("Boostdiff", boost_diff_mag)
