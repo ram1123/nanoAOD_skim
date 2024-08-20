@@ -127,7 +127,7 @@ def main():
         #            otherwise the output file will have larger size then expected. Reference: https://github.com/cms-nanoAOD/nanoAOD-tools/issues/249
         temp_keep_drop_file = create_temp_keep_drop_file(keep_drop_rules_GEN + keep_drop_rules_Data_MC)
         print("DEBUG: Keep and drop file: {}".format(temp_keep_drop_file))
-        p=PostProcessor("/eos/user/a/avijay/signal/sig_300/",testfilelist, None, None,modules = modulesToRun,
+        p=PostProcessor(".",testfilelist, None, None,modules = modulesToRun,
                         provenance=True,fwkJobReport=True,
                         haddFileName=args.outputFile,
                         maxEntries=entriesToRun,
@@ -141,7 +141,7 @@ def main():
 
         temp_keep_drop_file = create_temp_keep_drop_file(keep_drop_rules_Data_MC)
         print("DEBUG: Keep and drop file: {}".format(temp_keep_drop_file))
-        p=PostProcessor("/eos/user/a/avijay/signal/sig_300/",testfilelist, None, None, modules = modulesToRun,
+        p=PostProcessor(".",testfilelist, None, None, modules = modulesToRun,
                         provenance=True, fwkJobReport=True,
                         haddFileName=args.outputFile,
                         jsonInput=jsonFileName,

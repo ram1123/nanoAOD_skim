@@ -41,7 +41,7 @@ class GenVarsProducer(Module):
         self.out.branch("Boostdiff", "F")
         self.out.branch("Pz_neutrino1", "F")
         self.out.branch("Pz_neutrino2", "F")
-        #self.out.branch("Pz_neutrino", "F")
+        #self.out.branch("", "F")
         self.out.branch("delta_pz_neutrino", "F")
 
     def endFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
@@ -81,6 +81,7 @@ class GenVarsProducer(Module):
         neutrino1_pz = 0.0
         neutrino2_pz = 0.0
         delta_pz_neutrino = 0.0
+        pz1 = 0.0
         
         print("length of genParticles: {}".format(len(genParticles)))
         for idx, particle in enumerate(genParticles):
@@ -260,7 +261,7 @@ class GenVarsProducer(Module):
             #self.out.fillBranch("Boostdiff", boost_diff_mag)
             
         #self.out.fillBranch("Pz_neutrino", Pz)
-        self.out.fillBranch("Pz_neutrino1", neutrino1_pz)
+        self.out.fillBranch("Pz_neutrino1", pz1)
         self.out.fillBranch("delta_pz_neutrino", delta_pz_neutrino)
         self.out.fillBranch("BoostZ1", boost_Z1_mag)
         self.out.fillBranch("BoostZ2", boost_Z2_mag)
