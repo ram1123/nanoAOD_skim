@@ -135,18 +135,13 @@ def prepare_runJobs_missing(FailedJobRootFile,InputJdlFile,CondorLogDir,EOSDir,R
     if DEBUG: print("copy command: {}".format(bashCommand))
     os.system(bashCommand)
 
-    outjdl_fileName = InputJdlFile.replace(".jdl", "_resubmit_"+str(Resubmit_no)+".jdl")
+    outjdl_fileName = InputJdlFile.replace(".txt", "_resubmit_"+str(Resubmit_no)+".txt")
     outjdl_file = open(outjdl_fileName,"w")
 
-    with open(InputJdlFile, 'r') as myfile:
-        """Copy the main part of original jdl file to new jdl file.
-        All the lines before "Output = " should be copied to new jdl file.
-        """
-        for line in myfile:
-            # Check if line starts with "Output = "
-            if line.startswith("Output = "):
-                break
-            outjdl_file.write(line)
+    # Update the new txt file name in the JDL file
+    bashCommand = "sed -i 's/{0}/{1}/g' {2}".format(InputJdlFile, outjdl_fileName, InputJdlFile.replace(".txt",".jdl"))
+    if DEBUG: print("sed command: {}".format(bashCommand))
+    os.system(bashCommand)
 
     for RootFiles in FailedJobRootFile:
         if DEBUG: print("Root file to look for in stdout files: {}".format(RootFiles))
@@ -175,7 +170,7 @@ def prepare_runJobs_missing(FailedJobRootFile,InputJdlFile,CondorLogDir,EOSDir,R
             OldRefFile = ""
         if DEBUG: print("OldRefFile: {}".format(OldRefFile))
 
-        grepCommand_GetJdlInfo = 'grep -A1 -B3 "{}" {}'.format(RootFiles, InputJdlFile)
+        grepCommand_GetJdlInfo = 'grep  "{}" {}'.format(RootFiles, InputJdlFile)
         if DEBUG: print(grepCommand_GetJdlInfo)
         grep_condor_jdl_part = os.popen(grepCommand_GetJdlInfo).read()
         if DEBUG: print("=="*51)
@@ -244,7 +239,7 @@ def main():
     jdlfile = prepare_runJobs_missing(not_finished,options.input,options.dir,stageDir,str(options.resubmit_no))
     print(jdlfile)
     print('Submitting missing jobs : ')
-    submit_missing(jdlfile,options.resubmit)
+    submit_missing(options.input.replace(".txt",".jdl"),options.resubmit)
 
 if __name__ == "__main__":
     main()

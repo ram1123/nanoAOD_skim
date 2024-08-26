@@ -1,0 +1,129 @@
+diff --git a/python/postprocessing/examples/exampleAnalysis.py b/python/postprocessing/examples/exampleAnalysis.py
+index 28cb45f..1824684 100644
+--- a/python/postprocessing/examples/exampleAnalysis.py
++++ b/python/postprocessing/examples/exampleAnalysis.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/env python3
+ from PhysicsTools.NanoAODTools.postprocessing.framework.eventloop import Module
+ from PhysicsTools.NanoAODTools.postprocessing.framework.datamodel import Collection
+ from PhysicsTools.NanoAODTools.postprocessing.framework.postprocessor import PostProcessor
+diff --git a/python/postprocessing/examples/example_postproc.py b/python/postprocessing/examples/example_postproc.py
+index 1ace02c..3e7a495 100644
+--- a/python/postprocessing/examples/example_postproc.py
++++ b/python/postprocessing/examples/example_postproc.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/env python3
+ from exampleModule import *
+ from PhysicsTools.NanoAODTools.postprocessing.modules.jme.jetmetHelperRun2 import *
+ from PhysicsTools.NanoAODTools.postprocessing.modules.jme.jetmetUncertainties import *
+diff --git a/python/postprocessing/framework/crabhelper.py b/python/postprocessing/framework/crabhelper.py
+index 405b055..53613a7 100644
+--- a/python/postprocessing/framework/crabhelper.py
++++ b/python/postprocessing/framework/crabhelper.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/env python3
+ import os
+ from PhysicsTools.NanoAODTools.postprocessing.framework.postprocessor import *
+ import sys
+diff --git a/python/postprocessing/framework/postprocessor.py b/python/postprocessing/framework/postprocessor.py
+index c7cc3ca..ea54b4a 100755
+--- a/python/postprocessing/framework/postprocessor.py
++++ b/python/postprocessing/framework/postprocessor.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/env python3
+ from PhysicsTools.NanoAODTools.postprocessing.framework.jobreport import JobReport
+ from PhysicsTools.NanoAODTools.postprocessing.framework.preskimming import preSkim
+ from PhysicsTools.NanoAODTools.postprocessing.framework.output import FriendOutput, FullOutput
+@@ -261,8 +261,18 @@ class PostProcessor:
+         if self.haddFileName:
+             haddnano = "./haddnano.py" if os.path.isfile(
+                 "./haddnano.py") else "haddnano.py"
++            print("Merging output files into %s" % self.haddFileName)
++            print("")
++            os.system('date')
++            startTime = time.time()
++            print("%s %s %s" %
++                      (haddnano, self.outputDir + "/" + self.haddFileName, " ".join(outFileNames)))
+             os.system("%s %s %s" %
+-                      (haddnano, self.haddFileName, " ".join(outFileNames)))
++                      (haddnano, self.outputDir + "/" + self.haddFileName, " ".join(outFileNames)))
++            os.system('date')
++            print("Total time to merge %i files: %.1f sec" %
++                  (len(outFileNames), time.time() - startTime))
++            print("Done")
+         if self.jobReport:
+-            self.jobReport.addOutputFile(self.haddFileName)
++            self.jobReport.addOutputFile( self.outputDir + "/" + self.haddFileName)
+             self.jobReport.save()
+diff --git a/python/postprocessing/modules/common/puWeightProducer.py b/python/postprocessing/modules/common/puWeightProducer.py
+index b9062b4..7c5a1da 100644
+--- a/python/postprocessing/modules/common/puWeightProducer.py
++++ b/python/postprocessing/modules/common/puWeightProducer.py
+@@ -59,8 +59,13 @@ class puWeightProducer(Module):
+ 
+     def loadHisto(self, filename, hname):
+         tf = ROOT.TFile.Open(filename)
++        if not tf or tf.IsZombie():
++            raise IOError(f"Cannot open file: {filename}")
+         hist = tf.Get(hname)
+-        hist.SetDirectory(None)
++        if not hist:
++            raise IOError(f"Cannot find histogram {hname} in file: {filename}")
++
++        hist.SetDirectory(0) # With Python3/EL9 "None" is not working. So, replaced "None" with "0"
+         tf.Close()
+         return hist
+ 
+diff --git a/python/postprocessing/modules/jme/jetmetHelperRun2.py b/python/postprocessing/modules/jme/jetmetHelperRun2.py
+index d38c623..9d07645 100644
+--- a/python/postprocessing/modules/jme/jetmetHelperRun2.py
++++ b/python/postprocessing/modules/jme/jetmetHelperRun2.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/env python3
+ import os
+ import sys
+ import subprocess
+@@ -107,7 +107,7 @@ jmsValues = {
+     'UL2016': [1.000, 1.000, 1.000],  # placeholder
+     'UL2017': [1.000, 1.000, 1.000],  # placeholder
+     'UL2018': [1.000, 1.000, 1.000],  # placeholder
+-}   
++}
+ 
+ 
+ def createJMECorrector(isMC=True,
+diff --git a/scripts/haddnano.py b/scripts/haddnano.py
+index 96d7d11..82ac1dc 100755
+--- a/scripts/haddnano.py
++++ b/scripts/haddnano.py
+@@ -1,4 +1,4 @@
+-#!/bin/env python
++#!/usr/bin/env python3
+ import ROOT
+ import numpy
+ import sys
+diff --git a/scripts/nano_postproc.py b/scripts/nano_postproc.py
+index acd5c80..e788c10 100755
+--- a/scripts/nano_postproc.py
++++ b/scripts/nano_postproc.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/env python3
+ from PhysicsTools.NanoAODTools.postprocessing.framework.postprocessor import PostProcessor
+ from importlib import import_module
+ import os
+diff --git a/scripts/nano_report.py b/scripts/nano_report.py
+index e54b55b..e162a9a 100644
+--- a/scripts/nano_report.py
++++ b/scripts/nano_report.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/env python3
+ # imported from https://github.com/CERN-PH-CMG/cmg-cmssw/blob/0c11a5a0a15c4c3e1a648c9707b06b08b747b0c0/PhysicsTools/Heppy/scripts/heppy_report.py
+ from optparse import OptionParser
+ import json

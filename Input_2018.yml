@@ -3,6 +3,9 @@ TriggerChannels:
     - Triggers_HZZ4l
     - Triggers_HZZ2l2q
     - Triggers_HZZ2l2nu
+    - Triggers_HZZ2l2nu_SingleLep
+    - Triggers_HZZ2l2nu_DiLep
+    - Triggers_HZZ2l2nu_HighPt
 
 Triggers_HZZ4l:
     - event.HLT_Ele32_WPTight_Gsf
@@ -52,6 +55,44 @@ Triggers_HZZ2l2nu:
     - event.HLT_Photon120_R9Id90_HE10_IsoM
     - event.HLT_Photon165_R9Id90_HE10_IsoM
     - event.HLT_Photon300_NoHE
+
+
+Triggers_HZZ2l2nu_SingleLep:
+    # Single Mu
+    - event.HLT_IsoMu20
+    - event.HLT_IsoMu24
+    - event.HLT_IsoMu27
+    # Single Electron
+    - event.HLT_Ele32_WPTight_Gsf
+
+Triggers_HZZ2l2nu_DiLep:
+    # DoubleMu
+    - event.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass3p8
+    # Double Electron
+    - event.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL
+    - event.HLT_DoubleEle25_CaloIdL_MW
+
+Triggers_HZZ2l2nu_HighPt:
+    # Double Electron
+    - event.HLT_Ele27_Ele37_CaloIdL_MW
+    # Single Electron
+    - event.HLT_Ele35_WPTight_Gsf
+    - event.HLT_Ele35_WPTight_Gsf_L1EGMT
+    - event.HLT_Ele38_WPTight_Gsf
+    - event.HLT_Ele40_WPTight_Gsf
+    - event.HLT_Ele50_IsoVVVL_PFHT450
+    - event.HLT_Ele115_CaloIdVT_GsfTrkIdT
+    - event.HLT_Ele135_CaloIdVT_GsfTrkIdT
+    - event.HLT_Ele145_CaloIdVT_GsfTrkIdT
+    - event.HLT_Ele200_CaloIdVT_GsfTrkIdT
+    - event.HLT_Ele250_CaloIdVT_GsfTrkIdT
+    - event.HLT_Ele300_CaloIdVT_GsfTrkIdT
+    # DoubleMu
+    - event.HLT_Mu37_TkMu27
+    # SingleMu
+    - event.HLT_Mu50
+    - event.HLT_Mu55
+
 
 Zmass: 91.1876
 MZ1cut: 40

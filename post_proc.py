@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import os
 import sys
 import argparse
@@ -23,6 +23,7 @@ def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--inputFile", default="", type=str, help="Input file name")
     parser.add_argument('-o', '--outputFile', default="skimmed_nano.root", type=str, help="Output file name")
+    parser.add_argument('-outDir', '--outputDir', default=".", type=str, help="Output directory")
     parser.add_argument('-c', '--cutFlowFile', default="cutFlow.json", type=str, help="Cut flow file name")
     parser.add_argument("-n", "--entriesToRun", default=100, type=int, help="Set  to 0 if need to run over all entries else put number of entries to run")
     parser.add_argument("-d", "--DownloadFileToLocalThenRun", default=True, type=bool, help="Download file to local then run")
@@ -100,8 +101,8 @@ def main():
     H4LCppModule = lambda: HZZAnalysisCppProducer(year,cfgFile, isMC, isFSR, args.cutFlowFile, args.DEBUG)
     GenVarModule = lambda : GenVarsProducer() # FIXME: Gen variable producer module is not working
     #modulesToRun.extend([H4LCppModule()])
-    # modulesToRun.extend([H4LCppModule(), GenVarModule()])
-    modulesToRun.extend([ GenVarModule()])
+    modulesToRun.extend([H4LCppModule(), GenVarModule()])
+    # modulesToRun.extend([ GenVarModule()])
 
     print("systematic info: {}".format(args.NOsyst))
     print("Input json file: {}".format(jsonFileName))
@@ -114,7 +115,7 @@ def main():
             jetmetCorrector = createJMECorrector(isMC=isMC, dataYear=year, jesUncert="All", jetType = "AK4PFchs")
             fatJetCorrector = createJMECorrector(isMC=isMC, dataYear=year, jesUncert="All", jetType = "AK8PFPuppi")
             # btagSF = lambda: btagSFProducer("UL"+str(year), algo="deepjet",selectedWPs=['L','M','T','shape_corr'], sfFileName=sfFileName)
-            btagSF = lambda: btagSFProducer(era = "UL"+str(year), algo = "deepcsv")
+            # btagSF = lambda: btagSFProducer(era = "UL"+str(year), algo = "deepcsv")
             puidSF = lambda: JetSFMaker("%s" % year)
             modulesToRun.extend([jetmetCorrector(), fatJetCorrector(), puidSF()])
         # # modulesToRun.extend([jetmetCorrector(), fatJetCorrector(), btagSF(), puidSF()])
@@ -127,7 +128,7 @@ def main():
         #            otherwise the output file will have larger size then expected. Reference: https://github.com/cms-nanoAOD/nanoAOD-tools/issues/249
         temp_keep_drop_file = create_temp_keep_drop_file(keep_drop_rules_GEN + keep_drop_rules_Data_MC)
         print("DEBUG: Keep and drop file: {}".format(temp_keep_drop_file))
-        p=PostProcessor(".",testfilelist, None, None,modules = modulesToRun,
+        p=PostProcessor(args.outputDir,testfilelist, None, None,modules = modulesToRun,
                         provenance=True,fwkJobReport=True,
                         haddFileName=args.outputFile,
                         maxEntries=entriesToRun,
@@ -141,7 +142,7 @@ def main():
 
         temp_keep_drop_file = create_temp_keep_drop_file(keep_drop_rules_Data_MC)
         print("DEBUG: Keep and drop file: {}".format(temp_keep_drop_file))
-        p=PostProcessor(".",testfilelist, None, None, modules = modulesToRun,
+        p=PostProcessor(args.outputDir,testfilelist, None, None, modules = modulesToRun,
                         provenance=True, fwkJobReport=True,
                         haddFileName=args.outputFile,
                         jsonInput=jsonFileName,

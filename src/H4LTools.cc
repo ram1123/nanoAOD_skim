@@ -10,7 +10,7 @@ std::vector<unsigned int> H4LTools::goodLooseElectrons2012(){
         if (DEBUG)
             std::cout << "Inside goodLooseElectrons2012:: Electron_pt[" << i << "] = " << Electron_pt[i] << std::endl;
         //if ((Electron_pt[i]>elePtcut)&&(fabs(Electron_eta[i])<eleEtacut)){
-        if ((Electron_pt[i]>elePtcut)&&((fabs(Electron_eta[i])<1.4442)||(fabs(Electron_eta[i])>1.5660)&&(fabs(Electron_eta[i])<eleEtacut))){
+        if ((Electron_pt[i]>elePtcut)&&(((fabs(Electron_eta[i])<1.4442)||(fabs(Electron_eta[i])>1.5660))&&(fabs(Electron_eta[i])<eleEtacut))){
             LooseElectronindex.push_back(i);
             //std::cout << nElectron << std::endl;
         }
@@ -109,34 +109,38 @@ std::vector<unsigned int> H4LTools::goodFsrPhotons(){
     return goodFsrPhoton;
 }
 
-std::vector<unsigned int> H4LTools::SelectedJets(std::vector<unsigned int> ele, std::vector<unsigned int> mu){
+std::vector<unsigned int> H4LTools::SelectedJets(std::vector<unsigned int> ele, std::vector<unsigned int> mu)
+{
     std::vector<unsigned int> goodJets;
-    //unsigned nJ = (*nJet).Get()[0];
-    for(unsigned int i=0;i<Jet_pt.size();i++){
-        //if((Jet_pt[i]>JetPtcut)&&(fabs(Jet_eta[i])<JetEtacut)){
-        if((Jet_pt[i]<=JetPtcut)) continue;
-        if (fabs(Jet_eta[i])>=JetEtacut) continue;
+    for (unsigned int i = 0; i < Jet_pt.size(); i++)
+    {
+        if ((Jet_pt[i] <= JetPtcut)) continue;
+        if (fabs(Jet_eta[i]) >= JetEtacut) continue;
         if (Jet_jetId[i] <= 0) continue;
-        if ((Jet_pt[i]<50)&&(Jet_puId[i]!=7)) continue;
-             std::cout<<"DEBUG: Jet_pt.size() = " << Jet_pt.size() << ";" <<" JetID = " << Jet_jetId[i] << ";" << "Jet_pt = " << Jet_pt[i] << ";" << " puID = " << Jet_puId[i] <<  std::endl;
-                int overlaptag=0;
-                TLorentzVector jettest;
-                jettest.SetPtEtaPhiM(Jet_pt[i],Jet_eta[i],Jet_phi[i],Jet_mass[i]);
-                for(unsigned int ie=0;ie<ele.size();ie++){
-                    TLorentzVector eletest;
-                    eletest.SetPtEtaPhiM(Electron_pt[ele[ie]],Electron_eta[ele[ie]],Electron_phi[ele[ie]],Electron_mass[ele[ie]]);
-                    if(eletest.DeltaR(jettest)<0.5) overlaptag++;
-                }
-                for(unsigned int im=0;im<mu.size();im++){
-                    TLorentzVector mutest;
-                    mutest.SetPtEtaPhiM(Muon_pt[mu[im]],Muon_eta[mu[im]],Muon_phi[mu[im]],Muon_mass[mu[im]]);
-                    if(mutest.DeltaR(jettest)<0.5) overlaptag++;
-                }
-                if(overlaptag==0) goodJets.push_back(i);
-        
+        if ((Jet_pt[i] < 50) && (Jet_puId[i] != 7)) continue;
+        if (DEBUG)
+            std::cout << "DEBUG: Jet_pt.size() = " << Jet_pt.size() << ";" << " JetID = " << Jet_jetId[i] << ";" << "Jet_pt = " << Jet_pt[i] << ";" << " puID = " << Jet_puId[i] << std::endl;
+        int overlaptag = 0;
+        TLorentzVector jettest;
+        jettest.SetPtEtaPhiM(Jet_pt[i], Jet_eta[i], Jet_phi[i], Jet_mass[i]);
+        for (unsigned int ie = 0; ie < ele.size(); ie++)
+        {
+            TLorentzVector eletest;
+            eletest.SetPtEtaPhiM(Electron_pt[ele[ie]], Electron_eta[ele[ie]], Electron_phi[ele[ie]], Electron_mass[ele[ie]]);
+            if (eletest.DeltaR(jettest) < 0.5)
+                overlaptag++;
+        }
+        for (unsigned int im = 0; im < mu.size(); im++)
+        {
+            TLorentzVector mutest;
+            mutest.SetPtEtaPhiM(Muon_pt[mu[im]], Muon_eta[mu[im]], Muon_phi[mu[im]], Muon_mass[mu[im]]);
+            if (mutest.DeltaR(jettest) < 0.5)
+                overlaptag++;
+        }
+        if (overlaptag == 0)
+            goodJets.push_back(i);
     }
     return goodJets;
-
 }
 
 // Pre-selection for Fat-jets

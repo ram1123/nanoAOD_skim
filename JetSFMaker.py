@@ -15,8 +15,20 @@ class JetSFMaker(Module):
 
     def __init__(self, cmssw, puid_sf_config='PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim/data/JetPUID_cfg.py'):
         cmssw_base = os.getenv('CMSSW_BASE')
-        with open(cmssw_base + '/src/' + puid_sf_config) as src:
-            exec(src)
+
+        # Dictionary to hold the local variables from the exec
+        # Reference: https://stackoverflow.com/a/65647108
+        local_vars = {}
+
+        with open(cmssw_base + '/src/' + puid_sf_config) as src_file:
+            src_code = src_file.read()
+            exec(src_code, {}, local_vars)
+
+        # Extract jet_puid_sf from local_vars
+        if 'jet_puid_sf' in local_vars:
+            jet_puid_sf = local_vars['jet_puid_sf']
+        else:
+            raise NameError("jet_puid_sf is not defined in the provided configuration file.")
 
         puid_sf_cfg = jet_puid_sf[cmssw]
 

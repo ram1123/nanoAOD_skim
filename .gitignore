@@ -1,4 +1,5 @@
 # Ignore root files
+*.tgz
 *.xml
 *.1
 *.png
@@ -168,3 +169,6 @@ br.sm2
 *maincc
 *linkdef.h
 JHUGenMELA/
+cutFlow.json
+yaml-cpp/
+nanoAOD_skim.wiki/
