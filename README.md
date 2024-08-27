@@ -17,7 +17,6 @@ nanoAOD skiming code for H->ZZ->2l2Q studies.
    git clone git@github.com:cms-nanoAOD/nanoAOD-tools.git PhysicsTools/NanoAODTools
    cd PhysicsTools/NanoAODTools
    git checkout d163c18096fe2c5963ff5a9764bb420b46632178 # Updated to commit on 6 Dec 2023 in official nanoAOD-tools
-   git apply ../external/nanoAODTools_py2to3.patch
    ```
 
 3. Step: 3: Get our analysis repository
@@ -27,6 +26,9 @@ nanoAOD skiming code for H->ZZ->2l2Q studies.
    git clone git@github.com:ram1123/nanoAOD_skim.git PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim
    cd PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim
    git checkout Anusreevijay769-HZZ_Analysis_2l2q_v2_dev
+   cd $CMSSW_BASE/src/PhysicsTools/NanoAODTools
+   git apply python/postprocessing/analysis/nanoAOD_skim/external/nanoAODTools_py2to3.patch
+   cd $CMSSW_BASE/src/PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim
    git clone git@github.com:jbeder/yaml-cpp.git external/yaml-cpp
    cd external/yaml-cpp/
    git apply ../yamlcpp_pkg_py2to3.patch
@@ -56,8 +58,8 @@ nanoAOD skiming code for H->ZZ->2l2Q studies.
    git apply ../external/JHUGen_py2to3.patch
    cd ..
    sh JHUGenMELA/MELA/setup.sh -j 8
-   chmod +x JHUGenMELA/MELA/data/el9_amd64_gcc12/libmcfm_710.so
-   chmod +x JHUGenMELA/MELA/data/el9_amd64_gcc12/libjhugenmela.so
+   cd JHUGenMELA/MELA/data/el9_amd64_gcc12/
+   chmod +x *.so
    ```
 
 4. Step: 4: interactive running
@@ -65,6 +67,7 @@ nanoAOD skiming code for H->ZZ->2l2Q studies.
    ```bash
    cd $CMSSW_BASE/src/PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim
    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/afs/cern.ch/work/r/rasharma/h2l2nu/checkNewSetup_15July2024/CMSSW_14_0_2/src/PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim/JHUGenMELA/MELA/data/el9_amd64_gcc12
+   # NOTE: The above export command is needed to run just before running the post_proc.py script. Otherwise, it will give error.
    python3 post_proc.py
    ```
 
