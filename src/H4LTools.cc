@@ -112,22 +112,22 @@ std::vector<unsigned int> H4LTools::SelectedJets(std::vector<unsigned int> ele, 
     std::vector<unsigned int> goodJets;
     for(unsigned int i=0;i<Jet_pt.size();i++){
         if((Jet_pt[i]>JetPtcut)&&(fabs(Jet_eta[i])<JetEtacut)){
-            if((Jet_jetId[i]>0)&&(Jet_puId[i]==7)){
-                int overlaptag=0;
-                TLorentzVector jettest;
-                jettest.SetPtEtaPhiM(Jet_pt[i],Jet_eta[i],Jet_phi[i],Jet_mass[i]);
-                for(unsigned int ie=0;ie<ele.size();ie++){
-                    TLorentzVector eletest;
-                    eletest.SetPtEtaPhiM(Electron_pt[ele[ie]],Electron_eta[ele[ie]],Electron_phi[ele[ie]],Electron_mass[ele[ie]]);
-                    if(eletest.DeltaR(jettest)<0.4) overlaptag++;
-                }
-                for(unsigned int im=0;im<mu.size();im++){
-                    TLorentzVector mutest;
-                    mutest.SetPtEtaPhiM(Muon_pt[mu[im]],Muon_eta[mu[im]],Muon_phi[mu[im]],Muon_mass[mu[im]]);
-                    if(mutest.DeltaR(jettest)<0.4) overlaptag++;
-                }
-                if(overlaptag==0) goodJets.push_back(i);
+            if (Jet_jetId[i] <= 0) continue;
+            if ((Jet_pt[i] < 50) && (Jet_puId[i] != 7)) continue;            
+            int overlaptag=0;
+            TLorentzVector jettest;
+            jettest.SetPtEtaPhiM(Jet_pt[i],Jet_eta[i],Jet_phi[i],Jet_mass[i]);
+            for(unsigned int ie=0;ie<ele.size();ie++){
+                TLorentzVector eletest;
+                eletest.SetPtEtaPhiM(Electron_pt[ele[ie]],Electron_eta[ele[ie]],Electron_phi[ele[ie]],Electron_mass[ele[ie]]);
+                if(eletest.DeltaR(jettest)<0.4) overlaptag++;
             }
+            for(unsigned int im=0;im<mu.size();im++){
+                TLorentzVector mutest;
+                mutest.SetPtEtaPhiM(Muon_pt[mu[im]],Muon_eta[mu[im]],Muon_phi[mu[im]],Muon_mass[mu[im]]);
+                if(mutest.DeltaR(jettest)<0.4) overlaptag++;
+            }
+            if(overlaptag==0) goodJets.push_back(i);
         }
     } 
     njets_pt30_eta4p7 = goodJets.size();
@@ -1429,8 +1429,8 @@ void H4LTools::findHiggsCandidate()
         } // lep i
     } // lep j
    
-    if( (Muon_charge.size() + Electron_charge.size()) < 4 ) return;
-        
+    if( (Muonindex.size() + Electronindex.size()) < 4 ) return;
+    CutFlow_4Lepton = true;    
 
     bool properLep_ID = false; int Nmm = 0; int Nmp = 0; int Nem = 0; int Nep = 0;
     for(unsigned int i =0; i<Muonindex.size(); i++) {
@@ -1448,6 +1448,7 @@ void H4LTools::findHiggsCandidate()
     
     // four proper charge flavor combination
     if(!properLep_ID) return;
+    CutFlow_4LeptonOSSF = true;
 
     // Consider all ZZ candidates
     double minZ1DeltaM_SR=9999.9; double minZ1DeltaM_CR=99999.9;
@@ -1547,7 +1548,7 @@ void H4LTools::findHiggsCandidate()
 // 				std::cout<<"no tight Z bosons"<<std::endl;
             	continue;     
             }
-
+            CutFlow_getTightZ = true;
 // 				std::cout<<"\t\t\t"<<i1<<"\t"<<i2<<"\t"<<Zi.M()<<std::endl;
 // 				std::cout<<"\t\t\t"<<j1<<"\t"<<j2<<"\t"<<Zj.M()<<std::endl;
 
@@ -1575,6 +1576,7 @@ if (lep_tightId[i1] && lep_tightId[i2]
 					else { Z2_lepindex[0] = i2;  Z2_lepindex[1] = i1; }
 					Z1DeltaM = abs(Zj.M()-Zmass); 
 					Z2SumPt = lep_i1_nofsr.Pt()+lep_i2_nofsr.Pt();
+                }
 		        	
 }
 
@@ -1632,13 +1634,14 @@ if (lep_tightId[i1] && lep_tightId[i2]
             // Check tight ID cut for Z1 leptons
             if (!(lep_tightId[Z1_lepindex[0]])) continue; // checking tight lepton ID
             if (!(lep_tightId[Z1_lepindex[1]])) continue; // checking tight lepton ID
-          
+            CutFlow_getTightZ1 = true;
             // Check Leading and Subleading pt Cut
             vector<double> allPt;
             allPt.push_back(lep_i1_nofsr.Pt()); allPt.push_back(lep_i2_nofsr.Pt());
             allPt.push_back(lep_j1_nofsr.Pt()); allPt.push_back(lep_j2_nofsr.Pt());
             std::sort(allPt.begin(), allPt.end());
             if (allPt[3]<20 || allPt[2]<10) continue;
+            CutFlow_lep_pTcut = true;
             
             // Check dR(li,lj)>0.02 for any i,j
             vector<double> alldR;
@@ -1649,6 +1652,7 @@ if (lep_tightId[i1] && lep_tightId[i2]
             alldR.push_back(lep_i2_nofsr.DeltaR(lep_j2_nofsr));
             alldR.push_back(lep_j1_nofsr.DeltaR(lep_j2_nofsr));            
             if (*min_element(alldR.begin(),alldR.end())<0.02) continue;
+            CutFlow_lepdRcut = true;
 
             // Check M(l+,l-)>4.0 GeV for any OS pair
             // Do not include FSR photons
@@ -1672,7 +1676,7 @@ if (lep_tightId[i1] && lep_tightId[i2]
                 i2j1 = (lep_i2_nofsr)+(lep_j1_nofsr); allM.push_back(i2j1.M());
             }
             if (*min_element(allM.begin(),allM.end())<4.0) {passedFullSelection=false; passedZXCRSelection=false; continue;}
-
+            CutFlow_QCDcut = true;
             // Check the "smart cut": !( |mZa-mZ| < |mZ1-mZ| && mZb<12)
             // only for 4mu or 4e ZZ candidates
             bool passSmartCut=true;
@@ -1695,18 +1699,20 @@ if (lep_tightId[i1] && lep_tightId[i2]
 
             }
             if (!passSmartCut) continue;
+            CutFlow_Smartcut = true;
             
             if ( (Z1.M() < mZ1Low) || (Z1.M() > mZ1High) || (Z2.M() < mZ2Low) || (Z2.M() > mZ2High) ) continue;
-
+            CutFlow_MZ1MZ2cut = true;
             if ( _4l_temp.M() < m4lLowCut ) continue;
-
+            CutFlow_M4Lcut = true;
             // Signal region if Z2 leptons are both tight ID Iso
             bool signalRegion=true;
             if (lep_RelIsoNoFSR[Z2_lepindex[0]]>((abs(lep_id[Z2_lepindex[0]])==11) ? 9999 : 0.35)) signalRegion=false; // checking iso with FSR removed
             if (lep_RelIsoNoFSR[Z2_lepindex[1]]>((abs(lep_id[Z2_lepindex[1]])==11) ? 9999 : 0.35)) signalRegion=false; // checking iso with FSR removed
             if (!(lep_tightId[Z2_lepindex[0]])) signalRegion=false; // checking tight lepton ID
             if (!(lep_tightId[Z2_lepindex[1]])) signalRegion=false; // checking tight lepton ID  
-            
+            if (signalRegion) CutFlow_SR=true;
+            else CutFlow_CR=true;
             // Check if this candidate has the highest D_bkg_kin
             vector<TLorentzVector> P4s;
             P4s.clear();
@@ -1850,7 +1856,7 @@ if (lep_tightId[i1] && lep_tightId[i2]
     
 
 }
-}
+
 
 
 

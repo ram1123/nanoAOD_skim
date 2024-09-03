@@ -140,6 +140,18 @@ class HZZAnalysisCppProducer(Module):
         self.out.branch("passedZ4lZXCRSelection",  "O")
         self.out.branch("passedZXCRSelection",  "O")
         self.out.branch("passedFiducialSelection",  "O")
+        self.out.branch("CutFlow_4Lepton",  "O")
+        self.out.branch("CutFlow_4LeptonOSSF",  "O")
+        self.out.branch("CutFlow_getTightZ",  "O")
+        self.out.branch("CutFlow_getTightZ1",  "O")
+        self.out.branch("CutFlow_lep_pTcut",  "O")
+        self.out.branch("CutFlow_lepdRcut",  "O")
+        self.out.branch("CutFlow_QCDcut",  "O")
+        self.out.branch("CutFlow_Smartcut",  "O")
+        self.out.branch("CutFlow_MZ1MZ2cut",  "O")
+        self.out.branch("CutFlow_M4Lcut",  "O")
+        self.out.branch("CutFlow_SR",  "O")
+        self.out.branch("CutFlow_CR",  "O")
         GENHlepNum = 4
         GENZNum = 2
         self.out.branch("lep_Hindex",  "I", lenVar = "GENHlepNum")
@@ -223,6 +235,7 @@ class HZZAnalysisCppProducer(Module):
         passedTrig = PassTrig(event, self.cfgFile)
         if (passedTrig==True):
             self.passtrigEvts += 1
+            #keepIt = True
         else:
             return keepIt
         electrons = Collection(event, "Electron")
@@ -383,6 +396,19 @@ class HZZAnalysisCppProducer(Module):
         phij2 = self.worker.phij2
         mj2 = self.worker.mj2
 
+        CutFlow_4Lepton = self.worker.CutFlow_4Lepton
+        CutFlow_4LeptonOSSF = self.worker.CutFlow_4LeptonOSSF
+        CutFlow_getTightZ = self.worker.CutFlow_getTightZ
+        CutFlow_getTightZ1 = self.worker.CutFlow_getTightZ1
+        CutFlow_lep_pTcut = self.worker.CutFlow_lep_pTcut
+        CutFlow_lepdRcut = self.worker.CutFlow_lepdRcut
+        CutFlow_QCDcut = self.worker.CutFlow_QCDcut
+        CutFlow_Smartcut = self.worker.CutFlow_Smartcut
+        CutFlow_MZ1MZ2cut = self.worker.CutFlow_MZ1MZ2cut
+        CutFlow_M4Lcut = self.worker.CutFlow_M4Lcut
+        CutFlow_SR = self.worker.CutFlow_SR
+        CutFlow_CR = self.worker.CutFlow_CR
+
         if pTL2>pTL1:
             pTL1, pTl2 = pTL2, pTL1
             etaL1, etaL2 = etaL2, etaL1
@@ -444,6 +470,18 @@ class HZZAnalysisCppProducer(Module):
         self.out.fillBranch("passedZ4lZXCRSelection",  passedZ4lZXCRSelection)
         self.out.fillBranch("passedZXCRSelection",  passedZXCRSelection)
         self.out.fillBranch("passedFiducialSelection",  passedFiducialSelection)
+        self.out.fillBranch("CutFlow_4Lepton",  CutFlow_4Lepton)
+        self.out.fillBranch("CutFlow_4LeptonOSSF",  CutFlow_4LeptonOSSF)
+        self.out.fillBranch("CutFlow_getTightZ",  CutFlow_getTightZ)
+        self.out.fillBranch("CutFlow_getTightZ1",  CutFlow_getTightZ1)
+        self.out.fillBranch("CutFlow_lep_pTcut",  CutFlow_lep_pTcut)
+        self.out.fillBranch("CutFlow_lepdRcut",  CutFlow_lepdRcut)
+        self.out.fillBranch("CutFlow_QCDcut",  CutFlow_QCDcut)
+        self.out.fillBranch("CutFlow_Smartcut",  CutFlow_Smartcut)
+        self.out.fillBranch("CutFlow_MZ1MZ2cut",  CutFlow_MZ1MZ2cut)
+        self.out.fillBranch("CutFlow_M4Lcut",  CutFlow_M4Lcut)
+        self.out.fillBranch("CutFlow_SR",  CutFlow_SR)
+        self.out.fillBranch("CutFlow_CR",  CutFlow_CR)
 
         self.out.fillBranch("massL1",massL1)
         self.out.fillBranch("pTL1",pTL1)
@@ -461,7 +499,6 @@ class HZZAnalysisCppProducer(Module):
         self.out.fillBranch("pTL4",pTL4)
         self.out.fillBranch("etaL4",etaL4)
         self.out.fillBranch("phiL4",phiL4)
-
         self.out.fillBranch("mj1",mj1)
         self.out.fillBranch("pTj1",pTj1)
         self.out.fillBranch("etaj1",etaj1)

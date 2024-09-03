@@ -210,7 +210,7 @@ class H4LTools {
       std::vector<bool> Zlep1istight;
       std::vector<bool> Zlep2istight;
       std::vector<unsigned int> jetidx;
-
+      bool CutFlow_4Lepton,CutFlow_4LeptonOSSF,CutFlow_getTightZ,CutFlow_getTightZ1,CutFlow_lep_pTcut,CutFlow_lepdRcut,CutFlow_QCDcut,CutFlow_Smartcut,CutFlow_MZ1MZ2cut,CutFlow_M4Lcut,CutFlow_CR,CutFlow_SR;
       int nTightEle;
       int nTightMu;
       int nTightEleChgSum;
@@ -346,7 +346,7 @@ class H4LTools {
 
         pTj1 = -99;  etaj1 = -99;  phij1 = -99;  mj1 = -99;
         pTj2 = -99;  etaj2 = -99;  phij2 = -99;  mj2 = -99;
-
+        CutFlow_4Lepton=false;CutFlow_4LeptonOSSF=false;CutFlow_getTightZ=false;CutFlow_getTightZ1=false;CutFlow_lep_pTcut=false;CutFlow_lepdRcut=false;CutFlow_QCDcut=false;CutFlow_Smartcut=false;CutFlow_MZ1MZ2cut=false;CutFlow_M4Lcut=false;CutFlow_CR=false;CutFlow_SR=false;
         flag4e=false; flag4mu=false; flag2e2mu=false;
         passedZ1LSelection = false; passedFullSelection = false; passedZXCRSelection = false;
       }

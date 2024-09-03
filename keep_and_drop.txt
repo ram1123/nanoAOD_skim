@@ -27,6 +27,7 @@ keep PV*
 #
 #
 keep mass*
+keep Cut*
 keep *4l
 keep *Z1
 keep *Z2
@@ -48,8 +49,8 @@ keep *Weight*
 #keep Photon*
 #keep nElectron
 #keep Electron*
-#keep nMuon
-#keep Muon*
+keep nMuon
+keep Muon*
 #keep nTau
 #keep Tau*
 keep HTXS*
