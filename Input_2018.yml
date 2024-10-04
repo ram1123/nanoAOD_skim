@@ -110,6 +110,8 @@ Electron:
     #Sip3dcut: 4
     Loosedxycut: 0.045 #0.5
     Loosedzcut: 0.2 #1
+    ttH:
+        WP: 0.8
     BDTWP:
         LowEta:
             LowPT: 0.9044286167

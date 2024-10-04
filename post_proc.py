@@ -99,10 +99,6 @@ def main():
         sfFileName = "DeepCSV_102XSF_V2.csv"
         modulesToRun.extend([muonScaleRes2016()])
     H4LCppModule = lambda: HZZAnalysisCppProducer(year,cfgFile, isMC, isFSR, args.cutFlowFile, args.DEBUG)
-    GenVarModule = lambda : GenVarsProducer() # FIXME: Gen variable producer module is not working
-    #modulesToRun.extend([H4LCppModule()])
-    modulesToRun.extend([H4LCppModule(), GenVarModule()])
-    # modulesToRun.extend([ GenVarModule()])
 
     print("systematic info: {}".format(args.NOsyst))
     print("Input json file: {}".format(jsonFileName))
@@ -111,6 +107,8 @@ def main():
     print("isFSR: {}".format(isFSR))
 
     if isMC:
+        GenVarModule = lambda : GenVarsProducer() # FIXME: Gen variable producer module is not working
+        modulesToRun.extend([H4LCppModule(), GenVarModule()])
         if (not args.NOsyst):
             jetmetCorrector = createJMECorrector(isMC=isMC, dataYear=year, jesUncert="All", jetType = "AK4PFchs")
             fatJetCorrector = createJMECorrector(isMC=isMC, dataYear=year, jesUncert="All", jetType = "AK8PFPuppi")
@@ -135,6 +133,7 @@ def main():
                         prefetch=DownloadFileToLocalThenRun, longTermCache= True,   # prefetch: download file to local then run, longTermCache: keep the file in local after running so that if it is present use local instead of downloading again
                         outputbranchsel=temp_keep_drop_file)
     else:
+        modulesToRun.extend([H4LCppModule()])
         if (not args.NOsyst):
             jetmetCorrector = createJMECorrector(isMC=isMC, dataYear=year, jesUncert="All", jetType = "AK4PFchs")
             fatJetCorrector = createJMECorrector(isMC=isMC, dataYear=year, jesUncert="All", jetType = "AK8PFPuppi")
