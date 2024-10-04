@@ -1,4 +1,15 @@
 # Ignore root files
+*.tgz
+*.xml
+*.1
+*.png
+*.pdf
+crab_project*/
+*.rst
+*.swp
+*.swm
+*.swn
+*.swo
 *.bkup
 *.patch
 summary.dat
@@ -158,3 +169,6 @@ br.sm2
 *maincc
 *linkdef.h
 JHUGenMELA/
+cutFlow.json
+yaml-cpp/
+nanoAOD_skim.wiki/
