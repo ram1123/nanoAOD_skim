@@ -32,6 +32,7 @@ class HZZAnalysisCppProducer(Module):
         self.year = year
         self.isMC = isMC
         self.DEBUG = DEBUG
+        self.CutFlowTable =  ROOT.TH1F('cutFlow','cutFlow',18, -0.5, 17.5)
         with open(cfgFile, 'r') as ymlfile:
           cfg = yaml.load(ymlfile)
           self.worker = ROOT.H4LTools(self.year,self.isMC)
@@ -177,6 +178,8 @@ class HZZAnalysisCppProducer(Module):
             f.write("Sync data list:"+"\n")
 
     def endFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
+        outputFile.cd()
+        self.CutFlowTable.Write()
         pass
 
     # this function gets the pointers to Value and ArrayReaders and sets
@@ -255,7 +258,7 @@ class HZZAnalysisCppProducer(Module):
             self.worker.SetElectrons(xe.pt, xe.eta, xe.phi, xe.mass, xe.dxy,
                                       xe.dz, xe.sip3d, xe.mvaHZZIso, xe.pdgId,xe.charge, xe.pfRelIso03_all)
         for xm in muons:
-            self.worker.SetMuons(xm.corrected_pt, xm.eta, xm.phi, xm.mass, xm.isGlobal, xm.isTracker,
+            self.worker.SetMuons(xm.pt, xm.eta, xm.phi, xm.mass, xm.isGlobal, xm.isTracker,
                                 xm.dxy, xm.dz, xm.sip3d, xm.ptErr, xm.nTrackerLayers, xm.nStations, xm.isPFcand,
                                  xm.pdgId, xm.charge, xm.pfRelIso03_all)
         for xf in fsrPhotons:
@@ -408,7 +411,24 @@ class HZZAnalysisCppProducer(Module):
         CutFlow_M4Lcut = self.worker.CutFlow_M4Lcut
         CutFlow_SR = self.worker.CutFlow_SR
         CutFlow_CR = self.worker.CutFlow_CR
-
+        if CutFlow_4Lepton: self.CutFlowTable.Fill(0)
+        if CutFlow_4LeptonOSSF: self.CutFlowTable.Fill(1)
+        if CutFlow_getTightZ: self.CutFlowTable.Fill(2)
+        if CutFlow_getTightZ1: self.CutFlowTable.Fill(3)
+        if CutFlow_lep_pTcut: self.CutFlowTable.Fill(4)
+        if CutFlow_lepdRcut: self.CutFlowTable.Fill(5)
+        if CutFlow_QCDcut: self.CutFlowTable.Fill(6)
+        if CutFlow_Smartcut: self.CutFlowTable.Fill(7)
+        if CutFlow_MZ1MZ2cut: self.CutFlowTable.Fill(8)
+        if CutFlow_M4Lcut: self.CutFlowTable.Fill(9)
+        if CutFlow_SR: self.CutFlowTable.Fill(10)
+        if CutFlow_CR: self.CutFlowTable.Fill(11)
+        if self.worker.CutFlow_3Lep: self.CutFlowTable.Fill(12)
+        if self.worker.CutFlow_properID: self.CutFlowTable.Fill(13)
+        if self.worker.CutFlow_3LepDRcut: self.CutFlowTable.Fill(14)
+        if self.worker.CutFlow_3LepPtcut: self.CutFlowTable.Fill(15)
+        if self.worker.CutFlow_3LepQCDcut: self.CutFlowTable.Fill(16)
+        if self.worker.CutFlow_tightZ1cut: self.CutFlowTable.Fill(17)
         if pTL2>pTL1:
             pTL1, pTl2 = pTL2, pTL1
             etaL1, etaL2 = etaL2, etaL1
@@ -438,6 +458,8 @@ class HZZAnalysisCppProducer(Module):
             phi4l = self.worker.ZZsystemnofsr.Phi()
             mass4l = self.worker.mass4l
             rapidity4l = self.worker.ZZsystemnofsr.Rapidity()
+
+       
         self.out.fillBranch("mass4l",mass4l)
         self.out.fillBranch("mass4e",mass4e)
         self.out.fillBranch("mass2e2mu",mass2e2mu)

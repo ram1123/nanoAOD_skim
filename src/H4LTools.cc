@@ -684,7 +684,7 @@ void H4LTools::findZ1LCandidate(){
     
     unsigned int Nlep = lepFSR_pt.size();
     if( Nlep != 3 ) return;
-    
+    CutFlow_3Lep = true;
     // First, make all Z candidates including any FSR photons
     int n_Zs=0;
     vector<int> Z_Z1L_lepindex1;
@@ -735,6 +735,7 @@ void H4LTools::findZ1LCandidate(){
     
     // proper charge flavor combination for Z + 1L
     if(!properLep_ID) return;
+    CutFlow_properID = true;
     
     // Consider all Z candidates
     double minZ1DeltaM=9999.9;
@@ -770,14 +771,14 @@ void H4LTools::findZ1LCandidate(){
         allPt.push_back(lep_i1.Pt()); allPt.push_back(lep_i2.Pt());
         std::sort(allPt.begin(), allPt.end());
         if (allPt[1]<20 || allPt[0]<10 ) continue;
-        
+        CutFlow_3LepPtcut = true;
         // Check dR(li,lj)>0.02 for any i,j
         vector<double> alldR;
         alldR.push_back(lep_i1.DeltaR(lep_i2));
         alldR.push_back(lep_j1.DeltaR(lep_i2));
         alldR.push_back(lep_i1.DeltaR(lep_j1));
         if (*min_element(alldR.begin(),alldR.end())<0.02) continue;
-        
+        CutFlow_3LepDRcut = true;
         // Check M(l+,l-)>4.0 GeV for any OS pair
         // Do not include FSR photons
         vector<double> allM;
@@ -791,7 +792,7 @@ void H4LTools::findZ1LCandidate(){
             i2j1 = (lep_i2_nofsr)+(lep_j1_nofsr); allM.push_back(i2j1.M());
         }
         if (*min_element(allM.begin(),allM.end())<4.0) continue;
-        
+        CutFlow_3LepQCDcut = true;
         // Check isolation cut (without FSR ) for Z1 leptons
         if (lep_RelIsoNoFSR[Z1_lepindex[0]]>((abs(lep_id[Z1_lepindex[0]])==11) ? 9999 : 0.35)) continue; // checking iso with FSR removed
         if (lep_RelIsoNoFSR[Z1_lepindex[1]]>((abs(lep_id[Z1_lepindex[1]])==11) ? 9999 : 0.35)) continue; // checking iso with FSR removed
@@ -800,7 +801,7 @@ void H4LTools::findZ1LCandidate(){
         if (!(lep_tightId[Z1_lepindex[1]])) continue; // checking tight lepton ID
         
         if ( (Z1.M() < 40) || (Z1.M() > 120) ) continue;
-        
+        CutFlow_tightZ1cut = true;
         
         // Check if this candidate has the best Z1 and highest scalar sum of Z2 lepton pt
         
