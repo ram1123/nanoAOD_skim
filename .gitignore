@@ -158,3 +158,6 @@ br.sm2
 *maincc
 *linkdef.h
 JHUGenMELA/
+yaml-cpp/
+nanoAOD_skim.wiki/
+*.xml
