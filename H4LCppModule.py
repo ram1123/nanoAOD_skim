@@ -81,14 +81,26 @@ class HZZAnalysisCppProducer(Module):
             return yaml.safe_load(ymlfile)
 
     def _initialize_worker(self, cfg):
-        self.worker.InitializeElecut(cfg['Electron']['pTcut'],cfg['Electron']['Etacut'],cfg['Electron']['Sip3dcut'],cfg['Electron']['Loosedxycut'],cfg['Electron']['Loosedzcut'],
-                            cfg['Electron']['Isocut'],cfg['Electron']['BDTWP']['LowEta']['LowPT'],cfg['Electron']['BDTWP']['MedEta']['LowPT'],cfg['Electron']['BDTWP']['HighEta']['LowPT'],
-                            cfg['Electron']['BDTWP']['LowEta']['HighPT'],cfg['Electron']['BDTWP']['MedEta']['HighPT'],cfg['Electron']['BDTWP']['HighEta']['HighPT'])
-        self.worker.InitializeMucut(cfg['Muon']['pTcut'],cfg['Muon']['Etacut'],cfg['Muon']['Sip3dcut'],cfg['Muon']['Loosedxycut'],cfg['Muon']['Loosedzcut'],cfg['Muon']['Isocut'],
-                            cfg['Muon']['Tightdxycut'],cfg['Muon']['Tightdzcut'],cfg['Muon']['TightTrackerLayercut'],cfg['Muon']['TightpTErrorcut'],cfg['Muon']['HighPtBound'])
-        self.worker.InitializeFsrPhotonCut(cfg['FsrPhoton']['pTcut'],cfg['FsrPhoton']['Etacut'],cfg['FsrPhoton']['Isocut'],cfg['FsrPhoton']['dRlcut'],cfg['FsrPhoton']['dRlOverPtcut'])
-        self.worker.InitializeJetcut(cfg['Jet']['pTcut'],cfg['Jet']['Etacut'])
-        self.worker.InitializeEvtCut(cfg['MZ1cut'],cfg['MZZcut'],cfg['Higgscut']['down'],cfg['Higgscut']['up'],cfg['Zmass'],cfg['MZcut']['down'],cfg['MZcut']['up'])
+        self.worker.InitializeElecut(*self._get_nested_values(cfg['Electron'], [
+            'pTcut', 'Etacut', 'Sip3dcut', 'Loosedxycut', 'Loosedzcut',
+            'Isocut', ['BDTWP', 'LowEta', 'LowPT'], ['BDTWP', 'MedEta', 'LowPT'],
+            ['BDTWP', 'HighEta', 'LowPT'], ['BDTWP', 'LowEta', 'HighPT'],
+            ['BDTWP', 'MedEta', 'HighPT'], ['BDTWP', 'HighEta', 'HighPT']
+            ]))
+        self.worker.InitializeMucut(*self._get_nested_values(cfg['Muon'], [
+            'pTcut', 'Etacut', 'Sip3dcut', 'Loosedxycut', 'Loosedzcut', 'Isocut',
+            'Tightdxycut', 'Tightdzcut', 'TightTrackerLayercut', 'TightpTErrorcut',
+            'HighPtBound'
+            ]))
+        self.worker.InitializeFsrPhotonCut(*self._get_nested_values(cfg['FsrPhoton'], [
+            'pTcut', 'Etacut', 'Isocut', 'dRlcut', 'dRlOverPtcut'
+            ]))
+        self.worker.InitializeJetcut(*self._get_nested_values(cfg['Jet'], ['pTcut', 'Etacut']))
+        self.worker.InitializeEvtCut(*self._get_nested_values(cfg, ['MZ1cut', 'MZZcut',
+                                                                    ['Higgscut', 'down'], ['Higgscut', 'up'],
+                                                                    'Zmass', ['MZcut', 'down'], ['MZcut', 'up'],
+                                                                    ]))
+
 
     def _get_nested_values(self, dictionary, keys):
         values = []
@@ -345,6 +357,7 @@ class HZZAnalysisCppProducer(Module):
         self.worker.findZ1LCandidate()
         if ((self.worker.nTightEle<2)|(self.worker.nTightMu<2)):
             pass
+        self.worker.ZZSelection()
 
         Electron_Fsr_pt_vec = self.worker.ElectronFsrPt()
         Electron_Fsr_eta_vec = self.worker.ElectronFsrEta()
@@ -522,7 +535,7 @@ class HZZAnalysisCppProducer(Module):
         if self.worker.flag4e:
             mass4e = mass4l
         if self.worker.flag2e2mu:
-            mass4e = mass4l
+            mass2e2mu = mass4l
         if self.worker.flag4mu:
             mass4mu = mass4l
         if (self.worker.isFSR==False & (passedFullSelection | passedZXCRSelection)):

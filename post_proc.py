@@ -76,7 +76,7 @@ def main():
         cfgFile = "Input_2022.yml"
         jsonFileName = "golden_Json/Cert_Collisions2022_355100_362760_Golden.json"
         sfFileName = "DeepCSV_102XSF_V2.csv" # FIXME: Update for year 2022
-        modulesToRun.extend([muonScaleRes2018()]) # FIXME: Update for year 2022
+        modulesToRun.extend([muonScaleRes2022()]) # FIXME: Update for year 2022
     if "UL18" in first_file or "UL2018" in first_file:
         """UL2018 for identification of 2018 UL data and UL18 for identification of 2018 UL MC
         """
