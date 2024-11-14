@@ -2,16 +2,12 @@ import ROOT
 import yaml
 
 PI=3.14159
-def PassTrig(event,cfgFile):
-    
-    
+def PassTrig(event, cfg, TriggerCh):
     PassTrig = False
-    with open(cfgFile, 'r') as ymlfile:
-        cfg = yaml.load(ymlfile)
-        TriggerList = []
-        for TriggerName in cfg['Triggers']:
-            TriggerList.append(eval(TriggerName))
-         
+    TriggerList = []
+    for TriggerName in cfg[TriggerCh]:
+        TriggerList.append(eval(TriggerName))
+
     for i in range(len(TriggerList)):
         PassTrig = PassTrig | TriggerList[i]
 
@@ -88,7 +84,7 @@ def passTight_BDT_Id(electrons,year = '2018'):
     Tight_Id = []
     cutVal = 1000
     mvaVal = -1
-    
+
     for x in electrons:
         if (year == '2018'):
             if (x.pt<=10):
@@ -101,7 +97,7 @@ def passTight_BDT_Id(electrons,year = '2018'):
                 if (abs(x.eta) >= 1.479): cutVal = -0.5169136775
 
             mvaVal = x.mvaFall17V2Iso_WP90
-            
+
         if (year == '2017'):
             if (x.pt<=10):
                 if (abs(x.eta) < 0.8): cutVal = 0.9128577458
@@ -111,7 +107,7 @@ def passTight_BDT_Id(electrons,year = '2018'):
                 if (abs(x.eta) < 0.8): cutVal = 0.1559788054
                 if ((abs(x.eta) >= 0.8)&(abs(x.eta) <1.479)): cutVal = 0.0273863727
                 if (abs(x.eta) >= 1.479): cutVal = -0.5532483665
-            
+
             mvaVal = x.mvaFall17V2Iso_WP90
         if (year == '2016'):
             if (x.pt<=10):
@@ -122,14 +118,14 @@ def passTight_BDT_Id(electrons,year = '2018'):
                 if (abs(x.eta) < 0.8): cutVal = 0.3272075608
                 if ((abs(x.eta) >= 0.8)&(abs(x.eta) <1.479)): cutVal = 0.2468345995
                 if (abs(x.eta) >= 1.479): cutVal = -0.5955762814
-            
+
             mvaVal = x.mvaFall17V2Iso_WP90
 
         if mvaVal > cutVal:
             Tight_Id.append(True)
         else:
             Tight_Id.append(False)
-    
+
     return Tight_Id
 
 def passTight_Id(muons):

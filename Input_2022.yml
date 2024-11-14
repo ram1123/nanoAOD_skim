@@ -1,4 +1,7 @@
-Triggers:
+TriggerChannels:
+    - Triggers_HZZ4l
+
+Triggers_HZZ4l:
  - event.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL
  - event.HLT_DoubleEle25_CaloIdL_MW
  - event.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass3p8
@@ -44,7 +47,7 @@ Electron:
     LowEta:
       LowPT:
         0.926614978724
-      HighPT:        
+      HighPT:
         0.352678981617
     MedEta:
       LowPT:

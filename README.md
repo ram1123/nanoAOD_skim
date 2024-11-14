@@ -6,55 +6,59 @@ nanoAOD skiming code for H->ZZ->2l2Q studies.
 1. Step: 1: Get CMSSW release
 
    ```bash
-   cmsrel CMSSW_10_6_30
-   cd CMSSW_10_6_30/src
+   cmsrel CMSSW_14_0_2
+   cd CMSSW_14_0_2/src
    cmsenv
    ```
 
 2. Step: 2: Get  official nanoAODTools
 
    ```bash
-   git clone git@github.com:cms-nanoAOD/nanoAOD-tools.git PhysicsTools/NanoAODTools
-   cd PhysicsTools/NanoAODTools
-   git checkout 65359982275c476834ad4b37363d658166881f12 # Updated to commit on 16 June 2023 in official nanoAOD-tools
+   git clone -b h4l_dev git@github.com:ram1123/nanoAOD-tools.git PhysicsTools/NanoAODTools
    ```
 
 3. Step: 3: Get our analysis repository
 
    ```bash
+   # Main analysis repository
    cd $CMSSW_BASE/src
    git clone git@github.com:ram1123/nanoAOD_skim.git PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim
    cd PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim
-   git checkout ZXCR
-   cd -
-   cmsenv
-   # patch PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim/nanoAOD_tools.patch
-   cp PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim/data/btag/*.csv PhysicsTools/NanoAODTools/data/btagSF/.
-   scram b
-   voms-proxy-init --voms cms --valid 168:00
-   ```
+   git checkout ZXCR_EL9
 
-   (Optional: Fix git repo)
-
-   ```bash
-   find PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim/.git/ -name "*.py*" -delete
+   # External package: yaml-cpp
+   git clone git@github.com:jbeder/yaml-cpp.git external/yaml-cpp
+   cd external/yaml-cpp/
+   git apply ../yamlcpp_pkg_py2to3.patch
+   mkdir build
+   cd build
+   cmake3 .. -DBUILD_SHARED_LIBS=ON
+   cmake3 --build .
+   cd $CMSSW_BASE/src
+   scram b -j 8
    ```
 
 4. Step: 4: Get the MELA package
 
    ```bash
    cd $CMSSW_BASE/src/PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim
-   git clone -b v2.3.5 https://github.com/JHUGen/JHUGenMELA
+   git clone -b v2.4.2 https://github.com/JHUGen/JHUGenMELA
+   cd JHUGenMELA
+   git apply ../external/JHUGen_py2to3.patch
+   cd ..
    sh JHUGenMELA/MELA/setup.sh -j 8
-   cd JHUGenMELA/MELA
-   make
+   cd JHUGenMELA/MELA/data/el9_amd64_gcc12/
+   chmod +x *.so
    ```
 
 4. Step: 4: interactive running
 
    ```bash
    cd $CMSSW_BASE/src/PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim
-   python post_proc.py
+   export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/afs/cern.ch/work/r/rasharma/h2l2nu/checkNewSetup_15July2024/CMSSW_14_0_2/src/PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim/JHUGenMELA/MELA/data/el9_amd64_gcc12
+   # NOTE: The above export command is needed to run just before running the post_proc.py script. Otherwise, it will give error.
+   voms-proxy-init --voms cms --valid 168:00
+   python3 post_proc.py
    ```
 
 5. batch job submission.

@@ -1,5 +1,5 @@
 from PhysicsTools.NanoAODTools.postprocessing.framework.eventloop import Module
-from PhysicsTools.NanoAODTools.postprocessing.framework.datamodel import Collection
+from PhysicsTools.NanoAODTools.postprocessing.framework.datamodel import Collection, Object
 import ROOT
 import yaml
 import os
@@ -9,48 +9,121 @@ ROOT.PyConfig.IgnoreCommandLineOptions = True
 
 class HZZAnalysisCppProducer(Module):
     def __init__(self,year,cfgFile,isMC,isFSR,isFiducialAna, DEBUG=False):
-        base = "$CMSSW_BASE/src/PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim"
-        ROOT.gSystem.Load("%s/JHUGenMELA/MELA/data/slc7_amd64_gcc700/libJHUGenMELAMELA.so" % base)
-        ROOT.gSystem.Load("%s/JHUGenMELA/MELA/data/slc7_amd64_gcc700/libjhugenmela.so" % base)
-        ROOT.gSystem.Load("%s/JHUGenMELA/MELA/data/slc7_amd64_gcc700/libmcfm_707.so" % base)
-        ROOT.gSystem.Load("%s/JHUGenMELA/MELA/data/slc7_amd64_gcc700/libcollier.so" % base)
-        yaml_cpp_path = os.path.join(base, "external/yaml-cpp")
-        ROOT.gSystem.AddIncludePath("-I%s/include" % yaml_cpp_path)
-        yaml_cpp_lib_path = os.path.join(yaml_cpp_path, "build")
-        ROOT.gSystem.Load(os.path.join(yaml_cpp_lib_path, "libyaml-cpp.so"))
-        if "/H4LTools_cc.so" not in ROOT.gSystem.GetLibraries():
-            print("Load H4LTools C++ module")
-            base = "$CMSSW_BASE/src/PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim"
-            if base:
-                ROOT.gROOT.ProcessLine(
-                    ".L %s/src/H4LTools.cc+O" % base)
-            else:
-                base = "$CMSSW_BASE//src/PhysicsTools/NanoAODTools"
-                ROOT.gSystem.Load("libPhysicsToolsNanoAODTools.so")
-                ROOT.gROOT.ProcessLine(
-                    ".L %s/interface/H4LTools.h" % base)
+        self.loadLibraries()
         self.year = year
         self.isMC = isMC
         self.DEBUG = DEBUG
-        self.CutFlowTable =  ROOT.TH1F('cutFlow','cutFlow',18, -0.5, 17.5)
-        with open(cfgFile, 'r') as ymlfile:
-          cfg = yaml.load(ymlfile)
-          self.worker = ROOT.H4LTools(self.year,self.isMC)
-          self.worker.InitializeElecut(cfg['Electron']['pTcut'],cfg['Electron']['Etacut'],cfg['Electron']['Sip3dcut'],cfg['Electron']['Loosedxycut'],cfg['Electron']['Loosedzcut'],
-                                       cfg['Electron']['Isocut'],cfg['Electron']['BDTWP']['LowEta']['LowPT'],cfg['Electron']['BDTWP']['MedEta']['LowPT'],cfg['Electron']['BDTWP']['HighEta']['LowPT'],
-                                       cfg['Electron']['BDTWP']['LowEta']['HighPT'],cfg['Electron']['BDTWP']['MedEta']['HighPT'],cfg['Electron']['BDTWP']['HighEta']['HighPT'])
-          self.worker.InitializeMucut(cfg['Muon']['pTcut'],cfg['Muon']['Etacut'],cfg['Muon']['Sip3dcut'],cfg['Muon']['Loosedxycut'],cfg['Muon']['Loosedzcut'],cfg['Muon']['Isocut'],
-                                       cfg['Muon']['Tightdxycut'],cfg['Muon']['Tightdzcut'],cfg['Muon']['TightTrackerLayercut'],cfg['Muon']['TightpTErrorcut'],cfg['Muon']['HighPtBound'])
-          self.worker.InitializeFsrPhotonCut(cfg['FsrPhoton']['pTcut'],cfg['FsrPhoton']['Etacut'],cfg['FsrPhoton']['Isocut'],cfg['FsrPhoton']['dRlcut'],cfg['FsrPhoton']['dRlOverPtcut'])
-          self.worker.InitializeJetcut(cfg['Jet']['pTcut'],cfg['Jet']['Etacut'])
-          self.worker.InitializeEvtCut(cfg['MZ1cut'],cfg['MZZcut'],cfg['Higgscut']['down'],cfg['Higgscut']['up'],cfg['Zmass'],cfg['MZcut']['down'],cfg['MZcut']['up'])
-
-        self.passtrigEvts = 0
-        self.passZZEvts = 0
         self.cfgFile = cfgFile
+        self.cfg = self._load_config(cfgFile)
+        self.CutFlowTable =  ROOT.TH1F('cutFlow','cutFlow',20, 0, 20)
+        self.CutFlowTable.GetXaxis().SetBinLabel(1, "Events")
+        self.CutFlowTable.GetXaxis().SetBinLabel(2, "Trigger")
+        self.CutFlowTable.GetXaxis().SetBinLabel(3, "4Lepton")
+        self.CutFlowTable.GetXaxis().SetBinLabel(4, "4LeptonOSSF")
+        self.CutFlowTable.GetXaxis().SetBinLabel(5, "getTightZ")
+        self.CutFlowTable.GetXaxis().SetBinLabel(6, "getTightZ1")
+        self.CutFlowTable.GetXaxis().SetBinLabel(7, "lep_pTcut")
+        self.CutFlowTable.GetXaxis().SetBinLabel(8, "lepdRcut")
+        self.CutFlowTable.GetXaxis().SetBinLabel(9, "QCDcut")
+        self.CutFlowTable.GetXaxis().SetBinLabel(10, "Smartcut")
+        self.CutFlowTable.GetXaxis().SetBinLabel(11, "MZ1MZ2cut")
+        self.CutFlowTable.GetXaxis().SetBinLabel(12, "M4Lcut")
+        self.CutFlowTable.GetXaxis().SetBinLabel(13, "SR")
+        self.CutFlowTable.GetXaxis().SetBinLabel(14, "CR")
+        self.CutFlowTable.GetXaxis().SetBinLabel(15, "3Lepton")
+        self.CutFlowTable.GetXaxis().SetBinLabel(16, "properID_3lep")
+        self.CutFlowTable.GetXaxis().SetBinLabel(17, "3LepDRcut")
+        self.CutFlowTable.GetXaxis().SetBinLabel(18, "3LepPtcut")
+        self.CutFlowTable.GetXaxis().SetBinLabel(19, "3LepQCDcut")
+        self.CutFlowTable.GetXaxis().SetBinLabel(20, "3LepTightZ1cut")
+
+        self.worker = ROOT.H4LTools(self.year, self.isMC)
+        self._initialize_worker(self.cfg)
         self.worker.isFSR = isFSR
+        self._initialize_counters()
         self.worker.isFiducialAna = isFiducialAna
         pass
+
+    def loadLibraries(self):
+        base_path = os.getenv('CMSSW_BASE') + '/src/PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim'
+        yaml_cpp_path = os.path.join(base_path, "external/yaml-cpp")
+
+        # Adding yaml-cpp headers to the include path
+        ROOT.gSystem.AddIncludePath("-I%s/include" % yaml_cpp_path)
+        libraries = [
+            'libmcfm_710.so',
+            'libJHUGenMELAMELA.so',
+            'libjhugenmela.so',
+            'libcollier.so',
+        ]
+        for lib in libraries:
+            fullPath = os.path.join(base_path, 'JHUGenMELA/MELA/data/el9_amd64_gcc12', lib)
+            ROOT.gSystem.Load(fullPath)
+
+        # Load the yaml-cpp library
+        yaml_cpp_lib_path = os.path.join(yaml_cpp_path, "build")
+        ROOT.gSystem.Load(os.path.join(yaml_cpp_lib_path, "libyaml-cpp.so"))
+
+        # Load the C++ module
+        if "/H4LTools_cc.so" not in ROOT.gSystem.GetLibraries():
+            print("Load H4LTools C++ module")
+            if base_path:
+                ROOT.gROOT.ProcessLine(
+                    ".L %s/src/H4LTools.cc+O" % base_path)
+            else:
+                base_path = "$CMSSW_BASE//src/PhysicsTools/NanoAODTools"
+                ROOT.gSystem.Load("libPhysicsToolsNanoAODTools.so")
+                ROOT.gROOT.ProcessLine(
+                    ".L %s/interface/H4LTools.h" % base_path)
+
+    def _load_config(self, cfgFile):
+        with open(cfgFile, 'r') as ymlfile:
+            return yaml.safe_load(ymlfile)
+
+    def _initialize_worker(self, cfg):
+        self.worker.InitializeElecut(*self._get_nested_values(cfg['Electron'], [
+            'pTcut', 'Etacut', 'Sip3dcut', 'Loosedxycut', 'Loosedzcut',
+            'Isocut', ['BDTWP', 'LowEta', 'LowPT'], ['BDTWP', 'MedEta', 'LowPT'],
+            ['BDTWP', 'HighEta', 'LowPT'], ['BDTWP', 'LowEta', 'HighPT'],
+            ['BDTWP', 'MedEta', 'HighPT'], ['BDTWP', 'HighEta', 'HighPT']
+            ]))
+        self.worker.InitializeMucut(*self._get_nested_values(cfg['Muon'], [
+            'pTcut', 'Etacut', 'Sip3dcut', 'Loosedxycut', 'Loosedzcut', 'Isocut',
+            'Tightdxycut', 'Tightdzcut', 'TightTrackerLayercut', 'TightpTErrorcut',
+            'HighPtBound'
+            ]))
+        self.worker.InitializeFsrPhotonCut(*self._get_nested_values(cfg['FsrPhoton'], [
+            'pTcut', 'Etacut', 'Isocut', 'dRlcut', 'dRlOverPtcut'
+            ]))
+        self.worker.InitializeJetcut(*self._get_nested_values(cfg['Jet'], ['pTcut', 'Etacut']))
+        self.worker.InitializeEvtCut(*self._get_nested_values(cfg, ['MZ1cut', 'MZZcut',
+                                                                    ['Higgscut', 'down'], ['Higgscut', 'up'],
+                                                                    'Zmass', ['MZcut', 'down'], ['MZcut', 'up'],
+                                                                    ]))
+
+
+    def _get_nested_values(self, dictionary, keys):
+        values = []
+        for key in keys:
+            if isinstance(key, list):
+                sub_dict = dictionary
+                for sub_key in key:
+                    sub_dict = sub_dict.get(sub_key, {})
+                values.append(sub_dict if sub_dict else 'N/A')
+            else:
+                values.append(dictionary.get(key, 'N/A'))
+        return values
+
+    def _initialize_counters(self):
+        self.passAllEvts = 0
+        self.passtrigEvts = 0
+        self.passMETFilters = 0
+        self.passZZ4lEvts = 0
+        self.passZZ2l2qEvts = 0
+        self.passZZ2l2nuEvts = 0
+        self.passZZ2l2nu_emuCR_Evts = 0
+        self.passZZEvts = 0
+
     def beginJob(self):
         pass
 
@@ -81,6 +154,9 @@ class HZZAnalysisCppProducer(Module):
     def beginFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
         self.initReaders(inputTree)  # initReaders must be called in beginFile
         self.out = wrappedOutputTree
+        # Boolean branches for Trigger channels
+        for TriggerChannel in self.cfg['TriggerChannels']:
+            self.out.branch(TriggerChannel, "O")
         self.out.branch("mass4l",  "F")
         self.out.branch("mass4e",  "F")
         self.out.branch("mass4mu",  "F")
@@ -235,12 +311,21 @@ class HZZAnalysisCppProducer(Module):
         phi4l = -99
         mass4l = 0
         rapidity4l = -99
-        passedTrig = PassTrig(event, self.cfgFile)
-        if (passedTrig==True):
-            self.passtrigEvts += 1
-            #keepIt = True
-        else:
+
+        TriggerMap = {}
+        passedTrig = False
+        for TriggerChannel in self.cfg['TriggerChannels']:
+            TriggerMap[TriggerChannel] = PassTrig(event, self.cfg, TriggerChannel)
+
+        # If any of the trigger channel from TriggerMap passes, then the event is kept else return keepIt
+        for value in TriggerMap.values():
+            if value:
+                passedTrig = True
+                break
+        if not passedTrig:
             return keepIt
+        self.passtrigEvts += 1
+
         electrons = Collection(event, "Electron")
         muons = Collection(event, "Muon")
         fsrPhotons = Collection(event, "FsrPhoton")
@@ -272,6 +357,7 @@ class HZZAnalysisCppProducer(Module):
         self.worker.findZ1LCandidate()
         if ((self.worker.nTightEle<2)|(self.worker.nTightMu<2)):
             pass
+        self.worker.ZZSelection()
 
         Electron_Fsr_pt_vec = self.worker.ElectronFsrPt()
         Electron_Fsr_eta_vec = self.worker.ElectronFsrEta()
@@ -356,7 +442,7 @@ class HZZAnalysisCppProducer(Module):
                 lep_matchedR03_MomId.append(lep_matchedR03_MomId_vec[i])
                 lep_matchedR03_MomMomId.append(lep_matchedR03_MomMomId_vec[i])
                 lep_RelIsoNoFSR.append(lep_RelIsoNoFSR_vec[i])
-        
+
         if (foundZZCandidate):
             self.passZZEvts += 1
         pTZ1 = self.worker.Z1.Pt()
@@ -449,7 +535,7 @@ class HZZAnalysisCppProducer(Module):
         if self.worker.flag4e:
             mass4e = mass4l
         if self.worker.flag2e2mu:
-            mass4e = mass4l
+            mass2e2mu = mass4l
         if self.worker.flag4mu:
             mass4mu = mass4l
         if (self.worker.isFSR==False & (passedFullSelection | passedZXCRSelection)):
@@ -459,7 +545,10 @@ class HZZAnalysisCppProducer(Module):
             mass4l = self.worker.mass4l
             rapidity4l = self.worker.ZZsystemnofsr.Rapidity()
 
-       
+
+        # Fill the branches with the Trigger information for each channel
+        for TriggerChannel in self.cfg['TriggerChannels']:
+            self.out.fillBranch(TriggerChannel, TriggerMap[TriggerChannel])
         self.out.fillBranch("mass4l",mass4l)
         self.out.fillBranch("mass4e",mass4e)
         self.out.fillBranch("mass2e2mu",mass2e2mu)
@@ -544,8 +633,8 @@ class HZZAnalysisCppProducer(Module):
         self.out.fillBranch("lep_matchedR03_MomId", lep_matchedR03_MomId)
         self.out.fillBranch("lep_matchedR03_PdgId", lep_matchedR03_PdgId)
         self.out.fillBranch("lep_matchedR03_MomMomId", lep_matchedR03_MomMomId)
-        
-        
+
+
 
         # self.out.fillBranch("nElectron_Fsr", len(electrons))
         # self.out.fillBranch("nMuon_Fsr", len(muons))
