@@ -136,7 +136,7 @@ class H4LTools {
       void SetGenParts(float GenPart_pt_, int GenPart_genPartIdxMother_, int GenPart_pdgId_){
         GenPart_pt.push_back(GenPart_pt_);
         GenPart_genPartIdxMother.push_back(GenPart_genPartIdxMother_);
-        GenPart_pdgId.push_back(GenPart_genPartIdxMother_);
+        GenPart_pdgId.push_back(GenPart_pdgId_);
       }
       void SetObjectNum(unsigned nElectron_,unsigned nMuon_,unsigned nJet_,unsigned nFsrPhoton_){
         nElectron = nElectron_; 
@@ -348,7 +348,7 @@ class H4LTools {
         pTj1 = -99;  etaj1 = -99;  phij1 = -99;  mj1 = -99;
         pTj2 = -99;  etaj2 = -99;  phij2 = -99;  mj2 = -99;
         CutFlow_4Lepton=false;CutFlow_4LeptonOSSF=false;CutFlow_getTightZ=false;CutFlow_getTightZ1=false;CutFlow_lep_pTcut=false;CutFlow_lepdRcut=false;CutFlow_QCDcut=false;CutFlow_Smartcut=false;CutFlow_MZ1MZ2cut=false;CutFlow_M4Lcut=false;CutFlow_CR=false;CutFlow_SR=false;
-        CutFlow_3Lep=false;CutFlow_properID=true;CutFlow_3LepDRcut=false;CutFlow_3LepPtcut=false;CutFlow_3LepQCDcut=false;CutFlow_tightZ1cut=false;
+        CutFlow_3Lep=false;CutFlow_properID=false;CutFlow_3LepDRcut=false;CutFlow_3LepPtcut=false;CutFlow_3LepQCDcut=false;CutFlow_tightZ1cut=false;
         flag4e=false; flag4mu=false; flag2e2mu=false;
         passedZ1LSelection = false; passedFullSelection = false; passedZXCRSelection = false;
       }
