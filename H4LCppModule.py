@@ -32,7 +32,7 @@ class HZZAnalysisCppProducer(Module):
         self.year = year
         self.isMC = isMC
         self.DEBUG = DEBUG
-        self.CutFlowTable =  ROOT.TH1F('cutFlow','cutFlow',18, -0.5, 17.5)
+        
         with open(cfgFile, 'r') as ymlfile:
           cfg = yaml.load(ymlfile)
           self.worker = ROOT.H4LTools(self.year,self.isMC)
@@ -80,6 +80,9 @@ class HZZAnalysisCppProducer(Module):
 
     def beginFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
         self.initReaders(inputTree)  # initReaders must be called in beginFile
+        
+        self.CutFlowTable =  ROOT.TH1F('cutFlow','cutFlow',20, -0.5, 19.5)
+        print("DEBUG1")
         self.out = wrappedOutputTree
         self.out.branch("mass4l",  "F")
         self.out.branch("mass4e",  "F")
@@ -173,7 +176,7 @@ class HZZAnalysisCppProducer(Module):
         self.out.branch("Muon_Fsr_pt",  "F", lenVar = "nMuon_Fsr")
         self.out.branch("Muon_Fsr_eta",  "F", lenVar = "nMuon_Fsr")
         self.out.branch("Muon_Fsr_phi",  "F", lenVar = "nMuon_Fsr")
-
+        print("DEBUG2")
         with open("SyncLepton2018GGH.txt", 'w') as f:
             f.write("Sync data list:"+"\n")
 
@@ -204,7 +207,7 @@ class HZZAnalysisCppProducer(Module):
         if isMC:
             self.worker.SetObjectNumGen(event.nGenPart)
         keepIt = False
-
+        #self.CutFlowTable.Fill(0)
         passedTrig=False
         passedFullSelection=False
         passedZ4lSelection=False
@@ -238,6 +241,7 @@ class HZZAnalysisCppProducer(Module):
         passedTrig = PassTrig(event, self.cfgFile)
         if (passedTrig==True):
             self.passtrigEvts += 1
+            self.CutFlowTable.Fill(1)
             #keepIt = True
         else:
             return keepIt
@@ -299,6 +303,7 @@ class HZZAnalysisCppProducer(Module):
                 Muon_Fsr_phi.append(Muon_Fsr_phi_vec[i])
 
         self.worker.findHiggsCandidate()
+        
         foundZZCandidate = self.worker.passedFullSelection
         passedFullSelection = self.worker.passedFullSelection
         passedZ1LSelection = self.worker.passedZ1LSelection
@@ -344,7 +349,7 @@ class HZZAnalysisCppProducer(Module):
         lep_matchedR03_PdgId_vec = self.worker.lep_matchedR03_PdgId
         lep_matchedR03_MomId_vec = self.worker.lep_matchedR03_MomId
         lep_matchedR03_MomMomId_vec = self.worker.lep_matchedR03_MomMomId
-
+        self.worker.ZZSelection()
         if len(lep_pt_vec)>0:
             for i in range(len(lep_pt_vec)):
                 lep_pt.append(lep_pt_vec[i])
@@ -411,24 +416,24 @@ class HZZAnalysisCppProducer(Module):
         CutFlow_M4Lcut = self.worker.CutFlow_M4Lcut
         CutFlow_SR = self.worker.CutFlow_SR
         CutFlow_CR = self.worker.CutFlow_CR
-        if CutFlow_4Lepton: self.CutFlowTable.Fill(0)
-        if CutFlow_4LeptonOSSF: self.CutFlowTable.Fill(1)
-        if CutFlow_getTightZ: self.CutFlowTable.Fill(2)
-        if CutFlow_getTightZ1: self.CutFlowTable.Fill(3)
-        if CutFlow_lep_pTcut: self.CutFlowTable.Fill(4)
-        if CutFlow_lepdRcut: self.CutFlowTable.Fill(5)
-        if CutFlow_QCDcut: self.CutFlowTable.Fill(6)
-        if CutFlow_Smartcut: self.CutFlowTable.Fill(7)
-        if CutFlow_MZ1MZ2cut: self.CutFlowTable.Fill(8)
-        if CutFlow_M4Lcut: self.CutFlowTable.Fill(9)
-        if CutFlow_SR: self.CutFlowTable.Fill(10)
-        if CutFlow_CR: self.CutFlowTable.Fill(11)
-        if self.worker.CutFlow_3Lep: self.CutFlowTable.Fill(12)
-        if self.worker.CutFlow_properID: self.CutFlowTable.Fill(13)
-        if self.worker.CutFlow_3LepDRcut: self.CutFlowTable.Fill(14)
-        if self.worker.CutFlow_3LepPtcut: self.CutFlowTable.Fill(15)
-        if self.worker.CutFlow_3LepQCDcut: self.CutFlowTable.Fill(16)
-        if self.worker.CutFlow_tightZ1cut: self.CutFlowTable.Fill(17)
+        if CutFlow_4Lepton: self.CutFlowTable.Fill(2)
+        if CutFlow_4LeptonOSSF: self.CutFlowTable.Fill(3)
+        if CutFlow_getTightZ: self.CutFlowTable.Fill(4)
+        if CutFlow_getTightZ1: self.CutFlowTable.Fill(5)
+        if CutFlow_lep_pTcut: self.CutFlowTable.Fill(6)
+        if CutFlow_lepdRcut: self.CutFlowTable.Fill(7)
+        if CutFlow_QCDcut: self.CutFlowTable.Fill(8)
+        if CutFlow_Smartcut: self.CutFlowTable.Fill(9)
+        if CutFlow_MZ1MZ2cut: self.CutFlowTable.Fill(10)
+        if CutFlow_M4Lcut: self.CutFlowTable.Fill(11)
+        if CutFlow_SR: self.CutFlowTable.Fill(12)
+        if CutFlow_CR: self.CutFlowTable.Fill(13)
+        if self.worker.CutFlow_3Lep: self.CutFlowTable.Fill(14)
+        if self.worker.CutFlow_properID: self.CutFlowTable.Fill(15)
+        if self.worker.CutFlow_3LepDRcut: self.CutFlowTable.Fill(16)
+        if self.worker.CutFlow_3LepPtcut: self.CutFlowTable.Fill(17)
+        if self.worker.CutFlow_3LepQCDcut: self.CutFlowTable.Fill(18)
+        if self.worker.CutFlow_tightZ1cut: self.CutFlowTable.Fill(19)
         if pTL2>pTL1:
             pTL1, pTl2 = pTL2, pTL1
             etaL1, etaL2 = etaL2, etaL1
