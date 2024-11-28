@@ -25,7 +25,7 @@ class HZZAnalysisCppProducer(Module):
         self.worker.isFSR = isFSR
         self._initialize_counters()
 
-        self.CutFlowTable =  ROOT.TH1F('cutFlow','cutFlow',20, 0, 20)
+        self.CutFlowTable =  ROOT.TH1F('cutFlow','cutFlow',42, 0, 42)
         self.CutFlowTable.GetXaxis().SetBinLabel(1, "Total")
         self.CutFlowTable.GetXaxis().SetBinLabel(2, "PassTrig")
         self.CutFlowTable.GetXaxis().SetBinLabel(3, "PassMETFilters")
@@ -51,6 +51,23 @@ class HZZAnalysisCppProducer(Module):
         self.CutFlowTable.GetXaxis().SetBinLabel(23, "cutQCD2e2mu")
         self.CutFlowTable.GetXaxis().SetBinLabel(24, "cutZZ2e2mu")
         self.CutFlowTable.GetXaxis().SetBinLabel(25, "cutm4l2e2mu")
+        self.CutFlowTable.GetXaxis().SetBinLabel(26, "HZZ2l2qNu_cut2l")
+        self.CutFlowTable.GetXaxis().SetBinLabel(27, "HZZ2l2qNu_cutOppositeCharge")
+        self.CutFlowTable.GetXaxis().SetBinLabel(28, "HZZ2l2qNu_cutpTl1l2")
+        self.CutFlowTable.GetXaxis().SetBinLabel(29, "HZZ2l2qNu_cutETAl1l2")
+        self.CutFlowTable.GetXaxis().SetBinLabel(30, "HZZ2l2qNu_cutmZ1Window")
+        self.CutFlowTable.GetXaxis().SetBinLabel(31, "HZZ2l2qNu_cutZ1Pt")
+        self.CutFlowTable.GetXaxis().SetBinLabel(32, "cut2l1J")
+        self.CutFlowTable.GetXaxis().SetBinLabel(33, "cut2l2j")
+        self.CutFlowTable.GetXaxis().SetBinLabel(34, "cut2l1Jor2j")
+        self.CutFlowTable.GetXaxis().SetBinLabel(35, "HZZ2l2nu_cutbtag")
+        self.CutFlowTable.GetXaxis().SetBinLabel(36, "HZZ2l2nu_cutdPhiJetMET")
+        self.CutFlowTable.GetXaxis().SetBinLabel(37, "HZZ2l2nu_cutMETgT100")
+        self.CutFlowTable.GetXaxis().SetBinLabel(38, "HZZemuCR_cut2l")
+        self.CutFlowTable.GetXaxis().SetBinLabel(39, "HZZemuCR_cutpTl1l2")
+        self.CutFlowTable.GetXaxis().SetBinLabel(40, "HZZemuCR_cutETAl1l2")
+        self.CutFlowTable.GetXaxis().SetBinLabel(41, "HZZemuCR_cutmZ1Window")
+        self.CutFlowTable.GetXaxis().SetBinLabel(42, "HZZemuCR_cutZ1Pt")
 
 
     def loadLibraries(self):
@@ -551,6 +568,12 @@ class HZZAnalysisCppProducer(Module):
         isBoosted2l2q = False
 
         if self.worker.GetZ1_2l2qOR2l2nu():  #commented out for now
+            self.CutFlowTable.SetBinContent(25, HZZ2l2qNu_cut2l)
+            self.CutFlowTable.SetBinContent(26, HZZ2l2qNu_cutOppositeCharge)
+            self.CutFlowTable.SetBinContent(27, HZZ2l2qNu_cutpTl1l2)
+            self.CutFlowTable.SetBinContent(28, HZZ2l2qNu_cutETAl1l2)
+            self.CutFlowTable.SetBinContent(29, HZZ2l2qNu_cutmZ1Window)
+            self.CutFlowTable.SetBinContent(30, HZZ2l2qNu_cutZ1Pt)
             # foundZZCandidate_2l2q = self.worker.ZZSelection_2l2q()
             # isBoosted2l2q = self.worker.isBoosted2l2q    # for 2l2q
             # if self.DEBUG: print("isBoosted2l2q: ", isBoosted2l2q)
@@ -558,6 +581,11 @@ class HZZAnalysisCppProducer(Module):
         # FIXME: To debug 2l2q and 2l2nu channels, I am commenting out the 4l channel
         # foundZZCandidate_4l = self.worker.ZZSelection_4l()
         if self.worker.GetZ1_emuCR():
+            self.CutFlowTable.SetBinContent(37, HZZemuCR_cut2l)
+            self.CutFlowTable.SetBinContent(38, HZZemuCR_cutpTl1l2)
+            self.CutFlowTable.SetBinContent(39, HZZemuCR_cutETAl1l2)
+            self.CutFlowTable.SetBinContent(40, HZZemuCR_cutmZ1Window)
+            self.CutFlowTable.SetBinContent(41, HZZemuCR_cutZ1Pt)
             #HZZ2l2nu_isEMuCR = True;
             foundZZCandidate_2l2nu_emuCR = self.worker.ZZSelection_2l2nu()
         #foundZZCandidate_2l2nu_emuCR = self.worker.ZZSelection_2l2nu_EMu_CR()
@@ -616,6 +644,9 @@ class HZZAnalysisCppProducer(Module):
             passZZ2l2qSelection = True
             self.passZZ2l2qEvts += 1
             self.CutFlowTable.Fill(4)
+            self.CutFlowTable.SetBinContent(31, cut2l1J)
+            self.CutFlowTable.SetBinContent(32, cut2l2j)
+            self.CutFlowTable.SetBinContent(33, cut2l1Jor2j)
 
             massZ2_2j = self.worker.Z2_2j.M()
             phiZ2_2j = self.worker.Z2_2j.Phi()
@@ -628,6 +659,10 @@ class HZZAnalysisCppProducer(Module):
             passZZ2l2nuSelection = True
             self.passZZ2l2nuEvts += 1
             self.CutFlowTable.Fill(5)
+            self.CutFlowTable.SetBinContent(34, HZZ2l2nu_cutbtag)
+            self.CutFlowTable.SetBinContent(35, HZZ2l2nu_cutdPhiJetMET)
+            self.CutFlowTable.SetBinContent(36, HZZ2l2nu_cutMETgT100)
+
             #     FatJet_PNZvsQCD = self.worker.FatJet_PNZvsQCD
             #     self.out.fillBranch("FatJet_PNZvsQCD",FatJet_PNZvsQCD)
 
