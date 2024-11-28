@@ -1069,9 +1069,10 @@ bool H4LTools::GetZ1_emuCR()
 
     if ((TightEleindex.size() == 1) && (TightMuindex.size() == 1))
     {
-
-        std::cout << "*****$$$$*****Size of tight ele: " << TightEleindex[0] << "\t " << ElelistFsr[TightEleindex[0]].Pt() << std::endl;
-        std::cout << "*****$$$$*****Size of tight mu: " << TightMuindex[0] << "\t " << MulistFsr[TightMuindex[0]].Pt() << std::endl;
+        if (DEBUG){
+            std::cout << "*****$$$$*****Size of tight ele: " << TightEleindex[0] << "\t " << ElelistFsr[TightEleindex[0]].Pt() << std::endl;
+            std::cout << "*****$$$$*****Size of tight mu: " << TightMuindex[0] << "\t " << MulistFsr[TightMuindex[0]].Pt() << std::endl;
+	}
         Z_emuCRlep1pt.push_back(ElelistFsr[TightEleindex[0]].Pt());
         Z_emuCRlep2pt.push_back(MulistFsr[TightMuindex[0]].Pt());
         Z_emuCRlep1eta.push_back(ElelistFsr[TightEleindex[0]].Eta());
@@ -1083,7 +1084,7 @@ bool H4LTools::GetZ1_emuCR()
     }
 
      if (DEBUG)
-     std::cout << "##Zlep1pt,Zlep2pt (emu control region): " << ElelistFsr[TightEleindex[0]].Pt() << ", " << MulistFsr[TightMuindex[0]].Pt() << std::endl;
+         std::cout << "##Zlep1pt,Zlep2pt (emu control region): " << ElelistFsr[TightEleindex[0]].Pt() << ", " << MulistFsr[TightMuindex[0]].Pt() << std::endl;
 
     Z1 = ElelistFsr[TightEleindex[0]] + MulistFsr[TightMuindex[0]];
     TLorentzVector Lep1, Lep2;
@@ -1106,7 +1107,7 @@ bool H4LTools::GetZ1_emuCR()
     }
     HZZemuCR_cutpTl1l2++;
 
-    //if (DEBUG)
+    if (DEBUG)
         std::cout << "*****$$$$*****Zlep1pt,Zlep2pt (emu control region): " << pTL1 << ", " << pTL2 << std::endl;
 
     /// eta selection
