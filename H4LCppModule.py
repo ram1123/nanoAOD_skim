@@ -597,6 +597,13 @@ class HZZAnalysisCppProducer(Module):
             self.passZZ2l2nuEvts += 1
             #     FatJet_PNZvsQCD = self.worker.FatJet_PNZvsQCD
             #     self.out.fillBranch("FatJet_PNZvsQCD",FatJet_PNZvsQCD)
+
+        if (foundZZCandidate_2l2nu_emuCR):
+            keepIt = True
+            passZZ2l2nu_emuCR_Selection = True
+            self.passZZ2l2nu_emuCR_Evts += 1
+
+        if (foundZZCandidate_2l2nu or foundZZCandidate_2l2nu_emuCR):
             phiZ2_met = self.worker.Z2_met.Phi()
             pTZ2_met = self.worker.Z2_met.Pt()
             EneZ2_met = self.worker.Z2_met.E()
@@ -642,10 +649,10 @@ class HZZAnalysisCppProducer(Module):
         # self.out.fillBranch("pTZ2_met",pTZ2_met)
         # self.out.fillBranch("EneZ2_met",EneZ2_met)
 
-        if (foundZZCandidate_2l2nu_emuCR):
-            keepIt = True
-            passZZ2l2nu_emuCR_Selection = True
-            self.passZZ2l2nu_emuCR_Evts += 1
+        #if (foundZZCandidate_2l2nu_emuCR):
+            #keepIt = True
+            #passZZ2l2nu_emuCR_Selection = True
+            #self.passZZ2l2nu_emuCR_Evts += 1
 
 
         if (foundZZCandidate_4l):
