@@ -190,7 +190,7 @@ class GenVarsProducer(Module):
             v1_decay_products_mass = [daughter.mass for daughter in v1_decay_products]
             self.DEBUG: print("v1_decay_products_pt:", v1_decay_products_pt, type(v1_decay_products_pt))
             self.DEBUG: print("v1_decay_products_mass:", v1_decay_products_mass, type(v1_decay_products_mass))
-            print("v1_decay_products_phi:", v1_decay_products_phi, type(v1_decay_products_phi))
+            self.DEBUG: print("v1_decay_products_phi:", v1_decay_products_phi, type(v1_decay_products_phi))
             #pz = v1_decay_products_pt[0] * math.sinh(v1_decay_products_eta[0])
             #self.DEBUG: print("pz of neutrino1:", pz, type(pz))
             #for i in range(2):
