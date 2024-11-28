@@ -25,6 +25,34 @@ class HZZAnalysisCppProducer(Module):
         self.worker.isFSR = isFSR
         self._initialize_counters()
 
+        self.CutFlowTable =  ROOT.TH1F('cutFlow','cutFlow',20, 0, 20)
+        self.CutFlowTable.GetXaxis().SetBinLabel(1, "Total")
+        self.CutFlowTable.GetXaxis().SetBinLabel(2, "PassTrig")
+        self.CutFlowTable.GetXaxis().SetBinLabel(3, "PassMETFilters")
+        self.CutFlowTable.GetXaxis().SetBinLabel(4, "PassZZSelection")
+        self.CutFlowTable.GetXaxis().SetBinLabel(5, "PassZZ2l2qSelection")
+        self.CutFlowTable.GetXaxis().SetBinLabel(6, "PassZZ2l2nuSelection")
+        self.CutFlowTable.GetXaxis().SetBinLabel(7, "PassZZ2l2nu_emuCR_Selection")
+        self.CutFlowTable.GetXaxis().SetBinLabel(8, "cut4e")
+        self.CutFlowTable.GetXaxis().SetBinLabel(9, "cutghost4e")
+        self.CutFlowTable.GetXaxis().SetBinLabel(10, "cutLepPt4e")
+        self.CutFlowTable.GetXaxis().SetBinLabel(11, "cutQCD4e")
+        self.CutFlowTable.GetXaxis().SetBinLabel(12, "cutZZ4e")
+        self.CutFlowTable.GetXaxis().SetBinLabel(13, "cutm4l4e")
+        self.CutFlowTable.GetXaxis().SetBinLabel(14, "cut4mu")
+        self.CutFlowTable.GetXaxis().SetBinLabel(15, "cutghost4mu")
+        self.CutFlowTable.GetXaxis().SetBinLabel(16, "cutLepPt4mu")
+        self.CutFlowTable.GetXaxis().SetBinLabel(17, "cutQCD4mu")
+        self.CutFlowTable.GetXaxis().SetBinLabel(18, "cutZZ4mu")
+        self.CutFlowTable.GetXaxis().SetBinLabel(19, "cutm4l4mu")
+        self.CutFlowTable.GetXaxis().SetBinLabel(20, "cut2e2mu")
+        self.CutFlowTable.GetXaxis().SetBinLabel(21, "cutghost2e2mu")
+        self.CutFlowTable.GetXaxis().SetBinLabel(22, "cutLepPt2e2mu")
+        self.CutFlowTable.GetXaxis().SetBinLabel(23, "cutQCD2e2mu")
+        self.CutFlowTable.GetXaxis().SetBinLabel(24, "cutZZ2e2mu")
+        self.CutFlowTable.GetXaxis().SetBinLabel(25, "cutm4l2e2mu")
+
+
     def loadLibraries(self):
         base_path = os.getenv('CMSSW_BASE') + '/src/PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim'
         yaml_cpp_path = os.path.join(base_path, "external/yaml-cpp")
@@ -359,6 +387,7 @@ class HZZAnalysisCppProducer(Module):
         passedFiducialSelection=False
         nZXCRFailedLeptons=0
         self.passAllEvts += 1
+        self.CutFlowTable.Fill(0)
 
         massZ2_2j = -999.
         phiZ2_2j = -999.
@@ -455,9 +484,11 @@ class HZZAnalysisCppProducer(Module):
         if not passedTrig:
             return keepIt
         self.passtrigEvts += 1
+        self.CutFlowTable.Fill(1)
 
         if passFilters(event, int(self.year)):
             self.passMETFilters += 1
+            self.CutFlowTable.Fill(2)
         else:
             return keepIt
         electrons = Collection(event, "Electron")
@@ -584,6 +615,7 @@ class HZZAnalysisCppProducer(Module):
             keepIt = True
             passZZ2l2qSelection = True
             self.passZZ2l2qEvts += 1
+            self.CutFlowTable.Fill(4)
 
             massZ2_2j = self.worker.Z2_2j.M()
             phiZ2_2j = self.worker.Z2_2j.Phi()
@@ -595,6 +627,7 @@ class HZZAnalysisCppProducer(Module):
             keepIt = True
             passZZ2l2nuSelection = True
             self.passZZ2l2nuEvts += 1
+            self.CutFlowTable.Fill(5)
             #     FatJet_PNZvsQCD = self.worker.FatJet_PNZvsQCD
             #     self.out.fillBranch("FatJet_PNZvsQCD",FatJet_PNZvsQCD)
 
@@ -602,6 +635,7 @@ class HZZAnalysisCppProducer(Module):
             keepIt = True
             passZZ2l2nu_emuCR_Selection = True
             self.passZZ2l2nu_emuCR_Evts += 1
+            self.CutFlowTable.Fill(6)
 
         if (foundZZCandidate_2l2nu or foundZZCandidate_2l2nu_emuCR):
             phiZ2_met = self.worker.Z2_met.Phi()
@@ -658,7 +692,26 @@ class HZZAnalysisCppProducer(Module):
         if (foundZZCandidate_4l):
             keepIt = True
             self.passZZ4lEvts += 1
+            self.CutFlowTable.Fill(3)
             passZZ4lSelection = True
+            self.CutFlowTable.SetBinContent(7, cut4e)
+            self.CutFlowTable.SetBinContent(8, cutghost4e)
+            self.CutFlowTable.SetBinContent(9, cutLepPt4e)
+            self.CutFlowTable.SetBinContent(10, cutQCD4e)
+            self.CutFlowTable.SetBinContent(11, cutZZ4e)
+            self.CutFlowTable.SetBinContent(12, cutm4l4e)
+            self.CutFlowTable.SetBinContent(13, cut4mu)
+            self.CutFlowTable.SetBinContent(14, cutghost4mu)
+            self.CutFlowTable.SetBinContent(15, cutLepPt4mu)
+            self.CutFlowTable.SetBinContent(16, cutQCD4mu)
+            self.CutFlowTable.SetBinContent(17, cutZZ4mu)
+            self.CutFlowTable.SetBinContent(18, cutm4l4mu)
+            self.CutFlowTable.SetBinContent(19, cut2e2mu)
+            self.CutFlowTable.SetBinContent(20, cutghost2e2mu)
+            self.CutFlowTable.SetBinContent(21, cutLepPt2e2mu)
+            self.CutFlowTable.SetBinContent(22, cutQCD2e2mu)
+            self.CutFlowTable.SetBinContent(23, cutZZ2e2mu)
+            self.CutFlowTable.SetBinContent(24, cutm4l2e2mu)
             # print("Inside 4l loop: ",passZZ2l2qSelection)
             D_CP = self.worker.D_CP
             D_0m = self.worker.D_0m
