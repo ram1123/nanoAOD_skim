@@ -272,7 +272,7 @@ class HZZAnalysisCppProducer(Module):
         # Branches for 2l2nu channel: ZZ kinematics
         self.out.branch("HZZ2l2nu_ZZmT",  "F")
         self.out.branch("HZZ2l2nu_ZZpT",  "F")
-        self.out.branch("Pz_neutrino", "F")
+        #self.out.branch("Pz_neutrino", "F")
 
         # Branches for 2l2nu channel: VBF jets and dijet kinematics
         self.out.branch("HZZ2l2qNu_nJets", "I")
@@ -440,7 +440,7 @@ class HZZAnalysisCppProducer(Module):
         eta4l = -999.
         phi4l = -999.
         mass4l = -999.
-        Pz_neutrino = -999.
+        #Pz_neutrino = -999.
 
         TriggerMap = {}
         passedTrig = False
@@ -608,7 +608,7 @@ class HZZAnalysisCppProducer(Module):
             HZZ2l2nu_ZZmT = self.worker.ZZ_metsystem.Mt()
             HZZ2l2nu_ZZpT = self.worker.ZZ_metsystem.Pt()
 
-            Pz_neutrino = self.worker.Pz_neutrino
+            #Pz_neutrino = self.worker.Pz_neutrino
 
             # Define TLorentzVector for VBF jets and get dijet mass
             if HZZ2l2nu_VBFIndexJet1>=0 and HZZ2l2nu_VBFIndexJet2>=0:
@@ -708,7 +708,7 @@ class HZZAnalysisCppProducer(Module):
         self.out.fillBranch("HZZ2l2nu_ZZmT", HZZ2l2nu_ZZmT)
         self.out.fillBranch("HZZ2l2nu_ZZpT", HZZ2l2nu_ZZpT)
         self.out.fillBranch("HZZ2l2nu_minDPhi_METAK4", HZZ2l2nu_minDPhi_METAK4)
-        self.out.fillBranch("Pz_neutrino", Pz_neutrino)
+        #self.out.fillBranch("Pz_neutrino", Pz_neutrino)
 
         self.out.fillBranch("HZZ2l2nu_VBFIndexJet1", HZZ2l2nu_VBFIndexJet1)
         self.out.fillBranch("HZZ2l2nu_VBFIndexJet2", HZZ2l2nu_VBFIndexJet2)
