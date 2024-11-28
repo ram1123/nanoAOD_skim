@@ -365,6 +365,8 @@ class HZZAnalysisCppProducer(Module):
             f.write("Sync data list:"+"\n")
 
     def endFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
+        outputFile.cd()
+        self.CutFlowTable.Write()
         pass
 
     # this function gets the pointers to Value and ArrayReaders and sets
@@ -568,12 +570,12 @@ class HZZAnalysisCppProducer(Module):
         isBoosted2l2q = False
 
         if self.worker.GetZ1_2l2qOR2l2nu():  #commented out for now
-            self.CutFlowTable.SetBinContent(25, getattr(self.worker, "HZZ2l2qNu_cut2l", 'N/A'))
-            self.CutFlowTable.SetBinContent(26, getattr(self.worker, "HZZ2l2qNu_cutOppositeCharge", 'N/A'))
-            self.CutFlowTable.SetBinContent(27, getattr(self.worker, "HZZ2l2qNu_cutpTl1l2", 'N/A'))
-            self.CutFlowTable.SetBinContent(28, getattr(self.worker, "HZZ2l2qNu_cutETAl1l2", 'N/A'))
-            self.CutFlowTable.SetBinContent(29, getattr(self.worker, "HZZ2l2qNu_cutmZ1Window", 'N/A'))
-            self.CutFlowTable.SetBinContent(30, getattr(self.worker, "HZZ2l2qNu_cutZ1Pt", 'N/A'))
+            self.CutFlowTable.SetBinContent(26, getattr(self.worker, "HZZ2l2qNu_cut2l", 'N/A'))
+            self.CutFlowTable.SetBinContent(27, getattr(self.worker, "HZZ2l2qNu_cutOppositeCharge", 'N/A'))
+            self.CutFlowTable.SetBinContent(28, getattr(self.worker, "HZZ2l2qNu_cutpTl1l2", 'N/A'))
+            self.CutFlowTable.SetBinContent(29, getattr(self.worker, "HZZ2l2qNu_cutETAl1l2", 'N/A'))
+            self.CutFlowTable.SetBinContent(30, getattr(self.worker, "HZZ2l2qNu_cutmZ1Window", 'N/A'))
+            self.CutFlowTable.SetBinContent(31, getattr(self.worker, "HZZ2l2qNu_cutZ1Pt", 'N/A'))
             # foundZZCandidate_2l2q = self.worker.ZZSelection_2l2q()
             # isBoosted2l2q = self.worker.isBoosted2l2q    # for 2l2q
             # if self.DEBUG: print("isBoosted2l2q: ", isBoosted2l2q)
@@ -581,11 +583,11 @@ class HZZAnalysisCppProducer(Module):
         # FIXME: To debug 2l2q and 2l2nu channels, I am commenting out the 4l channel
         # foundZZCandidate_4l = self.worker.ZZSelection_4l()
         if self.worker.GetZ1_emuCR():
-            self.CutFlowTable.SetBinContent(37, getattr(self.worker, "HZZemuCR_cut2l", 'N/A'))
-            self.CutFlowTable.SetBinContent(38, getattr(self.worker, "HZZemuCR_cutpTl1l2", 'N/A'))
-            self.CutFlowTable.SetBinContent(39, getattr(self.worker, "HZZemuCR_cutETAl1l2", 'N/A'))
-            self.CutFlowTable.SetBinContent(40, getattr(self.worker, "HZZemuCR_cutmZ1Window", 'N/A'))
-            self.CutFlowTable.SetBinContent(41, getattr(self.worker, "HZZemuCR_cutZ1Pt", 'N/A'))
+            self.CutFlowTable.SetBinContent(38, getattr(self.worker, "HZZemuCR_cut2l", 'N/A'))
+            self.CutFlowTable.SetBinContent(39, getattr(self.worker, "HZZemuCR_cutpTl1l2", 'N/A'))
+            self.CutFlowTable.SetBinContent(40, getattr(self.worker, "HZZemuCR_cutETAl1l2", 'N/A'))
+            self.CutFlowTable.SetBinContent(41, getattr(self.worker, "HZZemuCR_cutmZ1Window", 'N/A'))
+            self.CutFlowTable.SetBinContent(42, getattr(self.worker, "HZZemuCR_cutZ1Pt", 'N/A'))
             #HZZ2l2nu_isEMuCR = True;
             foundZZCandidate_2l2nu_emuCR = self.worker.ZZSelection_2l2nu()
         #foundZZCandidate_2l2nu_emuCR = self.worker.ZZSelection_2l2nu_EMu_CR()
@@ -644,9 +646,9 @@ class HZZAnalysisCppProducer(Module):
             passZZ2l2qSelection = True
             self.passZZ2l2qEvts += 1
             self.CutFlowTable.Fill(4)
-            self.CutFlowTable.SetBinContent(31, getattr(self.worker, "cut2l1J", 'N/A'))
-            self.CutFlowTable.SetBinContent(32, getattr(self.worker, "cut2l2j", 'N/A'))
-            self.CutFlowTable.SetBinContent(33, getattr(self.worker, "cut2l1Jor2j", 'N/A'))
+            self.CutFlowTable.SetBinContent(32, getattr(self.worker, "cut2l1J", 'N/A'))
+            self.CutFlowTable.SetBinContent(33, getattr(self.worker, "cut2l2j", 'N/A'))
+            self.CutFlowTable.SetBinContent(34, getattr(self.worker, "cut2l1Jor2j", 'N/A'))
 
             massZ2_2j = self.worker.Z2_2j.M()
             phiZ2_2j = self.worker.Z2_2j.Phi()
@@ -659,9 +661,9 @@ class HZZAnalysisCppProducer(Module):
             passZZ2l2nuSelection = True
             self.passZZ2l2nuEvts += 1
             self.CutFlowTable.Fill(5)
-            self.CutFlowTable.SetBinContent(34, getattr(self.worker, "HZZ2l2nu_cutbtag", 'N/A'))
-            self.CutFlowTable.SetBinContent(35, getattr(self.worker, "HZZ2l2nu_cutdPhiJetMET", 'N/A'))
-            self.CutFlowTable.SetBinContent(36, getattr(self.worker, "HZZ2l2nu_cutMETgT100", 'N/A'))
+            self.CutFlowTable.SetBinContent(35, getattr(self.worker, "HZZ2l2nu_cutbtag", 'N/A'))
+            self.CutFlowTable.SetBinContent(36, getattr(self.worker, "HZZ2l2nu_cutdPhiJetMET", 'N/A'))
+            self.CutFlowTable.SetBinContent(37, getattr(self.worker, "HZZ2l2nu_cutMETgT100", 'N/A'))
 
             #     FatJet_PNZvsQCD = self.worker.FatJet_PNZvsQCD
             #     self.out.fillBranch("FatJet_PNZvsQCD",FatJet_PNZvsQCD)
@@ -729,24 +731,24 @@ class HZZAnalysisCppProducer(Module):
             self.passZZ4lEvts += 1
             self.CutFlowTable.Fill(3)
             passZZ4lSelection = True
-            self.CutFlowTable.SetBinContent(7, getattr(self.worker, "cut4e", 'N/A'))
-            self.CutFlowTable.SetBinContent(8, getattr(self.worker, "cutghost4e", 'N/A'))
-            self.CutFlowTable.SetBinContent(9, getattr(self.worker, "cutLepPt4e", 'N/A'))
-            self.CutFlowTable.SetBinContent(10, getattr(self.worker, "cutQCD4e", 'N/A'))
-            self.CutFlowTable.SetBinContent(11, getattr(self.worker, "cutZZ4e", 'N/A'))
-            self.CutFlowTable.SetBinContent(12, getattr(self.worker, "cutm4l4e", 'N/A'))
-            self.CutFlowTable.SetBinContent(13, getattr(self.worker, "cut4mu", 'N/A'))
-            self.CutFlowTable.SetBinContent(14, getattr(self.worker, "cutghost4mu", 'N/A'))
-            self.CutFlowTable.SetBinContent(15, getattr(self.worker, "cutLepPt4mu", 'N/A'))
-            self.CutFlowTable.SetBinContent(16, getattr(self.worker, "cutQCD4mu", 'N/A'))
-            self.CutFlowTable.SetBinContent(17, getattr(self.worker, "cutZZ4mu", 'N/A'))
-            self.CutFlowTable.SetBinContent(18, getattr(self.worker, "cutm4l4mu", 'N/A'))
-            self.CutFlowTable.SetBinContent(19, getattr(self.worker, "cut2e2mu", 'N/A'))
-            self.CutFlowTable.SetBinContent(20, getattr(self.worker, "cutghost2e2mu", 'N/A'))
-            self.CutFlowTable.SetBinContent(21, getattr(self.worker, "cutLepPt2e2mu", 'N/A'))
-            self.CutFlowTable.SetBinContent(22, getattr(self.worker, "cutQCD2e2mu", 'N/A'))
-            self.CutFlowTable.SetBinContent(23, getattr(self.worker, "cutZZ2e2mu", 'N/A'))
-            self.CutFlowTable.SetBinContent(24, getattr(self.worker, "cutm4l2e2mu", 'N/A'))
+            self.CutFlowTable.SetBinContent(8, getattr(self.worker, "cut4e", 'N/A'))
+            self.CutFlowTable.SetBinContent(9, getattr(self.worker, "cutghost4e", 'N/A'))
+            self.CutFlowTable.SetBinContent(10, getattr(self.worker, "cutLepPt4e", 'N/A'))
+            self.CutFlowTable.SetBinContent(11, getattr(self.worker, "cutQCD4e", 'N/A'))
+            self.CutFlowTable.SetBinContent(12, getattr(self.worker, "cutZZ4e", 'N/A'))
+            self.CutFlowTable.SetBinContent(13, getattr(self.worker, "cutm4l4e", 'N/A'))
+            self.CutFlowTable.SetBinContent(14, getattr(self.worker, "cut4mu", 'N/A'))
+            self.CutFlowTable.SetBinContent(15, getattr(self.worker, "cutghost4mu", 'N/A'))
+            self.CutFlowTable.SetBinContent(16, getattr(self.worker, "cutLepPt4mu", 'N/A'))
+            self.CutFlowTable.SetBinContent(17, getattr(self.worker, "cutQCD4mu", 'N/A'))
+            self.CutFlowTable.SetBinContent(18, getattr(self.worker, "cutZZ4mu", 'N/A'))
+            self.CutFlowTable.SetBinContent(19, getattr(self.worker, "cutm4l4mu", 'N/A'))
+            self.CutFlowTable.SetBinContent(20, getattr(self.worker, "cut2e2mu", 'N/A'))
+            self.CutFlowTable.SetBinContent(21, getattr(self.worker, "cutghost2e2mu", 'N/A'))
+            self.CutFlowTable.SetBinContent(22, getattr(self.worker, "cutLepPt2e2mu", 'N/A'))
+            self.CutFlowTable.SetBinContent(23, getattr(self.worker, "cutQCD2e2mu", 'N/A'))
+            self.CutFlowTable.SetBinContent(24, getattr(self.worker, "cutZZ2e2mu", 'N/A'))
+            self.CutFlowTable.SetBinContent(25, getattr(self.worker, "cutm4l2e2mu", 'N/A'))
             # print("Inside 4l loop: ",passZZ2l2qSelection)
             D_CP = self.worker.D_CP
             D_0m = self.worker.D_0m
