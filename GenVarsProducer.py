@@ -70,8 +70,8 @@ class GenVarsProducer(Module):
         found_Z1 = False
         found_Z2 = False
         temp_boson = None
-        Z1 = ROOT.TLorentzVector()
-        Z2 = ROOT.TLorentzVector()
+        Z1 = ROOT.TLorentzVector(0.0,0.0,0.0, 0.0)
+        Z2 = ROOT.TLorentzVector(0.0,0.0,0.0, 0.0)
         v1_decay_products = []
         v2_decay_products = []
         #boost_Z1 = None
@@ -83,6 +83,10 @@ class GenVarsProducer(Module):
         neutrino2_pz = 0.0
         delta_pz_neutrino = 0.0
         pz1 = 0.0
+        pz2 = 0.0
+        E1 = 0.0
+        E2 = 0.0
+        v1_eta = 0.0
 
         self.DEBUG: print("length of genParticles: {}".format(len(genParticles)))
         for idx, particle in enumerate(genParticles):
@@ -95,12 +99,15 @@ class GenVarsProducer(Module):
             elif (abs(particle.pdgId) == 23) and (particle.statusFlags >> 13 & 1) and self.getParentID(particle, genParticles) == 25:
                 self.DEBUG: print("DEBUG - line 76 (found Z boson, daughter of higgs): Index: {}, Particle ID: {}, Parent ID: {}, MotherIdx: {}, Status: {}".format(idx, particle.pdgId, self.getParentID(particle, genParticles), particle.genPartIdxMother, particle.statusFlags >> 13 & 1))
 
-                if v1 is None or v2 is None:
+                if v1 is None:
+                #if (abs(particle.pdgId) == 23):
                     v1_daughters = []
-                    v2_daughters = []
+                    #v2_daughters = []
                     for daughter1 in genParticles:
-                        if abs(daughter1.pdgId) in [11, 13, 15] and daughter1.genPartIdxMother == idx and self.getParentID(daughter1, genParticles) == 23 and daughter1.statusFlags >> 13 & 1:
+                        if abs(daughter1.pdgId) in [11, 13] and daughter1.genPartIdxMother == idx and self.getParentID(daughter1, genParticles) == 23 and daughter1.statusFlags >> 13 & 1:
                             v1 = particle
+                            #v1_eta = v1.eta
+                            #self.out.fillBranch("genV1Eta", v1_eta)
                             found_Z1 = True
                             self.DEBUG: print("DEBUG - line 81 (found Z1 boson, daughter of higgs): Index: {}, Particle ID: {}, Parent ID: {}, MotherIdx: {}, Status: {}".format(idx, v1.pdgId, self.getParentID(v1, genParticles), v1.genPartIdxMother, v1.statusFlags >> 13 & 1))
                             v1_daughters.append(daughter1)
@@ -126,6 +133,8 @@ class GenVarsProducer(Module):
                     #v1 = particle
                     #v2_daughters = []
                     #v1_daughters = []
+                if v2 is None:
+                    v2_daughters = []
                     for daughter2 in genParticles:
                         if abs(daughter2.pdgId) in [12, 14, 16] and daughter2.genPartIdxMother == idx and self.getParentID(daughter2, genParticles) == 23 and daughter2.statusFlags >> 13 & 1:
                             v2 = particle
@@ -149,12 +158,13 @@ class GenVarsProducer(Module):
             higgs_phi = higgs.phi
             higgs_mass = higgs.mass
         else:
-            higgs_pt = -1.
-            higgs_eta = 0.
-            higgs_phi = 0.
-            higgs_mass = -1.
+            higgs_pt = -999.
+            higgs_eta = -999.
+            higgs_phi = -999.
+            higgs_mass = -999.
 
         if v1 is not None:
+        #if found_Z1 == True:
             v1_pt = v1.pt
             v1_eta = v1.eta
             v1_phi = v1.phi
@@ -166,10 +176,10 @@ class GenVarsProducer(Module):
             #boost_Z1_mag = boost_Z1.Mag()
 
         else:
-            v1_pt = -1.
-            v1_eta = 0.
-            v1_phi = 0.
-            v1_mass = -1.
+            v1_pt = -999.
+            v1_eta = -999.
+            v1_phi = -999.
+            v1_mass = -999.
 
         if len(v1_decay_products) == 2:
             #v1_decay_products[0] = ROOT.TLorentzVector()
@@ -179,6 +189,8 @@ class GenVarsProducer(Module):
             v1_decay_products_phi = [daughter.phi for daughter in v1_decay_products]
             v1_decay_products_mass = [daughter.mass for daughter in v1_decay_products]
             self.DEBUG: print("v1_decay_products_pt:", v1_decay_products_pt, type(v1_decay_products_pt))
+            self.DEBUG: print("v1_decay_products_mass:", v1_decay_products_mass, type(v1_decay_products_mass))
+            print("v1_decay_products_phi:", v1_decay_products_phi, type(v1_decay_products_phi))
             #pz = v1_decay_products_pt[0] * math.sinh(v1_decay_products_eta[0])
             #self.DEBUG: print("pz of neutrino1:", pz, type(pz))
             #for i in range(2):
@@ -188,10 +200,10 @@ class GenVarsProducer(Module):
                  #neutrino2_pz = v1_decay_products[1].Pz()
             #self.DEBUG: print("neutrino1_pz:", neutrino1_pz, type(neutrino1_pz))
         else:
-            v1_decay_products_pt = [-1.]
-            v1_decay_products_eta = [0.]
-            v1_decay_products_phi = [0.]
-            v1_decay_products_mass = [-1.]
+            v1_decay_products_pt = [-999.]
+            v1_decay_products_eta = [-999.]
+            v1_decay_products_phi = [-999.]
+            v1_decay_products_mass = [-999.]
 
 
         if v2 is not None:
@@ -207,11 +219,10 @@ class GenVarsProducer(Module):
             #boost_Z2_mag = boost_Z2.Mag()
 
         else:
-            v2_pt = -1.
-            v2_eta = 0.
-            v2_phi = 0.
-            v2_mass = -1.
-            found = 0
+            v2_pt = -999.
+            v2_eta = -999.
+            v2_phi = -999.
+            v2_mass = -999.
 
         if len(v2_decay_products) == 2:
             v2_decay_products_pt = [daughter.pt for daughter in v2_decay_products]
@@ -233,15 +244,31 @@ class GenVarsProducer(Module):
             v2_decay_products[0].SetPtEtaPhiM(v2_decay_products_pt[0], v2_decay_products_eta[0], v2_decay_products_phi[0], v2_decay_products_mass[0])
             v2_decay_products[1] = ROOT.TLorentzVector()
             v2_decay_products[1].SetPtEtaPhiM(v2_decay_products_pt[1], v2_decay_products_eta[1], v2_decay_products_phi[1], v2_decay_products_mass[1])
+            #neutrino 1
             pz1 = v2_decay_products[0].Pz()
             self.DEBUG: print("pz of neutrino1_new:", pz1, type(pz1))
+            E1 = v2_decay_products[0].E()
+            px1 = v2_decay_products[0].Px()
+            py1 = v2_decay_products[0].Py()
+            p_mag1 = math.sqrt(px1**2 + py1**2 + pz1**2)
+            beta1 = v2_decay_products[0].Beta()
+            #print("beta 1:", beta1, type(beta1))
+            gamma1 = v2_decay_products[0].Gamma()
+            #print("gamma1:", gamma1, type(gamma1))
+            #pz1_com = gamma1*(pz1 - beta1*E1)
+            #print("pz of neutrino1 in COM frame:", pz1_com, type(pz1_com))
+
+            #neutrino 2
             pz2 = v2_decay_products[1].Pz()
             self.DEBUG: print("pz of neutrino2_new:", pz2, type(pz2))
+            E2 = v2_decay_products[1].E()
+            px2 = v2_decay_products[1].Px()
+            py2 = v2_decay_products[1].Py()
         else:
-            v2_decay_products_pt = [-1.]
-            v2_decay_products_eta = [0.]
-            v2_decay_products_phi = [0.]
-            v2_decay_products_mass = [-1.]
+            v2_decay_products_pt = [-999.]
+            v2_decay_products_eta = [-999.]
+            v2_decay_products_phi = [-999.]
+            v2_decay_products_mass = [-999.]
         ##Calculating Pz of neutrino
         #Pz_list = []
         #Pz = ROOT.TMath.Sqrt((v2_mass ** 2) / 4 - GenMET_pt)

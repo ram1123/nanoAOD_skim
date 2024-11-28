@@ -284,6 +284,7 @@ public:
     int HZZ2l2qNu_nMediumBtagJets;
     int HZZ2l2qNu_nLooseBtagJets;
     float minDeltaPhi;
+    float Pz_neutrino;
 
     float boostedJet_PNScore;
     int boostedJet_Index;   // Contains the inded of 2l2q case; the boosted jet index that satisfies the P/N score and pT cut>200 GeV; No mass cut
@@ -482,6 +483,7 @@ public:
         HZZ2l2qNu_nMediumBtagJets = 0;
         HZZ2l2qNu_nLooseBtagJets = 0;
         minDeltaPhi = 999.0;
+        Pz_neutrino = -999.0;
 
         boostedJet_PNScore = -999.0;
         boostedJet_Index = -999;
@@ -578,12 +580,13 @@ public:
     int HZZ2l2qNu_cutETAl1l2;
     int HZZ2l2qNu_cutmZ1Window;
     int HZZ2l2qNu_cutZ1Pt ;
-    int HZZ2l2nu_cutdPhiJetMET;
+    int HZZ2l2nu_cutdPhiJetMET;   
     int HZZ2l2nu_cutbtag;
     int HZZemuCR_cut2l;
     int HZZemuCR_cutpTl1l2;
     int HZZemuCR_cutETAl1l2;
     int HZZemuCR_cutmZ1Window;
+    int HZZemuCR_cutmZ1Window_SB;
     int HZZemuCR_cutZ1Pt;
     int HZZ_emuCR_cutbtag;
     int HZZ_emuCR_cutdPhiJetMET;
@@ -662,7 +665,7 @@ H4LTools::H4LTools(int year, bool DEBUG_Main)
     HZZ2l2qNu_cutmZ1Window = 0;
     HZZ2l2qNu_cutZ1Pt = 0;
     HZZ2l2nu_cutbtag = 0;
-    HZZ2l2nu_cutdPhiJetMET = 0;
+    HZZ2l2nu_cutdPhiJetMET = 0; 
 
     cut2e = 0;
     cut2mu = 0;
@@ -684,6 +687,7 @@ H4LTools::H4LTools(int year, bool DEBUG_Main)
     HZZemuCR_cutpTl1l2 = 0;
     HZZemuCR_cutETAl1l2 = 0;
     HZZemuCR_cutmZ1Window = 0;
+    HZZemuCR_cutmZ1Window_SB = 0;
     HZZemuCR_cutZ1Pt = 0;
     HZZ_emuCR_cutbtag = 0;
     HZZ_emuCR_cutdPhiJetMET = 0;

@@ -99,7 +99,6 @@ def main():
         sfFileName = "DeepCSV_102XSF_V2.csv"
         modulesToRun.extend([muonScaleRes2016()])
     H4LCppModule = lambda: HZZAnalysisCppProducer(year,cfgFile, isMC, isFSR, args.cutFlowFile, args.DEBUG)
-
     print("systematic info: {}".format(args.NOsyst))
     print("Input json file: {}".format(jsonFileName))
     print("Input cfg file: {}".format(cfgFile))
