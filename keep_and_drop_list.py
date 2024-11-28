@@ -127,5 +127,6 @@ keep_drop_rules_Data_MC = [
     "keep HZZ*",
     "keep Triggers_HZZ*",
     "keep *Weight",
-    "keep *Weight*"
+    "keep *Weight*",
+    "keep Pz_neutrino"
 ]

@@ -126,7 +126,8 @@ class HZZAnalysisCppProducer(Module):
             "PassMETFilters": self.passMETFilters,
             "PassZZSelection": self.passZZ4lEvts,
             "PassZZ2l2qSelection": self.passZZ2l2qEvts,
-            "PassZZ2l2nuSelection": self.passZZ2l2nuEvts
+            "PassZZ2l2nuSelection": self.passZZ2l2nuEvts,
+            "PassZZ2l2nu_emuCR_Selection": self.passZZ2l2nu_emuCR_Evts
         }
 
         # Cut flow data for 4l, 2l2q, 2l2nu channels for json output
@@ -134,12 +135,14 @@ class HZZAnalysisCppProducer(Module):
             "General": self.cutFlowCounts,
             "4l_Channel": {},
             "2l2q_Channel": {},
-            "2l2nu_Channel": {}
+            "2l2nu_Channel": {},
+            "2l2nu_Channel_emu_CR": {}
         }
 
         for key, value in self.cutFlowCounts.items():
             print("{:27}:{:7} {}".format(key, str(value), " Events"))
 
+        HZZ2l2nu_cutdPhiJetMET = 0
         # Alternatively, for dynamic worker attributes
         dynamicCuts_4l = ["cut4e", "cutghost4e", "cutLepPt4e", "cutQCD4e", "cutZZ4e", "cutm4l4e",
                           "cut4mu", "cutghost4mu", "cutLepPt4mu", "cutQCD4mu", "cutZZ4mu", "cutm4l4mu",
@@ -151,6 +154,9 @@ class HZZAnalysisCppProducer(Module):
         dynamicCuts_2l2nu = ["HZZ2l2qNu_cut2l", "HZZ2l2qNu_cutOppositeCharge", "HZZ2l2qNu_cutpTl1l2",
                              "HZZ2l2qNu_cutETAl1l2", "HZZ2l2qNu_cutmZ1Window", "HZZ2l2qNu_cutZ1Pt",
                              "HZZ2l2nu_cutbtag", "HZZ2l2nu_cutdPhiJetMET", "HZZ2l2nu_cutMETgT100"]
+        dynamicCuts_2l2nu_emu_CR = ["HZZemuCR_cut2l", "HZZemuCR_cutpTl1l2",
+                             "HZZemuCR_cutETAl1l2", "HZZemuCR_cutmZ1Window",
+                             "HZZemuCR_cutZ1Pt", "HZZ2l2nu_cutdPhiJetMET", "HZZ2l2nu_cutMETgT100"]
 
         print("\n4l channel cut flow table:")
         for cut in dynamicCuts_4l:
@@ -167,11 +173,16 @@ class HZZAnalysisCppProducer(Module):
             print("{:27}:{:7} {}".format(cut, str(getattr(self.worker, cut)), " Events"))
             cutFlowData["2l2nu_Channel"][cut] = getattr(self.worker, cut, 'N/A')
 
+        print("\n2l2nu channel emu control region cut flow table:")
+        for cut in dynamicCuts_2l2nu_emu_CR:
+            print("{:27}:{:7} {}".format(cut, str(getattr(self.worker, cut)), " Events"))
+            cutFlowData["2l2nu_Channel_emu_CR"][cut] = getattr(self.worker, cut, 'N/A')
+
         print("\n========== END: Print Cut flow table  ====================\n")
 
         # Write the cut flow data to a json file
         with open(self.cutFlowJSONFile, "w") as jsonFile:
-            json.dump(cutFlowData, jsonFile, indent=4)
+            json.dump(cutFlowData, jsonFile, indent=5)
 
         pass
 
@@ -261,6 +272,7 @@ class HZZAnalysisCppProducer(Module):
         # Branches for 2l2nu channel: ZZ kinematics
         self.out.branch("HZZ2l2nu_ZZmT",  "F")
         self.out.branch("HZZ2l2nu_ZZpT",  "F")
+        #self.out.branch("Pz_neutrino", "F")
 
         # Branches for 2l2nu channel: VBF jets and dijet kinematics
         self.out.branch("HZZ2l2qNu_nJets", "I")
@@ -428,6 +440,7 @@ class HZZAnalysisCppProducer(Module):
         eta4l = -999.
         phi4l = -999.
         mass4l = -999.
+        #Pz_neutrino = -999.
 
         TriggerMap = {}
         passedTrig = False
@@ -506,17 +519,17 @@ class HZZAnalysisCppProducer(Module):
         HZZ2l2qNu_cutOppositeChargeFlag = False
         isBoosted2l2q = False
 
-        if self.worker.GetZ1_2l2qOR2l2nu():
+        if self.worker.GetZ1_2l2qOR2l2nu():  #commented out for now
             # foundZZCandidate_2l2q = self.worker.ZZSelection_2l2q()
             # isBoosted2l2q = self.worker.isBoosted2l2q    # for 2l2q
             # if self.DEBUG: print("isBoosted2l2q: ", isBoosted2l2q)
-            foundZZCandidate_2l2nu = self.worker.ZZSelection_2l2nu()
+            foundZZCandidate_2l2nu = self.worker.ZZSelection_2l2nu()  #commented out for now
         # FIXME: To debug 2l2q and 2l2nu channels, I am commenting out the 4l channel
         # foundZZCandidate_4l = self.worker.ZZSelection_4l()
-        ##if self.worker.GetZ1_emuCR():
-        ##HZZ2l2nu_isEMuCR = True;
-        ##foundZZCandidate_2l2nu = self.worker.ZZSelection_2l2nu()
-        # foundZZCandidate_2l2nu_emuCR = self.worker.ZZSelection_2l2nu_EMu_CR()
+        if self.worker.GetZ1_emuCR():
+            #HZZ2l2nu_isEMuCR = True;
+            foundZZCandidate_2l2nu_emuCR = self.worker.ZZSelection_2l2nu()
+        #foundZZCandidate_2l2nu_emuCR = self.worker.ZZSelection_2l2nu_EMu_CR()
 
         HZZ2l2q_boostedJet_PNScore = self.worker.boostedJet_PNScore
         HZZ2l2q_boostedJet_Index = self.worker.boostedJet_Index
@@ -536,7 +549,7 @@ class HZZAnalysisCppProducer(Module):
         HZZ2l2qNu_nMediumBtagJets = self.worker.HZZ2l2qNu_nMediumBtagJets
         HZZ2l2qNu_nLooseBtagJets = self.worker.HZZ2l2qNu_nLooseBtagJets
 
-        if (foundZZCandidate_4l or foundZZCandidate_2l2q or foundZZCandidate_2l2nu):
+        if (foundZZCandidate_4l or foundZZCandidate_2l2q or foundZZCandidate_2l2nu or foundZZCandidate_2l2nu_emuCR):
             if self.DEBUG: print("Found ZZ candidate (4l, 2l2q, 2l2nu): ({}, {}, {})".format(foundZZCandidate_4l, foundZZCandidate_2l2q, foundZZCandidate_2l2nu))
             pTL1 = self.worker.pTL1
             etaL1 = self.worker.etaL1
@@ -584,6 +597,13 @@ class HZZAnalysisCppProducer(Module):
             self.passZZ2l2nuEvts += 1
             #     FatJet_PNZvsQCD = self.worker.FatJet_PNZvsQCD
             #     self.out.fillBranch("FatJet_PNZvsQCD",FatJet_PNZvsQCD)
+
+        if (foundZZCandidate_2l2nu_emuCR):
+            keepIt = True
+            passZZ2l2nu_emuCR_Selection = True
+            self.passZZ2l2nu_emuCR_Evts += 1
+
+        if (foundZZCandidate_2l2nu or foundZZCandidate_2l2nu_emuCR):
             phiZ2_met = self.worker.Z2_met.Phi()
             pTZ2_met = self.worker.Z2_met.Pt()
             EneZ2_met = self.worker.Z2_met.E()
@@ -594,6 +614,8 @@ class HZZAnalysisCppProducer(Module):
 
             HZZ2l2nu_ZZmT = self.worker.ZZ_metsystem.Mt()
             HZZ2l2nu_ZZpT = self.worker.ZZ_metsystem.Pt()
+
+            #Pz_neutrino = self.worker.Pz_neutrino
 
             # Define TLorentzVector for VBF jets and get dijet mass
             if HZZ2l2nu_VBFIndexJet1>=0 and HZZ2l2nu_VBFIndexJet2>=0:
@@ -626,6 +648,12 @@ class HZZAnalysisCppProducer(Module):
         # self.out.fillBranch("phiZ2_met",phiZ2_met)
         # self.out.fillBranch("pTZ2_met",pTZ2_met)
         # self.out.fillBranch("EneZ2_met",EneZ2_met)
+
+        #if (foundZZCandidate_2l2nu_emuCR):
+            #keepIt = True
+            #passZZ2l2nu_emuCR_Selection = True
+            #self.passZZ2l2nu_emuCR_Evts += 1
+
 
         if (foundZZCandidate_4l):
             keepIt = True
@@ -687,6 +715,7 @@ class HZZAnalysisCppProducer(Module):
         self.out.fillBranch("HZZ2l2nu_ZZmT", HZZ2l2nu_ZZmT)
         self.out.fillBranch("HZZ2l2nu_ZZpT", HZZ2l2nu_ZZpT)
         self.out.fillBranch("HZZ2l2nu_minDPhi_METAK4", HZZ2l2nu_minDPhi_METAK4)
+        #self.out.fillBranch("Pz_neutrino", Pz_neutrino)
 
         self.out.fillBranch("HZZ2l2nu_VBFIndexJet1", HZZ2l2nu_VBFIndexJet1)
         self.out.fillBranch("HZZ2l2nu_VBFIndexJet2", HZZ2l2nu_VBFIndexJet2)
@@ -764,6 +793,7 @@ class HZZAnalysisCppProducer(Module):
         self.out.fillBranch("passZZ4lSelection",passZZ4lSelection)
         self.out.fillBranch("passZZ2l2qSelection",passZZ2l2qSelection)
         self.out.fillBranch("passZZ2l2nuSelection",passZZ2l2nuSelection)
+        self.out.fillBranch("passZZ2l2nu_emuCR_Selection",passZZ2l2nu_emuCR_Selection)
         self.out.fillBranch("isBoosted2l2q",isBoosted2l2q)
 
         self.out.fillBranch("HZZ2l2q_boostedJet_PNScore", HZZ2l2q_boostedJet_PNScore)
