@@ -12,11 +12,10 @@ from PhysicsTools.NanoAODTools.postprocessing.modules.btv.btagSFProducer import 
 from PhysicsTools.NanoAODTools.postprocessing.modules.common.puWeightProducer import *
 
 # Custom module imports
-from H4Lmodule import *
-from H4LCppModule import *
-from JetSFMaker import *
-from GenVarsProducer import *
-from keep_and_drop_list import keep_drop_rules_Data_MC, keep_drop_rules_GEN
+from modules.H4LCppModule import *
+from modules.JetSFMaker import *
+from modules.GenVarsProducer import *
+from modules.keep_and_drop_list import keep_drop_rules_Data_MC, keep_drop_rules_GEN
 
 def parse_arguments():
     """Parse command line arguments."""
@@ -86,27 +85,28 @@ def main():
         """Summer22 and Run2022 for identification of 2022 MC and data respectiverly
         """
         year = 2022
-        cfgFile = "Input_2022.yml"
-        jsonFileName = "golden_Json/Cert_Collisions2022_355100_362760_Golden.json"
+        cfgFile = "config/Input_2022.yml"
+        jsonFileName = "data/golden_json/Cert_Collisions2022_355100_362760_Golden.json"
         sfFileName = "DeepCSV_102XSF_V2.csv" # FIXME: Update for year 2022
         modulesToRun.extend([muonScaleRes2022()]) # FIXME: Update for year 2022
     if "UL18" in first_file or "UL2018" in first_file:
         """UL2018 for identification of 2018 UL data and UL18 for identification of 2018 UL MC
         """
         year = 2018
-        cfgFile = "Input_2018.yml"
-        jsonFileName = "golden_Json/Cert_314472-325175_13TeV_Legacy2018_Collisions18_JSON.txt"
+        cfgFile = "config/Input_2018.yml"
+        jsonFileName = "data/golden_json/Cert_314472-325175_13TeV_Legacy2018_Collisions18_JSON.txt"
         sfFileName = "DeepCSV_102XSF_V2.csv"
         modulesToRun.extend([muonScaleRes2018()])
     if "UL17" in first_file or "UL2017" in first_file:
         year = 2017
-        cfgFile = "Input_2017.yml"
-        jsonFileName="golden_Json/Cert_294927-306462_13TeV_UL2017_Collisions17_GoldenJSON.txt"
+        cfgFile = "config/Input_2017.yml"
+        jsonFileName="data/golden_json/Cert_294927-306462_13TeV_UL2017_Collisions17_GoldenJSON.txt"
         sfFileName = "DeepCSV_102XSF_V2.csv"
         modulesToRun.extend([muonScaleRes2017()])
     if "UL16" in first_file or "UL2016" in first_file:
         year = 2016
-        jsonFileName = "golden_Json/Cert_271036-284044_13TeV_Legacy2016_Collisions16_JSON.txt"
+        cfgFile = "config/Input_2016.yml"
+        jsonFileName = "data/golden_json/Cert_271036-284044_13TeV_Legacy2016_Collisions16_JSON.txt"
         sfFileName = "DeepCSV_102XSF_V2.csv"
         modulesToRun.extend([muonScaleRes2016()])
 

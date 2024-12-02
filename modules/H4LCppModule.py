@@ -5,8 +5,10 @@ import yaml
 import json
 import os
 from collections import OrderedDict
-from Helper import *
-from METFilters import passFilters
+
+from modules.Helper import *
+from modules.METFilters import passFilters
+
 ROOT.PyConfig.IgnoreCommandLineOptions = True
 
 
@@ -76,7 +78,7 @@ class HZZAnalysisCppProducer(Module):
             'libcollier.so',
         ]
         for lib in libraries:
-            fullPath = os.path.join(base_path, 'JHUGenMELA/MELA/data/el9_amd64_gcc12', lib)
+            fullPath = os.path.join(base_path, 'external/JHUGenMELA/MELA/data/el9_amd64_gcc12', lib)
             ROOT.gSystem.Load(fullPath)
 
         # Load the yaml-cpp library
@@ -93,7 +95,7 @@ class HZZAnalysisCppProducer(Module):
                 base_path = "$CMSSW_BASE//src/PhysicsTools/NanoAODTools"
                 ROOT.gSystem.Load("libPhysicsToolsNanoAODTools.so")
                 ROOT.gROOT.ProcessLine(
-                    ".L %s/interface/H4LTools.h" % base_path)
+                    ".L %s/include/H4LTools.h" % base_path)
 
     def _load_config(self, cfgFile):
         with open(cfgFile, 'r') as ymlfile:
