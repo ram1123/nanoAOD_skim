@@ -25,7 +25,7 @@ nanoAOD skiming code for H->ZZ->2l2Q studies.
    cd $CMSSW_BASE/src
    git clone git@github.com:ram1123/nanoAOD_skim.git PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim
    cd PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim
-   git checkout HZZ_Analysis_2l2nu 
+   git checkout HZZ_Analysis_2l2nu
    cd $CMSSW_BASE/src/PhysicsTools/NanoAODTools
    git apply python/postprocessing/analysis/nanoAOD_skim/external/nanoAODTools_py2to3.patch
    cd $CMSSW_BASE/src/PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim
@@ -70,6 +70,12 @@ nanoAOD skiming code for H->ZZ->2l2Q studies.
    # NOTE: The above export command is needed to run just before running the post_proc.py script. Otherwise, it will give error.
    python3 post_proc.py
    ```
+
+   ***NOTE:*** There is a script that sets the PATH and proxy. So, before running just run the script:
+
+      ```bash
+      source set_env.sh
+      ```
 
 5. batch job submission.
    1. Step: 5 (a): Condor-job submission (recommended)
