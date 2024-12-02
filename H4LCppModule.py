@@ -12,11 +12,12 @@ ROOT.PyConfig.IgnoreCommandLineOptions = True
 
 class HZZAnalysisCppProducer(Module):
 
-    def __init__(self, year, cfgFile, isMC, isFSR, cutFlowJSONFile, DEBUG=False):
+    def __init__(self, year, cfgFile, isMC, isFSR, cutFlowJSONFile, channels, DEBUG=False):
         self.loadLibraries()
         self.year = year
         self.isMC = isMC
         self.cutFlowJSONFile = cutFlowJSONFile
+        self.channels = channels # choices=["all", "4l", "2l2q", "2l2v"],
         self.DEBUG = DEBUG
         self.cfgFile = cfgFile
         self.cfg = self._load_config(cfgFile)
@@ -25,7 +26,25 @@ class HZZAnalysisCppProducer(Module):
         self.worker.isFSR = isFSR
         self._initialize_counters()
 
-        self.CutFlowTable =  ROOT.TH1F('cutFlow','cutFlow',42, 0, 42)
+        # Alternatively, for dynamic worker attributes
+        self.dynamicCuts_4l = ["cut4e", "cutghost4e", "cutLepPt4e", "cutQCD4e", "cutZZ4e", "cutm4l4e",
+                          "cut4mu", "cutghost4mu", "cutLepPt4mu", "cutQCD4mu", "cutZZ4mu", "cutm4l4mu",
+                          "cut2e2mu", "cutghost2e2mu", "cutLepPt2e2mu", "cutQCD2e2mu", "cutZZ2e2mu",
+                          "cutm4l2e2mu"]
+        self.dynamicCuts_2l2q = ["HZZ2l2qNu_cut2l", "HZZ2l2qNu_cutOppositeCharge", "HZZ2l2qNu_cutpTl1l2",
+                             "HZZ2l2qNu_cutETAl1l2", "HZZ2l2qNu_cutmZ1Window", "HZZ2l2qNu_cutZ1Pt",
+                             "cut2l1J", "cut2l2j", "cut2l1Jor2j"]
+        self.dynamicCuts_2l2nu = ["HZZ2l2qNu_cut2l", "HZZ2l2qNu_cutOppositeCharge", "HZZ2l2qNu_cutpTl1l2",
+                             "HZZ2l2qNu_cutETAl1l2", "HZZ2l2qNu_cutmZ1Window", "HZZ2l2qNu_cutZ1Pt",
+                             "HZZ2l2nu_cutbtag", "HZZ2l2nu_cutdPhiJetMET", "HZZ2l2nu_cutMETgT100"]
+        self.dynamicCuts_2l2nu_emu_CR = ["HZZemuCR_cut2l", "HZZemuCR_cutpTl1l2",
+                             "HZZemuCR_cutETAl1l2", "HZZemuCR_cutmZ1Window",
+                             "HZZemuCR_cutZ1Pt", "HZZ2l2nu_cutdPhiJetMET", "HZZ2l2nu_cutMETgT100"]
+
+
+        hist_nBins = 7 + len(self.dynamicCuts_4l) + len(self.dynamicCuts_2l2q) + len(self.dynamicCuts_2l2nu) + len(self.dynamicCuts_2l2nu_emu_CR)
+        print("hist_nBins: ", hist_nBins)
+        self.CutFlowTable =  ROOT.TH1F('cutFlow','cutFlow',hist_nBins, 0, hist_nBins)
         self.CutFlowTable.GetXaxis().SetBinLabel(1, "Total")
         self.CutFlowTable.GetXaxis().SetBinLabel(2, "PassTrig")
         self.CutFlowTable.GetXaxis().SetBinLabel(3, "PassMETFilters")
@@ -33,41 +52,15 @@ class HZZAnalysisCppProducer(Module):
         self.CutFlowTable.GetXaxis().SetBinLabel(5, "PassZZ2l2qSelection")
         self.CutFlowTable.GetXaxis().SetBinLabel(6, "PassZZ2l2nuSelection")
         self.CutFlowTable.GetXaxis().SetBinLabel(7, "PassZZ2l2nu_emuCR_Selection")
-        self.CutFlowTable.GetXaxis().SetBinLabel(8, "cut4e")
-        self.CutFlowTable.GetXaxis().SetBinLabel(9, "cutghost4e")
-        self.CutFlowTable.GetXaxis().SetBinLabel(10, "cutLepPt4e")
-        self.CutFlowTable.GetXaxis().SetBinLabel(11, "cutQCD4e")
-        self.CutFlowTable.GetXaxis().SetBinLabel(12, "cutZZ4e")
-        self.CutFlowTable.GetXaxis().SetBinLabel(13, "cutm4l4e")
-        self.CutFlowTable.GetXaxis().SetBinLabel(14, "cut4mu")
-        self.CutFlowTable.GetXaxis().SetBinLabel(15, "cutghost4mu")
-        self.CutFlowTable.GetXaxis().SetBinLabel(16, "cutLepPt4mu")
-        self.CutFlowTable.GetXaxis().SetBinLabel(17, "cutQCD4mu")
-        self.CutFlowTable.GetXaxis().SetBinLabel(18, "cutZZ4mu")
-        self.CutFlowTable.GetXaxis().SetBinLabel(19, "cutm4l4mu")
-        self.CutFlowTable.GetXaxis().SetBinLabel(20, "cut2e2mu")
-        self.CutFlowTable.GetXaxis().SetBinLabel(21, "cutghost2e2mu")
-        self.CutFlowTable.GetXaxis().SetBinLabel(22, "cutLepPt2e2mu")
-        self.CutFlowTable.GetXaxis().SetBinLabel(23, "cutQCD2e2mu")
-        self.CutFlowTable.GetXaxis().SetBinLabel(24, "cutZZ2e2mu")
-        self.CutFlowTable.GetXaxis().SetBinLabel(25, "cutm4l2e2mu")
-        self.CutFlowTable.GetXaxis().SetBinLabel(26, "HZZ2l2qNu_cut2l")
-        self.CutFlowTable.GetXaxis().SetBinLabel(27, "HZZ2l2qNu_cutOppositeCharge")
-        self.CutFlowTable.GetXaxis().SetBinLabel(28, "HZZ2l2qNu_cutpTl1l2")
-        self.CutFlowTable.GetXaxis().SetBinLabel(29, "HZZ2l2qNu_cutETAl1l2")
-        self.CutFlowTable.GetXaxis().SetBinLabel(30, "HZZ2l2qNu_cutmZ1Window")
-        self.CutFlowTable.GetXaxis().SetBinLabel(31, "HZZ2l2qNu_cutZ1Pt")
-        self.CutFlowTable.GetXaxis().SetBinLabel(32, "cut2l1J")
-        self.CutFlowTable.GetXaxis().SetBinLabel(33, "cut2l2j")
-        self.CutFlowTable.GetXaxis().SetBinLabel(34, "cut2l1Jor2j")
-        self.CutFlowTable.GetXaxis().SetBinLabel(35, "HZZ2l2nu_cutbtag")
-        self.CutFlowTable.GetXaxis().SetBinLabel(36, "HZZ2l2nu_cutdPhiJetMET")
-        self.CutFlowTable.GetXaxis().SetBinLabel(37, "HZZ2l2nu_cutMETgT100")
-        self.CutFlowTable.GetXaxis().SetBinLabel(38, "HZZemuCR_cut2l")
-        self.CutFlowTable.GetXaxis().SetBinLabel(39, "HZZemuCR_cutpTl1l2")
-        self.CutFlowTable.GetXaxis().SetBinLabel(40, "HZZemuCR_cutETAl1l2")
-        self.CutFlowTable.GetXaxis().SetBinLabel(41, "HZZemuCR_cutmZ1Window")
-        self.CutFlowTable.GetXaxis().SetBinLabel(42, "HZZemuCR_cutZ1Pt")
+
+        for idx, cut in enumerate(self.dynamicCuts_4l):
+            self.CutFlowTable.GetXaxis().SetBinLabel(8 + idx, cut)
+        for idx, cut in enumerate(self.dynamicCuts_2l2q):
+            self.CutFlowTable.GetXaxis().SetBinLabel(8 + len(self.dynamicCuts_4l) + idx, cut)
+        for idx, cut in enumerate(self.dynamicCuts_2l2nu):
+            self.CutFlowTable.GetXaxis().SetBinLabel(8 + len(self.dynamicCuts_4l) + len(self.dynamicCuts_2l2q) + idx, cut)
+        for idx, cut in enumerate(self.dynamicCuts_2l2nu_emu_CR):
+            self.CutFlowTable.GetXaxis().SetBinLabel(8 + len(self.dynamicCuts_4l) + len(self.dynamicCuts_2l2q) + len(self.dynamicCuts_2l2nu) + idx, cut)
 
 
     def loadLibraries(self):
@@ -164,83 +157,6 @@ class HZZAnalysisCppProducer(Module):
         pass
 
     def endJob(self):
-        print("\n========== Print Cut flow table  ====================\n")
-        self.cutFlowCounts = {
-            "Total": self.passAllEvts,
-            "PassTrig": self.passtrigEvts,
-            "PassMETFilters": self.passMETFilters,
-            "PassZZSelection": self.passZZ4lEvts,
-            "PassZZ2l2qSelection": self.passZZ2l2qEvts,
-            "PassZZ2l2nuSelection": self.passZZ2l2nuEvts,
-            "PassZZ2l2nu_emuCR_Selection": self.passZZ2l2nu_emuCR_Evts
-        }
-
-        # Cut flow data for 4l, 2l2q, 2l2nu channels for json output
-        cutFlowData = {
-            "General": self.cutFlowCounts,
-            "4l_Channel": {},
-            "2l2q_Channel": {},
-            "2l2nu_Channel": {},
-            "2l2nu_Channel_emu_CR": {}
-        }
-
-        for key, value in self.cutFlowCounts.items():
-            print("{:27}:{:7} {}".format(key, str(value), " Events"))
-
-        HZZ2l2nu_cutdPhiJetMET = 0
-        # Alternatively, for dynamic worker attributes
-        dynamicCuts_4l = ["cut4e", "cutghost4e", "cutLepPt4e", "cutQCD4e", "cutZZ4e", "cutm4l4e",
-                          "cut4mu", "cutghost4mu", "cutLepPt4mu", "cutQCD4mu", "cutZZ4mu", "cutm4l4mu",
-                          "cut2e2mu", "cutghost2e2mu", "cutLepPt2e2mu", "cutQCD2e2mu", "cutZZ2e2mu",
-                          "cutm4l2e2mu"]
-        dynamicCuts_2l2q = ["HZZ2l2qNu_cut2l", "HZZ2l2qNu_cutOppositeCharge", "HZZ2l2qNu_cutpTl1l2",
-                             "HZZ2l2qNu_cutETAl1l2", "HZZ2l2qNu_cutmZ1Window", "HZZ2l2qNu_cutZ1Pt",
-                             "cut2l1J", "cut2l2j", "cut2l1Jor2j"]
-        dynamicCuts_2l2nu = ["HZZ2l2qNu_cut2l", "HZZ2l2qNu_cutOppositeCharge", "HZZ2l2qNu_cutpTl1l2",
-                             "HZZ2l2qNu_cutETAl1l2", "HZZ2l2qNu_cutmZ1Window", "HZZ2l2qNu_cutZ1Pt",
-                             "HZZ2l2nu_cutbtag", "HZZ2l2nu_cutdPhiJetMET", "HZZ2l2nu_cutMETgT100"]
-        dynamicCuts_2l2nu_emu_CR = ["HZZemuCR_cut2l", "HZZemuCR_cutpTl1l2",
-                             "HZZemuCR_cutETAl1l2", "HZZemuCR_cutmZ1Window",
-                             "HZZemuCR_cutZ1Pt", "HZZ2l2nu_cutdPhiJetMET", "HZZ2l2nu_cutMETgT100"]
-
-        print("\n4l channel cut flow table:")
-        for cut in dynamicCuts_4l:
-            print("{:27}:{:7} {}".format(cut, str(getattr(self.worker, cut)), " Events"))
-            cutFlowData["4l_Channel"][cut] = getattr(self.worker, cut, 'N/A')
-            for i in range(8, 25):
-               self.CutFlowTable.SetBinContent(i, getattr(self.worker, cut, 'N/A'))
-
-        print("\n2l2q channel cut flow table:")
-        for cut in dynamicCuts_2l2q:
-            print("{:27}:{:7} {}".format(cut, str(getattr(self.worker, cut)), " Events"))
-            cutFlowData["2l2q_Channel"][cut] = getattr(self.worker, cut, 'N/A')
-            #for i in range(26, 31):
-               #self.CutFlowTable.SetBinContent(i, getattr(self.worker, cut, 'N/A'))
-
-        print("\n2l2nu channel cut flow table:")
-        for idx, cut in enumerate(dynamicCuts_2l2nu):
-            print("{:27}:{:7} {}".format(cut, str(getattr(self.worker, cut)), " Events"))
-            cutFlowData["2l2nu_Channel"][cut] = getattr(self.worker, cut, 'N/A')
-            value = getattr(self.worker, cut, 'N/A')
-            if isinstance(value, (int, float)):
-                bin_index = 26 + idx
-                if 26 <= bin_index <= 31:
-                    print(f"Setting bin {bin_index} to value {value}")
-                    self.CutFlowTable.SetBinContent(bin_index, value)
-                else:
-                    print(f"Bin index {bin_index} is out of range 26-31)")
-
-        print("\n2l2nu channel emu control region cut flow table:")
-        for cut in dynamicCuts_2l2nu_emu_CR:
-            print("{:27}:{:7} {}".format(cut, str(getattr(self.worker, cut)), " Events"))
-            cutFlowData["2l2nu_Channel_emu_CR"][cut] = getattr(self.worker, cut, 'N/A')
-
-        print("\n========== END: Print Cut flow table  ====================\n")
-
-        # Write the cut flow data to a json file
-        with open(self.cutFlowJSONFile, "w") as jsonFile:
-            json.dump(cutFlowData, jsonFile, indent=5)
-
         pass
 
     def beginFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
@@ -377,6 +293,59 @@ class HZZAnalysisCppProducer(Module):
             f.write("Sync data list:"+"\n")
 
     def endFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
+        print("\n========== Print Cut flow table  ====================\n")
+        self.cutFlowCounts = {
+            "Total": self.passAllEvts,
+            "PassTrig": self.passtrigEvts,
+            "PassMETFilters": self.passMETFilters,
+            "PassZZSelection": self.passZZ4lEvts,
+            "PassZZ2l2qSelection": self.passZZ2l2qEvts,
+            "PassZZ2l2nuSelection": self.passZZ2l2nuEvts,
+            "PassZZ2l2nu_emuCR_Selection": self.passZZ2l2nu_emuCR_Evts
+        }
+
+        # Cut flow data for 4l, 2l2q, 2l2nu channels for json output
+        cutFlowData = {
+            "General": self.cutFlowCounts,
+            "4l_Channel": {},
+            "2l2q_Channel": {},
+            "2l2nu_Channel": {},
+            "2l2nu_Channel_emu_CR": {}
+        }
+
+        for key, value in self.cutFlowCounts.items():
+            print("{:27}:{:7} {}".format(key, str(value), " Events"))
+
+        print("\n4l channel cut flow table:")
+        for idx, cut in enumerate(self.dynamicCuts_4l):
+            print("{:2} {:27}:{:7} {}".format(8 + idx, cut, str(getattr(self.worker, cut)), " Events"))
+            cutFlowData["4l_Channel"][cut] = getattr(self.worker, cut, 'N/A')
+            self.CutFlowTable.SetBinContent(8 + idx, getattr(self.worker, cut, 'N/A'))
+
+        print("\n2l2q channel cut flow table:")
+        for idx, cut in enumerate(self.dynamicCuts_2l2q):
+            print("{:2} {:27}:{:7} {}".format(8 + len(self.dynamicCuts_4l) + idx, cut, str(getattr(self.worker, cut)), " Events"))
+            cutFlowData["2l2q_Channel"][cut] = getattr(self.worker, cut, 'N/A')
+            self.CutFlowTable.SetBinContent(8 + len(self.dynamicCuts_4l) + idx, getattr(self.worker, cut, 'N/A'))
+
+        print("\n2l2nu channel cut flow table:")
+        for idx, cut in enumerate(self.dynamicCuts_2l2nu):
+            print("{:2} {:27}:{:7} {}".format(8 + len(self.dynamicCuts_4l) + len(self.dynamicCuts_2l2q) + idx, cut, str(getattr(self.worker, cut)), " Events"))
+            cutFlowData["2l2nu_Channel"][cut] = getattr(self.worker, cut, 'N/A')
+            self.CutFlowTable.SetBinContent(8 + len(self.dynamicCuts_4l) + len(self.dynamicCuts_2l2q) + idx, getattr(self.worker, cut, 'N/A'))
+
+        print("\n2l2nu channel emu control region cut flow table:")
+        for idx, cut in enumerate(self.dynamicCuts_2l2nu_emu_CR):
+            print("{:2} {:27}:{:7} {}".format(8 + len(self.dynamicCuts_4l) + len(self.dynamicCuts_2l2q) + len(self.dynamicCuts_2l2nu) + idx, cut, str(getattr(self.worker, cut)), " Events"))
+            cutFlowData["2l2nu_Channel_emu_CR"][cut] = getattr(self.worker, cut, 'N/A')
+            self.CutFlowTable.SetBinContent(8 + len(self.dynamicCuts_4l) + len(self.dynamicCuts_2l2q) + len(self.dynamicCuts_2l2nu) + idx, getattr(self.worker, cut, 'N/A'))
+
+        print("\n========== END: Print Cut flow table  ====================\n")
+
+        # Write the cut flow data to a json file
+        with open(self.cutFlowJSONFile, "w") as jsonFile:
+            json.dump(cutFlowData, jsonFile, indent=5)
+
         outputFile.cd()
         self.CutFlowTable.Write()
         pass
@@ -581,28 +550,17 @@ class HZZAnalysisCppProducer(Module):
         HZZ2l2qNu_cutOppositeChargeFlag = False
         isBoosted2l2q = False
 
-        if self.worker.GetZ1_2l2qOR2l2nu():  #commented out for now
-            #self.CutFlowTable.SetBinContent(26, getattr(self.worker, "HZZ2l2qNu_cut2l", 'N/A'))
-            #self.CutFlowTable.SetBinContent(27, getattr(self.worker, "HZZ2l2qNu_cutOppositeCharge", 'N/A'))
-            #self.CutFlowTable.SetBinContent(28, getattr(self.worker, "HZZ2l2qNu_cutpTl1l2", 'N/A'))
-            #self.CutFlowTable.SetBinContent(29, getattr(self.worker, "HZZ2l2qNu_cutETAl1l2", 'N/A'))
-            #self.CutFlowTable.SetBinContent(30, getattr(self.worker, "HZZ2l2qNu_cutmZ1Window", 'N/A'))
-            #self.CutFlowTable.SetBinContent(31, getattr(self.worker, "HZZ2l2qNu_cutZ1Pt", 'N/A'))
-            # foundZZCandidate_2l2q = self.worker.ZZSelection_2l2q()
-            # isBoosted2l2q = self.worker.isBoosted2l2q    # for 2l2q
-            # if self.DEBUG: print("isBoosted2l2q: ", isBoosted2l2q)
-            foundZZCandidate_2l2nu = self.worker.ZZSelection_2l2nu()  #commented out for now
-        # FIXME: To debug 2l2q and 2l2nu channels, I am commenting out the 4l channel
-        # foundZZCandidate_4l = self.worker.ZZSelection_4l()
-        if self.worker.GetZ1_emuCR():
-            self.CutFlowTable.SetBinContent(38, getattr(self.worker, "HZZemuCR_cut2l", 'N/A'))
-            self.CutFlowTable.SetBinContent(39, getattr(self.worker, "HZZemuCR_cutpTl1l2", 'N/A'))
-            self.CutFlowTable.SetBinContent(40, getattr(self.worker, "HZZemuCR_cutETAl1l2", 'N/A'))
-            self.CutFlowTable.SetBinContent(41, getattr(self.worker, "HZZemuCR_cutmZ1Window", 'N/A'))
-            self.CutFlowTable.SetBinContent(42, getattr(self.worker, "HZZemuCR_cutZ1Pt", 'N/A'))
-            #HZZ2l2nu_isEMuCR = True;
+        if self.worker.GetZ1_2l2qOR2l2nu() and (self.channels == "all"  or self.channels == "2l2v" or self.channels == "2l2q"):  #commented out for now
+            if self.channels == "2l2q" or self.channels == "all":
+                foundZZCandidate_2l2q = self.worker.ZZSelection_2l2q()
+                isBoosted2l2q = self.worker.isBoosted2l2q
+                if self.DEBUG: print("isBoosted2l2q: ", isBoosted2l2q)
+            if self.channels == "2l2v" or self.channels == "all":
+                foundZZCandidate_2l2nu = self.worker.ZZSelection_2l2nu()  #commented out for now
+        if (self.channels == "all"  or self.channels == "4l"):
+            foundZZCandidate_4l = self.worker.ZZSelection_4l()
+        if self.worker.GetZ1_emuCR() and (self.channels == "all"  or self.channels == "2l2v"):
             foundZZCandidate_2l2nu_emuCR = self.worker.ZZSelection_2l2nu()
-        #foundZZCandidate_2l2nu_emuCR = self.worker.ZZSelection_2l2nu_EMu_CR()
 
         HZZ2l2q_boostedJet_PNScore = self.worker.boostedJet_PNScore
         HZZ2l2q_boostedJet_Index = self.worker.boostedJet_Index
@@ -658,9 +616,6 @@ class HZZAnalysisCppProducer(Module):
             passZZ2l2qSelection = True
             self.passZZ2l2qEvts += 1
             self.CutFlowTable.Fill(4)
-            self.CutFlowTable.SetBinContent(32, getattr(self.worker, "cut2l1J", 'N/A'))
-            self.CutFlowTable.SetBinContent(33, getattr(self.worker, "cut2l2j", 'N/A'))
-            self.CutFlowTable.SetBinContent(34, getattr(self.worker, "cut2l1Jor2j", 'N/A'))
 
             massZ2_2j = self.worker.Z2_2j.M()
             phiZ2_2j = self.worker.Z2_2j.Phi()
@@ -673,9 +628,6 @@ class HZZAnalysisCppProducer(Module):
             passZZ2l2nuSelection = True
             self.passZZ2l2nuEvts += 1
             self.CutFlowTable.Fill(5)
-            self.CutFlowTable.SetBinContent(35, getattr(self.worker, "HZZ2l2nu_cutbtag", 'N/A'))
-            self.CutFlowTable.SetBinContent(36, getattr(self.worker, "HZZ2l2nu_cutdPhiJetMET", 'N/A'))
-            self.CutFlowTable.SetBinContent(37, getattr(self.worker, "HZZ2l2nu_cutMETgT100", 'N/A'))
 
             #     FatJet_PNZvsQCD = self.worker.FatJet_PNZvsQCD
             #     self.out.fillBranch("FatJet_PNZvsQCD",FatJet_PNZvsQCD)
@@ -743,24 +695,6 @@ class HZZAnalysisCppProducer(Module):
             self.passZZ4lEvts += 1
             self.CutFlowTable.Fill(3)
             passZZ4lSelection = True
-            #self.CutFlowTable.SetBinContent(8, getattr(self.worker, "cut4e", 'N/A'))
-            #self.CutFlowTable.SetBinContent(9, getattr(self.worker, "cutghost4e", 'N/A'))
-            #self.CutFlowTable.SetBinContent(10, getattr(self.worker, "cutLepPt4e", 'N/A'))
-            #self.CutFlowTable.SetBinContent(11, getattr(self.worker, "cutQCD4e", 'N/A'))
-            #self.CutFlowTable.SetBinContent(12, getattr(self.worker, "cutZZ4e", 'N/A'))
-            #self.CutFlowTable.SetBinContent(13, getattr(self.worker, "cutm4l4e", 'N/A'))
-            #self.CutFlowTable.SetBinContent(14, getattr(self.worker, "cut4mu", 'N/A'))
-            #self.CutFlowTable.SetBinContent(15, getattr(self.worker, "cutghost4mu", 'N/A'))
-            #self.CutFlowTable.SetBinContent(16, getattr(self.worker, "cutLepPt4mu", 'N/A'))
-            #self.CutFlowTable.SetBinContent(17, getattr(self.worker, "cutQCD4mu", 'N/A'))
-            #self.CutFlowTable.SetBinContent(18, getattr(self.worker, "cutZZ4mu", 'N/A'))
-            #self.CutFlowTable.SetBinContent(19, getattr(self.worker, "cutm4l4mu", 'N/A'))
-            #self.CutFlowTable.SetBinContent(20, getattr(self.worker, "cut2e2mu", 'N/A'))
-            #self.CutFlowTable.SetBinContent(21, getattr(self.worker, "cutghost2e2mu", 'N/A'))
-            #self.CutFlowTable.SetBinContent(22, getattr(self.worker, "cutLepPt2e2mu", 'N/A'))
-            #self.CutFlowTable.SetBinContent(23, getattr(self.worker, "cutQCD2e2mu", 'N/A'))
-            #self.CutFlowTable.SetBinContent(24, getattr(self.worker, "cutZZ2e2mu", 'N/A'))
-            #self.CutFlowTable.SetBinContent(25, getattr(self.worker, "cutm4l2e2mu", 'N/A'))
             # print("Inside 4l loop: ",passZZ2l2qSelection)
             D_CP = self.worker.D_CP
             D_0m = self.worker.D_0m

@@ -173,7 +173,7 @@ queue infile, outfile, eospath, outfilename, logtxt from {condor_file_name}.txt
     outScript = open(condor_file_name + ".sh", "w")
     # Variables for the outScript
     entries = 100 if args.debug else 0
-    no_syst_flag="--NOsyst" if args.NOsyst else ""
+    syst_flag="--WithSyst" if args.WithSyst else ""
 
     outScript.write(f"""#!/bin/bash
 echo "Starting job on " `date`
@@ -202,7 +202,7 @@ echo "..."
 echo "========================================="
 output_file=${{4}}_hadd.root
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CMSSW_BASE/src/PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim/JHUGenMELA/MELA/data/el9_amd64_gcc12
-{command} --entriesToRun {entries} --inputFile ${{1}} --outputFile ${{output_file}} --cutFlowFile ${{4}}.json --DownloadFileToLocalThenRun True {no_syst_flag}
+{command} --entriesToRun {entries} --inputFile ${{1}} --outputFile ${{output_file}} --cutFlowFile ${{4}}.json --DownloadFileToLocalThenRun True {syst_flag}
 echo "====> List root files : "
 ls -ltrh *.root
 ls -ltrh *.json
@@ -262,7 +262,7 @@ if __name__ == "__main__":
 
     parser.add_argument("--post_proc", default="post_proc.py", help="Post process script to run.")
     parser.add_argument("--transfer_input_files", default="keep_and_drop.txt", help="Files to be transferred as input.")
-    parser.add_argument("--NOsyst", default=False, action='store_true', help="Run without systematics.")
+    parser.add_argument("--WithSyst", default=False, action='store_true', help="Run without systematics.")
     parser.add_argument("--debug", default=False, action='store_true', help="Debug mode.")
 
     args = parser.parse_args()

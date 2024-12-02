@@ -1120,24 +1120,24 @@ bool H4LTools::GetZ1_emuCR()
         std::cout << "*****$$$$*****Zlep1eta,Zlep2eta (emu control region): " << etaL1 << ", " << etaL2 << std::endl;
     // std::cout << "##HELLO##Z_emu mass: " << Z1_emuCR.M() <<  std::endl;
     // std::cout << "##HELLO#Z_emu Pt: " << Z1_emuCR.Pt() <<  std::endl;
-    
+
     if (fabs(Z1.M() - Zmass) > 160)
     {
         return foundZ1_emuCRCandidate;                     //UNCOMMENT FOR THE EVENTS IN Z1 MASS WINDOW
     }
     HZZemuCR_cutmZ1Window++;
-   
+
     if (DEBUG)
         std::cout << "*****$$$$***** Z_emu mass: " << Z1.M() << std::endl;
-     
-    /* 
+
+    /*
     //side band
     if (!(((Z1.M() > 40) && (Z1.M() < 70)) || ((Z1.M() > 110) && (Z1.M() < 200))))
     {
         return foundZ1_emuCRCandidate;                     //UNCOMMENT FOR THE EVENTS IN SIDE BAND REGION
     }
     HZZemuCR_cutmZ1Window_SB++;
-    std::cout << "*****$$$$***** Z_emu mass_sideband: " << Z1.M() << std::endl;                   
+    std::cout << "*****$$$$***** Z_emu mass_sideband: " << Z1.M() << std::endl;
     */
     /// pT selection of dilepton
     if (Z1.Pt() < 25)
