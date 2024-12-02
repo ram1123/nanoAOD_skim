@@ -1,5 +1,5 @@
 # NanoAOD Skim
-nanoAOD skiming code for H->ZZ->2l2Q studies.
+nanoAOD skiming code for H->ZZ->4l/2l2Q/2l2nu studies.
 
 # Setup
 
