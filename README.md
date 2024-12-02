@@ -14,20 +14,15 @@ nanoAOD skiming code for H->ZZ->2l2Q studies.
 2. Step: 2: Get  official nanoAODTools
 
    ```bash
-   git clone git@github.com:cms-nanoAOD/nanoAOD-tools.git PhysicsTools/NanoAODTools
+   git clone -b h4l_allCh_dev git@github.com:cms-nanoAOD/nanoAOD-tools.git PhysicsTools/NanoAODTools
    cd PhysicsTools/NanoAODTools
-   git checkout d163c18096fe2c5963ff5a9764bb420b46632178 # Updated to commit on 6 Dec 2023 in official nanoAOD-tools
    ```
 
 3. Step: 3: Get our analysis repository
 
    ```bash
    cd $CMSSW_BASE/src
-   git clone git@github.com:ram1123/nanoAOD_skim.git PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim
-   cd PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim
-   git checkout HZZ_Analysis_2l2nu
-   cd $CMSSW_BASE/src/PhysicsTools/NanoAODTools
-   git apply python/postprocessing/analysis/nanoAOD_skim/external/nanoAODTools_py2to3.patch
+   git clone -b HZZ_Analysis_2l2nu git@github.com:ram1123/nanoAOD_skim.git PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim
    cd $CMSSW_BASE/src/PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim
    git clone git@github.com:jbeder/yaml-cpp.git external/yaml-cpp
    cd external/yaml-cpp/

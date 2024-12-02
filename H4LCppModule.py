@@ -124,11 +124,13 @@ class HZZAnalysisCppProducer(Module):
                                                                     'Zmass', ['MZcut', 'down'], ['MZcut', 'up'],
                                                                     ['Jet','deepJet_btag','Loose'], ['Jet','deepJet_btag','Medium'], ['Jet','deepJet_btag','Tight']]))
 
-        self.worker.InitializeHZZ2l2qCut(*self._get_nested_values(cfg['HZZ2l2q'],
+        if self.channels == "all" or self.channels == "2l2q":
+            self.worker.InitializeHZZ2l2qCut(*self._get_nested_values(cfg['HZZ2l2q'],
                                                                   ['Leading_Lep_pT', 'SubLeading_Lep_pT', 'Lep_eta',
                                                                    ['MZLepcut', 'down'], ['MZLepcut', 'up']]))
 
-        self.worker.InitializeHZZ2l2nuCut(*self._get_nested_values(cfg['HZZ2l2nu'],
+        if self.channels == "all" or self.channels == "2l2v":
+            self.worker.InitializeHZZ2l2nuCut(*self._get_nested_values(cfg['HZZ2l2nu'],
                                                                    ['Leading_Lep_pT', 'SubLeading_Lep_pT', 'Lep_eta', 'Pt_ll',
                                                                     'M_ll_Window', 'dPhi_jetMET', ['MZLepcut', 'down'], ['MZLepcut', 'up']]))
 
