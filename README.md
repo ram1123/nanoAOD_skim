@@ -6,7 +6,7 @@ nanoAOD skiming code for H->ZZ->4l/2l2Q/2l2nu studies.
 To setup the code, download the setup script and run it. As it will download four GitHub repository using ssh link, so it will ask for the password. The details of the `setup.sh` script is given in this [README.md](docs/README.md) file.
 
 ```bash
-wget https://raw.githubusercontent.com/ram1123/nanoAOD_skim/refs/heads/dev_MergeAllChannel/setup.sh
+wget https://raw.githubusercontent.com/ram1123/nanoAOD_skim/refs/heads/HZZ_Analysis/setup.sh
 source setup.sh
 ```
 
