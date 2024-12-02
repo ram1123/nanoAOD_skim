@@ -5,8 +5,10 @@ import yaml
 import json
 import os
 from collections import OrderedDict
-from Helper import *
-from METFilters import passFilters
+
+from modules.Helper import *
+from modules.METFilters import passFilters
+
 ROOT.PyConfig.IgnoreCommandLineOptions = True
 
 
@@ -76,7 +78,7 @@ class HZZAnalysisCppProducer(Module):
             'libcollier.so',
         ]
         for lib in libraries:
-            fullPath = os.path.join(base_path, 'JHUGenMELA/MELA/data/el9_amd64_gcc12', lib)
+            fullPath = os.path.join(base_path, 'external/JHUGenMELA/MELA/data/el9_amd64_gcc12', lib)
             ROOT.gSystem.Load(fullPath)
 
         # Load the yaml-cpp library
@@ -93,7 +95,7 @@ class HZZAnalysisCppProducer(Module):
                 base_path = "$CMSSW_BASE//src/PhysicsTools/NanoAODTools"
                 ROOT.gSystem.Load("libPhysicsToolsNanoAODTools.so")
                 ROOT.gROOT.ProcessLine(
-                    ".L %s/interface/H4LTools.h" % base_path)
+                    ".L %s/include/H4LTools.h" % base_path)
 
     def _load_config(self, cfgFile):
         with open(cfgFile, 'r') as ymlfile:
@@ -124,11 +126,13 @@ class HZZAnalysisCppProducer(Module):
                                                                     'Zmass', ['MZcut', 'down'], ['MZcut', 'up'],
                                                                     ['Jet','deepJet_btag','Loose'], ['Jet','deepJet_btag','Medium'], ['Jet','deepJet_btag','Tight']]))
 
-        self.worker.InitializeHZZ2l2qCut(*self._get_nested_values(cfg['HZZ2l2q'],
+        if self.channels == "all" or self.channels == "2l2q":
+            self.worker.InitializeHZZ2l2qCut(*self._get_nested_values(cfg['HZZ2l2q'],
                                                                   ['Leading_Lep_pT', 'SubLeading_Lep_pT', 'Lep_eta',
                                                                    ['MZLepcut', 'down'], ['MZLepcut', 'up']]))
 
-        self.worker.InitializeHZZ2l2nuCut(*self._get_nested_values(cfg['HZZ2l2nu'],
+        if self.channels == "all" or self.channels == "2l2v":
+            self.worker.InitializeHZZ2l2nuCut(*self._get_nested_values(cfg['HZZ2l2nu'],
                                                                    ['Leading_Lep_pT', 'SubLeading_Lep_pT', 'Lep_eta', 'Pt_ll',
                                                                     'M_ll_Window', 'dPhi_jetMET', ['MZLepcut', 'down'], ['MZLepcut', 'up']]))
 

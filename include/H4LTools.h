@@ -8,7 +8,7 @@
 #include <TSpline.h>
 #include <vector>
 //#include "yaml-cpp/yaml.h"
-#include "../JHUGenMELA/MELA/interface/Mela.h"
+#include "../external/JHUGenMELA/MELA/interface/Mela.h"
 
 class H4LTools
 {
@@ -580,7 +580,7 @@ public:
     int HZZ2l2qNu_cutETAl1l2;
     int HZZ2l2qNu_cutmZ1Window;
     int HZZ2l2qNu_cutZ1Pt ;
-    int HZZ2l2nu_cutdPhiJetMET;   
+    int HZZ2l2nu_cutdPhiJetMET;
     int HZZ2l2nu_cutbtag;
     int HZZemuCR_cut2l;
     int HZZemuCR_cutpTl1l2;
@@ -622,19 +622,19 @@ H4LTools::H4LTools(int year, bool DEBUG_Main)
     std::cout << "year" << " " << year << std::endl;
     mela = new Mela(13.0, 125.0, TVar::SILENT);
     mela->setCandidateDecayMode(TVar::CandidateDecay_ZZ);
-    TFile *gConstant_g4 = TFile::Open("CoupleConstantsForMELA/gConstant_HZZ2e2mu_g4.root");
+    TFile *gConstant_g4 = TFile::Open("external/CoupleConstantsForMELA/gConstant_HZZ2e2mu_g4.root");
     spline_g4 = (TSpline *)gConstant_g4->Get("sp_tgfinal_HZZ2e2mu_SM_over_tgfinal_HZZ2e2mu_g4");
     gConstant_g4->Close();
     delete gConstant_g4;
-    TFile *gConstant_g2 = TFile::Open("CoupleConstantsForMELA/gConstant_HZZ2e2mu_g2.root");
+    TFile *gConstant_g2 = TFile::Open("external/CoupleConstantsForMELA/gConstant_HZZ2e2mu_g2.root");
     spline_g2 = (TSpline *)gConstant_g2->Get("sp_tgfinal_HZZ2e2mu_SM_over_tgfinal_HZZ2e2mu_g2");
     gConstant_g2->Close();
     delete gConstant_g2;
-    TFile *gConstant_L1 = TFile::Open("CoupleConstantsForMELA/gConstant_HZZ2e2mu_L1.root");
+    TFile *gConstant_L1 = TFile::Open("external/CoupleConstantsForMELA/gConstant_HZZ2e2mu_L1.root");
     spline_L1 = (TSpline *)gConstant_L1->Get("sp_tgfinal_HZZ2e2mu_SM_over_tgfinal_HZZ2e2mu_L1");
     gConstant_L1->Close();
     delete gConstant_L1;
-    TFile *gConstant_L1Zgs = TFile::Open("CoupleConstantsForMELA/gConstant_HZZ2e2mu_L1Zgs.root");
+    TFile *gConstant_L1Zgs = TFile::Open("external/CoupleConstantsForMELA/gConstant_HZZ2e2mu_L1Zgs.root");
     spline_L1Zgs = (TSpline *)gConstant_L1Zgs->Get("sp_tgfinal_HZZ2e2mu_SM_photoncut_over_tgfinal_HZZ2e2mu_L1Zgs");
     gConstant_L1Zgs->Close();
     delete gConstant_L1Zgs;
@@ -665,7 +665,7 @@ H4LTools::H4LTools(int year, bool DEBUG_Main)
     HZZ2l2qNu_cutmZ1Window = 0;
     HZZ2l2qNu_cutZ1Pt = 0;
     HZZ2l2nu_cutbtag = 0;
-    HZZ2l2nu_cutdPhiJetMET = 0; 
+    HZZ2l2nu_cutdPhiJetMET = 0;
 
     cut2e = 0;
     cut2mu = 0;

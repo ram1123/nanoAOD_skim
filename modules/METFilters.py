@@ -69,6 +69,8 @@ def passFilters(event, year, debug=False):
             return False
         if debug: print("DEBUG: Flag_hfNoisyHitsFilter passed")
         return True
+    elif year == 2022: # FIXME: Add MET filters for year 2022
+        pass
     else:
         print("ERROR: Invalid year: {}".format(year))
         exit(1)

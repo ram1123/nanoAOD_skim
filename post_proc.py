@@ -12,11 +12,10 @@ from PhysicsTools.NanoAODTools.postprocessing.modules.btv.btagSFProducer import 
 from PhysicsTools.NanoAODTools.postprocessing.modules.common.puWeightProducer import *
 
 # Custom module imports
-from H4Lmodule import *
-from H4LCppModule import *
-from JetSFMaker import *
-from GenVarsProducer import *
-from keep_and_drop_list import keep_drop_rules_Data_MC, keep_drop_rules_GEN
+from modules.H4LCppModule import *
+from modules.JetSFMaker import *
+from modules.GenVarsProducer import *
+from modules.keep_and_drop_list import keep_drop_rules_Data_MC, keep_drop_rules_GEN
 
 def parse_arguments():
     """Parse command line arguments."""
@@ -31,7 +30,6 @@ def parse_arguments():
     parser.add_argument("--DEBUG", default=False, action="store_true", help="Print debug information")
     parser.add_argument("--channels",  choices=["all", "4l", "2l2q", "2l2v"],  default="all",
                         help="Channels to run: all, 4l, 2l2q, or 2l2v")
-    # run all channels 4l, 2l2q and 2l2v? or only one channel
     return parser.parse_args()
 
 def getListFromFile(filename):
@@ -54,6 +52,7 @@ def main():
     modulesToRun = []
     isMC = True
     isFSR = True
+    isFiducialAna = True
     year = None
     cfgFile = None
     jsonFileName = None
@@ -82,26 +81,35 @@ def main():
     first_file = testfilelist[0]
     isMC = "/data/" not in first_file
 
+    if "Summer22" in first_file or "Run2022" in first_file:
+        """Summer22 and Run2022 for identification of 2022 MC and data respectiverly
+        """
+        year = 2022
+        cfgFile = "config/Input_2022.yml"
+        jsonFileName = "data/golden_json/Cert_Collisions2022_355100_362760_Golden.json"
+        sfFileName = "DeepCSV_102XSF_V2.csv" # FIXME: Update for year 2022
+        modulesToRun.extend([muonScaleRes2022()]) # FIXME: Update for year 2022
     if "UL18" in first_file or "UL2018" in first_file:
         """UL2018 for identification of 2018 UL data and UL18 for identification of 2018 UL MC
         """
         year = 2018
-        cfgFile = "Input_2018.yml"
-        jsonFileName = "golden_Json/Cert_314472-325175_13TeV_Legacy2018_Collisions18_JSON.txt"
+        cfgFile = "config/Input_2018.yml"
+        jsonFileName = "data/golden_json/Cert_314472-325175_13TeV_Legacy2018_Collisions18_JSON.txt"
         sfFileName = "DeepCSV_102XSF_V2.csv"
         modulesToRun.extend([muonScaleRes2018()])
     if "UL17" in first_file or "UL2017" in first_file:
         year = 2017
-        cfgFile = "Input_2017.yml"
-        jsonFileName="golden_Json/Cert_294927-306462_13TeV_UL2017_Collisions17_GoldenJSON.txt"
+        cfgFile = "config/Input_2017.yml"
+        jsonFileName="data/golden_json/Cert_294927-306462_13TeV_UL2017_Collisions17_GoldenJSON.txt"
         sfFileName = "DeepCSV_102XSF_V2.csv"
         modulesToRun.extend([muonScaleRes2017()])
     if "UL16" in first_file or "UL2016" in first_file:
         year = 2016
-        jsonFileName = "golden_Json/Cert_271036-284044_13TeV_Legacy2016_Collisions16_JSON.txt"
+        cfgFile = "config/Input_2016.yml"
+        jsonFileName = "data/golden_json/Cert_271036-284044_13TeV_Legacy2016_Collisions16_JSON.txt"
         sfFileName = "DeepCSV_102XSF_V2.csv"
         modulesToRun.extend([muonScaleRes2016()])
-    H4LCppModule = lambda: HZZAnalysisCppProducer(year,cfgFile, isMC, isFSR, args.cutFlowFile, args.DEBUG, channels=args.channels)
+
     H4LCppModule = lambda: HZZAnalysisCppProducer(year=year, cfgFile=cfgFile,
                                                   isMC=isMC, isFSR=isFSR,
                                                   cutFlowJSONFile=args.cutFlowFile,
@@ -124,8 +132,9 @@ def main():
             # btagSF = lambda: btagSFProducer(era = "UL"+str(year), algo = "deepcsv")
             puidSF = lambda: JetSFMaker("%s" % year)
             modulesToRun.extend([jetmetCorrector(), fatJetCorrector(), puidSF()])
-        # # modulesToRun.extend([jetmetCorrector(), fatJetCorrector(), btagSF(), puidSF()])
+            # modulesToRun.extend([jetmetCorrector(), fatJetCorrector(), btagSF(), puidSF()])
 
+        # FIXME: No PU weight for 2022
         if year == 2018: modulesToRun.extend([puAutoWeight_2018()])
         if year == 2017: modulesToRun.extend([puAutoWeight_2017()])
         if year == 2016: modulesToRun.extend([puAutoWeight_2016()])
@@ -154,7 +163,7 @@ def main():
                         haddFileName=args.outputFile,
                         jsonInput=jsonFileName,
                         maxEntries=entriesToRun,
-                        prefetch=DownloadFileToLocalThenRun, longTermCache= True,
+                        prefetch=DownloadFileToLocalThenRun,  longTermCache= True,   # prefetch: download file to local then run, longTermCache: keep the file in local after running so that if it is present use local instead of downloading again
                         outputbranchsel=temp_keep_drop_file)
 
     p.run()
