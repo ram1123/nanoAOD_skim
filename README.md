@@ -1,108 +1,41 @@
 # NanoAOD Skim
-nanoAOD skiming code for H->ZZ->2l2Q studies.
+nanoAOD skiming code for H->ZZ->4l/2l2Q/2l2nu studies.
 
-## Code setup
+# Setup
 
-1. Step: 1: Get CMSSW release
+To setup the code, download the setup script and run it. As it will download four GitHub repository using ssh link, so it will ask for the password. The details of the `setup.sh` script is given in this [README.md](docs/README.md) file.
 
-   ```bash
-   cmsrel CMSSW_10_6_30
-   cd CMSSW_10_6_30/src
-   cmsenv
-   ```
+```bash
+wget https://raw.githubusercontent.com/ram1123/nanoAOD_skim/refs/heads/HZZ_Analysis/setup.sh
+source setup.sh
+```
 
-2. Step: 2: Get  official nanoAODTools
+Once it's done, you can set the environment and run the code.
 
-   ```bash
-   git clone git@github.com:cms-nanoAOD/nanoAOD-tools.git PhysicsTools/NanoAODTools
-   cd PhysicsTools/NanoAODTools
-   git checkout 65359982275c476834ad4b37363d658166881f12 # Updated to commit on 16 June 2023 in official nanoAOD-tools
-   ```
+```bash
+cmsenv
+source set_env.sh
+python3 post_proc.py
+```
 
-3. Step: 3: Get our analysis repository
+# batch job submission.
+Condor-job submission (recommended)
 
-   ```bash
-   cd $CMSSW_BASE/src
-   git clone git@github.com:ram1123/nanoAOD_skim.git PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim
-   cd PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim
-   git checkout HZZ_Analysis
-   cd -
-   cmsenv
-   # patch PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim/nanoAOD_tools.patch
-   cp PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim/data/btag/*.csv PhysicsTools/NanoAODTools/data/btagSF/.
-   scram b
-   voms-proxy-init --voms cms --valid 168:00
-   ```
-
-   (Optional: Fix git repo)
-
-   ```bash
-   find PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim/.git/ -name "*.py*" -delete
-   ```
-
-4. Step: 4: Get the MELA package
+In the file [condor_setup_lxplus.py](scripts/condor/condor_setup_lxplus.py), specify the correct input text file (present inside directory [input_data_Files](input_data_Files)) from which you need to take input NanoAOD DAS names. Also, updated the output EOS path. Then do the following:
 
    ```bash
    cd $CMSSW_BASE/src/PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim
-   git clone -b v2.3.5 https://github.com/JHUGen/JHUGenMELA
-   sh JHUGenMELA/MELA/setup.sh -j 8
-   cd JHUGenMELA/MELA
-   make
+   # Use the arguments that you need.
+   python3 scripts/condor/condor_setup_lxplus.py --input_file sample_list_v9_2018.dat
+   # Set proxy before submitting the condor jobs.
+   voms-proxy-init -voms cms --valid 200:00
+   condor_submit <Files-created-from-above-command>.jdl
    ```
 
-4. Step: 4: interactive running
+   To resubmit the failed jobs, use the following command:
 
    ```bash
-   cd $CMSSW_BASE/src/PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim
-   python post_proc.py
+   python3 scripts/condor/nanoAOD_condor_resubmit.py -d condor_logs/SkimNanoAOD_2022_ZXCR/240312_135155/ -s /eos/user/r/rasharma/nanoAOD_ntuples/SkimNanoAOD_2022_ZXCR/ -i submit_condor_jobs_lnujj_SkimNanoAOD_2022_ZXCR.txt -n 1
    ```
 
-5. batch job submission.
-   1. Step: 5 (a): Condor-job submission (recommended)
-      1. In the file [condor_setup_lxplus.py](condor_setup_lxplus.py), specify the correct input text file (present inside directory [input_data_Files](input_data_Files)) from which you need to take input NanoAOD DAS names. Also, updated the output EOS path. Then do the following:
-
-         ```bash
-         cd $CMSSW_BASE/src/PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim
-         # Use the arguments that you need.
-         python condor_setup_lxplus.py --input-file sample_list_v9.dat
-         # Set proxy before submitting the condor jobs.
-         voms-proxy-init -voms cms --valid 200:00
-         condor_submit <Files-created-from-above-command>.jdl
-         ```
-
-   1. Step: 5(b): Crab-job submission (Not tested recently)
-      ```bash
-      cd crab/
-      voms-proxy-init -voms cms --valid 200:00
-      source /cvmfs/cms.cern.ch/crab3/crab.sh
-      crab submit -c crab_cfg.py
-      ```
-
-## Few additioanl scripts
-
-1. [condor_setup_lxplus.py](condor_setup_lxplus.py): This script can be used to setup the condor jobs. It takes the input text file (present inside directory [input_data_Files](input_data_Files)) from which you need to take input NanoAOD DAS names. Also, updated the output EOS path. Then do the following:
-
-   ```bash
-   python condor_setup_lxplus.py --input-file sample_list_v9.dat
-   ```
-   This will create the condor job files and the condor log files.
-
-1. [scripts/GetLogSummary.py](scripts/GetLogSummary.py): This script can be used to get the summary of the condor jobs. It takes the condor log files as input and gives the summary of the jobs. This summary contains the cut-flow table. It can be used as follows:
-
-   ```bash
-   python scripts/GetLogSummary.py <condor_log_file_base_path>
-   ```
-
-2. [scripts/check_das_sample.py](scripts/check_das_sample.py): This script can be used to check the status of the DAS samples. It takes the DAS name of the sample as input and gives the status of the sample. It can be used as follows:
-
-   ```bash
-   python scripts/check_das_sample.py <DAS_name_of_the_sample>
-   ```
-
-3. [scripts/condor_resubmit.py](scripts/condor_resubmit.py): This script can be used to resubmit the failed condor jobs. It takes the condor log files as input and resubmits the failed jobs. It can be used as follows:
-
-   ```bash
-   python scripts/condor_resubmit.py <condor_log_file_base_path>
-   ```
-
-## Few important points
+   This will give you new txt file. Then you can submit the condor job using new txt file.
