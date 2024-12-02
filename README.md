@@ -14,7 +14,7 @@ nanoAOD skiming code for H->ZZ->2l2Q studies.
 2. Step: 2: Get  official nanoAODTools
 
    ```bash
-   git clone -b h4l_allCh_dev git@github.com:cms-nanoAOD/nanoAOD-tools.git PhysicsTools/NanoAODTools
+   git clone -b h4l_allCh_dev git@github.com:ram1123/nanoAOD-tools.git PhysicsTools/NanoAODTools
    cd PhysicsTools/NanoAODTools
    ```
 
