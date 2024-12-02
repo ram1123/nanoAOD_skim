@@ -32,10 +32,10 @@ cp PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim/data/bt
 
 # Clone and setup MELA package
 echo "Setting up MELA package..."
-cd $CMSSW_BASE/src/PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim
+cd $CMSSW_BASE/src/PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim/external
 git clone -b v2.4.2 https://github.com/JHUGen/JHUGenMELA
 cd JHUGenMELA
-git apply ../external/JHUGen_py2to3.patch
+git apply ../JHUGen_py2to3.patch
 cd ..
 sh JHUGenMELA/MELA/setup.sh -j 8
 cd JHUGenMELA/MELA/data/el9_amd64_gcc12/
@@ -48,11 +48,12 @@ scram b -j 8
 
 # Back to the working directory
 cd $CMSSW_BASE/src/PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/afs/cern.ch/work/r/rasharma/h2l2nu/checkNewSetup_15July2024/CMSSW_14_0_2/src/PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim/external/JHUGenMELA/MELA/data/el9_amd64_gcc12
 
 # Note for interactive running
 echo "Setup for interactive running completed!"
 echo "Before running post_proc.py, execute:"
-echo 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/afs/cern.ch/work/r/rasharma/h2l2nu/checkNewSetup_15July2024/CMSSW_14_0_2/src/PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim/JHUGenMELA/MELA/data/el9_amd64_gcc12'
+echo 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/afs/cern.ch/work/r/rasharma/h2l2nu/checkNewSetup_15July2024/CMSSW_14_0_2/src/PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim/external/JHUGenMELA/MELA/data/el9_amd64_gcc12'
 echo ""
 echo "OR set the path and proxy using the script: set_env.sh"
 echo "source set_env.sh"
