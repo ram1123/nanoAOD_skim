@@ -12,7 +12,7 @@ git clone -b h4l_allCh_dev git@github.com:ram1123/nanoAOD-tools.git PhysicsTools
 
 # Clone and setup analysis repository
 echo "Setting up analysis repository..."
-git clone -b HZZ_Analysis_2l2nu git@github.com:ram1123/nanoAOD_skim.git PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim
+git clone -b HZZ_Analysis git@github.com:ram1123/nanoAOD_skim.git PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim
 
 # Build YAML-cpp dependency
 echo "Setting up YAML-cpp..."
