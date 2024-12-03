@@ -324,9 +324,6 @@ class HZZAnalysisCppProducer(Module):
         self.out.branch("Muon_Fsr_eta",  "F", lenVar = "nMuon_Fsr")
         self.out.branch("Muon_Fsr_phi",  "F", lenVar = "nMuon_Fsr")
 
-        with open("SyncLepton2018GGH.txt", 'w') as f:
-            f.write("Sync data list:"+"\n")
-
     def endFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
         print("\n========== Print Cut flow table  ====================\n")
         self.cutFlowCounts = {
