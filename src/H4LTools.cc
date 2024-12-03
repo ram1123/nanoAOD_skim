@@ -7,39 +7,43 @@
 std::vector<unsigned int> H4LTools::goodLooseElectrons2012(){
     std::vector<unsigned int> LooseElectronindex;
     for (unsigned int i=0; i<Electron_pt.size(); i++){
-        if (DEBUG)
-            std::cout << "Inside goodLooseElectrons2012:: Electron_pt[" << i << "] = " << Electron_pt[i] << std::endl;
-        //if ((Electron_pt[i]>elePtcut)&&(fabs(Electron_eta[i])<eleEtacut)){
-        if ((Electron_pt[i]>elePtcut)&&(((fabs(Electron_eta[i])<1.4442)||(fabs(Electron_eta[i])>1.5660))&&(fabs(Electron_eta[i])<eleEtacut))){
-            LooseElectronindex.push_back(i);
-            //std::cout << nElectron << std::endl;
+        if (DEBUG) std::cout << "Inside goodLooseElectrons2012:: Electron_pt[" << i << "] = " << Electron_pt[i] << std::endl;
+        if (Electron_pt[i] < elePtcut) continue;
+        if (fabs(Electron_eta[i]) > eleEtacut) continue;
+        if ((fabs(Electron_eta[i])<1.4442)||(fabs(Electron_eta[i])>1.5660))
+        {
+            if (fabs(Electron_eta[i])<eleEtacut){
+                LooseElectronindex.push_back(i);
+            }
         }
     }
-
     return LooseElectronindex;
 }
 
 std::vector<unsigned int> H4LTools::goodLooseMuons2012(){
     std::vector<unsigned int> LooseMuonindex;
     for (unsigned int i=0; i<Muon_eta.size(); i++){
-        if (DEBUG)
-            std::cout << "Inside goodLooseMuons2012:: Muon_pt[" << i << "] = " << Muon_pt[i] << std::endl;
-        if ((Muon_pt[i]>MuPtcut)&&(fabs(Muon_eta[i])<MuEtacut)&&((Muon_isGlobal[i]||Muon_isTracker[i]||Muon_isPFcand[i])&&(Muon_mediumId[i]))){
+        if (DEBUG) std::cout << "Inside goodLooseMuons2012:: Muon_pt[" << i << "] = " << Muon_pt[i] << std::endl;
+        if (Muon_pt[i] < MuPtcut) continue;
+        if (fabs(Muon_eta[i]) > MuEtacut) continue;
+        if ((Muon_isGlobal[i]||Muon_isTracker[i]||Muon_isPFcand[i])&&(Muon_mediumId[i])){
             LooseMuonindex.push_back(i);
-      //      std::cout << nMuon << std::endl;
         }
-    }
 
+    }
     return LooseMuonindex;
 }
+
 std::vector<unsigned int> H4LTools::goodMuons2015_noIso_noPf(std::vector<unsigned int> Muonindex){
     std::vector<unsigned int> bestMuonindex;
     for (unsigned int i=0; i<Muonindex.size(); i++){
-        if ((Muon_pt[Muonindex[i]]>MuPtcut)&&(fabs(Muon_eta[Muonindex[i]])<MuEtacut)&&(Muon_isGlobal[Muonindex[i]]||Muon_isTracker[Muonindex[i]])&&(Muon_mediumId[Muonindex[i]])){
-            //if (Muon_sip3d[Muonindex[i]]<Musip3dCut){
-                if((fabs(Muon_dxy[Muonindex[i]])<MuLoosedxycut)&&(fabs(Muon_dz[Muonindex[i]])<MuLoosedzcut)){
+        if (Muon_pt[Muonindex[i]] < MuPtcut) continue;
+        if (fabs(Muon_eta[Muonindex[i]]) > MuEtacut) continue;
+        if ((Muon_isGlobal[Muonindex[i]]||Muon_isTracker[Muonindex[i]])&&(Muon_mediumId[Muonindex[i]])){
+            if (Muon_sip3d[Muonindex[i]] < Musip3dCut){
+                if ((fabs(Muon_dxy[Muonindex[i]]) < MuLoosedxycut) && (fabs(Muon_dz[Muonindex[i]]) < MuLoosedzcut)){
                     bestMuonindex.push_back(Muonindex[i]);
-               // }
+                }
             }
         }
     }
@@ -48,12 +52,18 @@ std::vector<unsigned int> H4LTools::goodMuons2015_noIso_noPf(std::vector<unsigne
 std::vector<unsigned int> H4LTools::goodElectrons2015_noIso_noBdt(std::vector<unsigned int> Electronindex){
     std::vector<unsigned int> bestElectronindex;
     for (unsigned int i=0; i<Electronindex.size(); i++){
+        if (Electronindex[i] >= Electron_pt.size())
+        {
+            std::cerr << "ERROR: Electronindex out of bounds! i = " << i
+                      << ", Electronindex[i] = " << Electronindex[i]
+                      << ", Electron_pt.size() = " << Electron_pt.size() << std::endl;
+            continue;
+        }
         if ((Electron_pt[Electronindex[i]])>elePtcut){
-           // if(Electron_sip3d[Electronindex[i]]<elesip3dCut){
+           if(Electron_sip3d[Electronindex[i]]<elesip3dCut){
                 if((fabs(Electron_dxy[Electronindex[i]])<eleLoosedxycut)&&(fabs(Electron_dz[Electronindex[i]])<eleLoosedzcut)){
                     bestElectronindex.push_back(Electronindex[i]);
-                    //std::cout << nElectron << std::endl;
-                //}
+                }
             }
         }
     }
@@ -72,6 +82,48 @@ std::vector<bool> H4LTools::passTight_BDT_Id()
         mvaVal = Electron_mvaFall17V2Iso_WP90[i];
         tightid.push_back(mvaVal);
     }
+    return tightid;
+}
+
+std::vector<bool> H4LTools::passTight_BDT_Id_ZZ4l()
+{
+    std::vector<bool> tightid;
+    float cutVal, mvaVal;
+    cutVal = 1000;
+    mvaVal = -1;
+    // unsigned nE = (*nElectron).Get()[0];
+    for (unsigned int i = 0; i < Electron_pt.size(); i++)
+    {
+        if (Electron_pt[i] < 10)
+        {
+            if (fabs(Electron_eta[i]) < 0.8)
+                cutVal = eleBDTWPLELP;
+            if ((fabs(Electron_eta[i]) >= 0.8) && (fabs(Electron_eta[i]) < 1.479))
+                cutVal = eleBDTWPMELP;
+            if (fabs(Electron_eta[i]) >= 1.479)
+                cutVal = eleBDTWPHELP;
+        }
+        else
+        {
+            if (fabs(Electron_eta[i]) < 0.8)
+                cutVal = eleBDTWPLEHP;
+            if ((fabs(Electron_eta[i]) >= 0.8) && (fabs(Electron_eta[i]) < 1.479))
+                cutVal = eleBDTWPMEHP;
+            if (fabs(Electron_eta[i]) >= 1.479)
+                cutVal = eleBDTWPHEHP;
+        }
+
+        mvaVal = Electron_mvaFall17V2Iso[i];
+        if (mvaVal > cutVal)
+        {
+            tightid.push_back(true);
+        }
+        else
+        {
+            tightid.push_back(false);
+        }
+    }
+
     return tightid;
 }
 
@@ -425,7 +477,8 @@ void H4LTools::LeptonSelection(){
     bestMu = goodMuons2015_noIso_noPf(looseMu);
     Electronindex = bestEle;
     Muonindex = bestMu;
-    AllEid = passTight_BDT_Id();
+    if (year == 2022) AllEid = passTight_BDT_Id_ZZ4l();
+    else AllEid = passTight_BDT_Id();
     AllMuid = passTight_Id();
     for (unsigned int iuj=0;iuj<looseEle.size();iuj++){
         if(AllEid[looseEle[iuj]]) tighteleforjetidx.push_back(looseEle[iuj]);
@@ -436,7 +489,15 @@ void H4LTools::LeptonSelection(){
     jetidx = SelectedJets(tighteleforjetidx,tightmuforjetidx);
     FatJetidx = SelectedFatJets(tighteleforjetidx, tightmuforjetidx);
 
-    for(unsigned int ie=0; ie<Electronindex.size();ie++){
+    for(unsigned int ie=0; ie<Electronindex.size();ie++)
+    {
+        if (Electronindex[ie] >= Electron_pt.size())
+        {
+            std::cerr << "ERROR: Electronindex out of bounds! ie = " << ie
+                      << ", Electronindex[ie] = " << Electronindex[ie]
+                      << ", Electron_pt.size() = " << Electron_pt.size() << std::endl;
+            continue;
+        }
         if(Electron_pdgId[Electronindex[ie]]>0){
             Elechg.push_back(-1);
         }
@@ -512,60 +573,75 @@ void H4LTools::LeptonSelection(){
     if (DEBUG)
         std::cout << "Size of Eid = " << Eid.size() << std::endl;
 
-    for(unsigned int ae=0; ae<Eid.size();ae++){
+    for (unsigned int ae = 0; ae < Eid.size(); ae++)
+    {
         float RelEleIsoNoFsr;
         RelEleIsoNoFsr = Eiso[ae];
         unsigned FsrEleidx;
-        FsrEleidx = doFsrRecovery_Run3(goodFsrPhotons(), Electronindex[ae], 11);
-        if (isFSR && (FsrEleidx < 900)){
+        if (year == 2022)
+            FsrEleidx = doFsrRecovery_Run3(goodFsrPhotons(), Electronindex[ae], 11);
+        else
+            FsrEleidx = doFsrRecovery(Elelist[ae]);
+        if (DEBUG)
+            std::cout << "FsrEleidx = " << FsrEleidx << std::endl;
+        if (isFSR && (FsrEleidx < 900))
+        {
             TLorentzVector fsrele;
-            fsrele.SetPtEtaPhiM(FsrPhoton_pt[FsrEleidx],FsrPhoton_eta[FsrEleidx],FsrPhoton_phi[FsrEleidx],0);
-            if(Elelist[ae].DeltaR(fsrele)>0.01){
-                RelEleIsoNoFsr = RelEleIsoNoFsr - FsrPhoton_pt[FsrEleidx]/Elelist[ae].Pt();
+            fsrele.SetPtEtaPhiM(FsrPhoton_pt[FsrEleidx], FsrPhoton_eta[FsrEleidx], FsrPhoton_phi[FsrEleidx], 0);
+            if (Elelist[ae].DeltaR(fsrele) > 0.01)
+            {
+                RelEleIsoNoFsr = RelEleIsoNoFsr - FsrPhoton_pt[FsrEleidx] / Elelist[ae].Pt();
             }
-          //FsrEleidx = doFsrRecovery(Elelist[ae]);
-          /*if(FsrEleidx<900){
-              TLorentzVector fsrele;
-              fsrele.SetPtEtaPhiM(FsrPhoton_pt[FsrEleidx],FsrPhoton_eta[FsrEleidx],FsrPhoton_phi[FsrEleidx],0);
-              if (DEBUG)
-                std::cout<<"Ele correction: "<< std::endl;
-              if(Elelist[ae].DeltaR(fsrele)>0.01){
-                RelEleIsoNoFsr = RelEleIsoNoFsr - FsrPhoton_pt[FsrEleidx]/Elelist[ae].Pt();
-              }
-          }*/
         }
-        if((Eid[ae]==true)&&(RelEleIsoNoFsr<0.35)){
+
+        if (DEBUG)
+            std::cout << "Line#597: Eid[" << ae << "] = " << Eid[ae] << "  RelEleIsoNoFsr = " << RelEleIsoNoFsr << std::endl;
+        // check size of Eid
+        if (DEBUG)
+            std::cout << "Line#600: Size of Eid = " << Eid.size() << std::endl;
+
+        if ((Eid[ae] == true) && (RelEleIsoNoFsr < 0.35))
+        {
+            if (DEBUG)
+                std::cout << "Line#605: Eid[" << ae << "] = " << Eid[ae] << "  RelEleIsoNoFsr = " << RelEleIsoNoFsr << "  nTightEle : " << nTightEle << std::endl;
             nTightEle++;
             TightEleindex.push_back(ae);
             nTightEleChgSum += Elechg[ae];
             TightElelep_index.push_back(Lepointer);
             Lepointer++;
-            if (isMC) lep_genindex.push_back(Electron_genPartIdx[Electronindex[ae]]);
-            else lep_genindex.push_back(-1);
+            if (DEBUG)
+                std::cout << "Line#612: isMC = " << isMC << std::endl;
+            if (isMC)
+            {
+                if (DEBUG)
+                    std::cout << "Length of Electron_genPartIdx = " << Electron_genPartIdx.size() << " ae = " << ae << std::endl;
+                lep_genindex.push_back(Electron_genPartIdx[Electronindex[ae]]);
+                if (DEBUG)
+                    std::cout << "Line#616: lep_genindex[" << ae << "] = " << lep_genindex[ae] << std::endl;
+            }
+            else
+            {
+                lep_genindex.push_back(-1);
+            }
         }
-
+        if (DEBUG)
+            std::cout << "nTightEle = " << nTightEle << std::endl;
     }
 
     for(unsigned int amu=0; amu<muid.size();amu++){
         float RelIsoNoFsr;
         RelIsoNoFsr = Muiso[amu];
         unsigned int FsrMuonidx;
-        FsrMuonidx = doFsrRecovery_Run3(goodFsrPhotons(), Muonindex[amu], 13);
+        if (year == 2022)
+            FsrMuonidx = doFsrRecovery_Run3(goodFsrPhotons(), Muonindex[amu], 13);
+        else
+            FsrMuonidx = doFsrRecovery(Mulist[amu]);
         if (isFSR && (FsrMuonidx < 900)){
             TLorentzVector fsrmuon;
             fsrmuon.SetPtEtaPhiM(FsrPhoton_pt[FsrMuonidx],FsrPhoton_eta[FsrMuonidx],FsrPhoton_phi[FsrMuonidx],0);
             if(Mulist[amu].DeltaR(fsrmuon)>0.01){
                 RelIsoNoFsr = RelIsoNoFsr - FsrPhoton_pt[FsrMuonidx]/Mulist[amu].Pt();
             }
-          /*if(FsrMuonidx<900){
-              TLorentzVector fsrmuon;
-              fsrmuon.SetPtEtaPhiM(FsrPhoton_pt[FsrMuonidx],FsrPhoton_eta[FsrMuonidx],FsrPhoton_phi[FsrMuonidx],0);
-              if (DEBUG)
-                std::cout<<"muon FSR recovered"<<endl;
-              if(Mulist[amu].DeltaR(fsrmuon)>0.01){
-                RelIsoNoFsr = RelIsoNoFsr - FsrPhoton_pt[FsrMuonidx]/Mulist[amu].Pt();
-              }
-          }*/
         }
         if((muid[amu]==true)&&(RelIsoNoFsr<0.35)){
             nTightMu++;

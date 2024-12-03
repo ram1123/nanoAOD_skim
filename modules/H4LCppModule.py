@@ -21,11 +21,12 @@ class HZZAnalysisCppProducer(Module):
         self.DEBUG = DEBUG
         self.cfgFile = cfgFile
         self.cfg = self._load_config(cfgFile)
-        self.worker = ROOT.H4LTools(self.year, self.isMC, self.DEBUG)
+        self.worker = ROOT.H4LTools(int(self.year), self.isMC, self.DEBUG)
+        self.genworker = ROOT.GenAnalysis(self.DEBUG)
         self._initialize_worker(self.cfg)
         self.worker.isFSR = isFSR
         self._initialize_counters()
-        if self.year == 2012:
+        if str(self.year) == '2022':
             self.PUweight_list = self.GetPUWeight()
 
         # Alternatively, for dynamic worker attributes
@@ -125,7 +126,7 @@ class HZZAnalysisCppProducer(Module):
         print("Initializing worker")
         if self.DEBUG:
             print("Config file loaded: ", cfg)
-        if self.year == 2012:
+        if str(self.year) == '2022':
             self.PUweightfile = cfg["outputdataNPV"]
             self.PUweighthisto = cfg["PUweightHistoName"]
         self.worker.InitializeElecut(*self._get_nested_values(cfg['Electron'], [
@@ -520,11 +521,18 @@ class HZZAnalysisCppProducer(Module):
         #         return keepIt
 
         if isMC:
+            nGenPart = event.nGenPart
             genparts = Collection(event, "GenPart")
+            genjets = Collection(event, "GenJet")
+            for xj in genjets:
+                self.genworker.SetGenJets(xj.pt,xj.eta,xj.phi,xj.mass)
             for xg in genparts:
                 self.worker.SetGenParts(xg.pt)
+                self.genworker.SetGenParts(xg.pt,xg.eta,xg.phi,xg.mass,xg.pdgId,xg.status,xg.statusFlags,xg.genPartIdxMother)
             for xm in muons:
                 self.worker.SetMuonsGen(xm.genPartIdx)
+            for xe in electrons:
+                self.worker.SetElectronsGen(xe.genPartIdx)
 
         for xe in electrons:
             if str(self.year) == "2022":

@@ -9,10 +9,12 @@
 #include <vector>
 #include "../external/JHUGenMELA/MELA/interface/Mela.h"
 
+
 class H4LTools
 {
 public:
-    H4LTools(int year, bool isMC_, bool DEBUG_Main);
+    H4LTools(int year_, bool isMC_, bool DEBUG_Main);
+    // ~H4LTools();
     float elePtcut, MuPtcut, eleEtacut, MuEtacut, elesip3dCut, Musip3dCut, Zmass, MZ1cut, MZcutup, MZcutdown, MZZcut, HiggscutUp, HiggscutDown;
     float btag_deepJet_Loose, btag_deepJet_Medium, btag_deepJet_Tight;
     float eleLoosedxycut, eleLoosedzcut, MuLoosedxycut, MuLoosedzcut, MuTightdxycut, MuTightdzcut, MuTightTrackerLayercut, MuTightpTErrorcut, MuHighPtBound, eleIsocut, MuIsocut;
@@ -22,6 +24,7 @@ public:
     float HZZ2l2q_Leading_Lep_pT, HZZ2l2q_SubLeading_Lep_pT, HZZ2l2q_Lep_eta, HZZ2l2q_MZLepcutdown, HZZ2l2q_MZLepcutup;
     float HZZ2l2nu_Leading_Lep_pT, HZZ2l2nu_SubLeading_Lep_pT, HZZ2l2nu_Lep_eta, HZZ2l2nu_Pt_ll, HZZ2l2nu_M_ll_Window, HZZ2l2nu_dPhi_jetMET, HZZ2l2nu_MZLepcutdown, HZZ2l2nu_MZLepcutup;
     bool DEBUG;
+    int year;
 
     void InitializeElecut(float elePtcut_, float eleEtacut_, float elesip3dCut_, float eleLoosedxycut_, float eleLoosedzcut_, float eleIsocut_, float eleBDTWPLELP_, float eleBDTWPMELP_, float eleBDTWPHELP_, float eleBDTWPLEHP_, float eleBDTWPMEHP_, float eleBDTWPHEHP_)
     {
@@ -216,6 +219,7 @@ public:
     std::vector<unsigned int> goodMuons2015_noIso_noPf(std::vector<unsigned int> Muonindex);
     std::vector<unsigned int> goodElectrons2015_noIso_noBdt(std::vector<unsigned int> Electronindex);
     std::vector<bool> passTight_BDT_Id();
+    std::vector<bool> passTight_BDT_Id_ZZ4l();
     std::vector<bool> passTight_Id();
     std::vector<unsigned int> goodFsrPhotons();
     unsigned doFsrRecovery(TLorentzVector Lep);
@@ -651,10 +655,11 @@ private:
     unsigned nElectron, nMuon, nJet, nGenPart, nFsrPhoton;
 };
 
-H4LTools::H4LTools(int year, bool isMC_, bool DEBUG_Main)
+H4LTools::H4LTools(int year_, bool isMC_, bool DEBUG_Main)
 {
     DEBUG = DEBUG_Main;
-    std::cout << "year" << " " << year << std::endl;
+    year = year_;
+    // std::cout << "Line#659: year " << " " << year_ << std::endl;
     mela = new Mela(13.0, 125.0, TVar::SILENT);
     mela->setCandidateDecayMode(TVar::CandidateDecay_ZZ);
     TFile *gConstant_g4 = TFile::Open("external/CoupleConstantsForMELA/gConstant_HZZ2e2mu_g4.root");
@@ -728,4 +733,9 @@ H4LTools::H4LTools(int year, bool isMC_, bool DEBUG_Main)
     HZZ_emuCR_cutdPhiJetMET = 0;
     HZZ_emuCR_cutMETgT100 = 0;
 }
+
+// ~H4LTools()
+// {
+// }
+
 #endif

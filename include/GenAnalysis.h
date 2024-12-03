@@ -11,7 +11,7 @@
 
 class GenAnalysis{
     public:
-      GenAnalysis(); //Importing Ficducial Space cuts
+      GenAnalysis(bool isMC_); // Importing Ficducial Space cuts
       std::vector<float> GENlep_pt;
       std::vector<float> GENlep_eta;
       std::vector<float> GENlep_phi;
@@ -110,7 +110,8 @@ class GenAnalysis{
 
       unsigned nGenPart, nGenJet;
 };
-GenAnalysis::GenAnalysis(){
+GenAnalysis::GenAnalysis(bool isMC_)
+{
   // FIXME: Add the values to the yaml file
     genIsoConeSizeEl=0.3; genIsoConeSizeMu=0.3;
     genIsoCutEl=0.35; genIsoCutMu=0.35;

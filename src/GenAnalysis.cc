@@ -1,4 +1,4 @@
-#include "../interface/GenAnalysis.h"
+#include "../include/GenAnalysis.h"
 #include <TLorentzVector.h>
 #include <TRandom3.h>
 #include <vector>
@@ -171,7 +171,7 @@ void GenAnalysis::SetGenVariables(){
         GENpT4lj = -1.0; GENpT4ljj=-1.0; GENmass4lj = -1.0; GENmass4ljj=-1.0;
 
         passedFiducialSelection = mZ1_mZ2(L1, L2, L3, L4, true);
-        if(flag2e2mu){            
+        if(flag2e2mu){
             if(flagpassZ1){
                 nGEN2e2mupassZ1++;
                 if(flagpassFid){
