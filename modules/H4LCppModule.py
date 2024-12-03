@@ -23,10 +23,12 @@ class HZZAnalysisCppProducer(Module):
         self.DEBUG = DEBUG
         self.cfgFile = cfgFile
         self.cfg = self._load_config(cfgFile)
-        self.worker = ROOT.H4LTools(self.year, self.DEBUG)
+        self.worker = ROOT.H4LTools(self.year, self.isMC, self.DEBUG)
         self._initialize_worker(self.cfg)
         self.worker.isFSR = isFSR
         self._initialize_counters()
+        if self.year == 2012:
+            self.PUweight_list = self.GetPUWeight()
 
         # Alternatively, for dynamic worker attributes
         self.dynamicCuts_4l = ["cut4e", "cutghost4e", "cutLepPt4e", "cutQCD4e", "cutZZ4e", "cutm4l4e",
@@ -64,6 +66,14 @@ class HZZAnalysisCppProducer(Module):
         for idx, cut in enumerate(self.dynamicCuts_2l2nu_emu_CR):
             self.CutFlowTable.GetXaxis().SetBinLabel(8 + len(self.dynamicCuts_4l) + len(self.dynamicCuts_2l2q) + len(self.dynamicCuts_2l2nu) + idx, cut)
 
+    def GetPUWeight(self):
+        PUinput_file = ROOT.TFile.Open(self.PUweightfile)
+        PUinput_hist = PUinput_file.Get(self.PUweighthisto)
+        PUweight_list = []
+        for i in range(1, PUinput_hist.GetNbinsX() + 1):
+            PUweight_list.append(PUinput_hist.GetBinContent(i))
+        PUinput_file.Close()
+        return PUweight_list
 
     def loadLibraries(self):
         base_path = os.getenv('CMSSW_BASE') + '/src/PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim'
@@ -97,20 +107,38 @@ class HZZAnalysisCppProducer(Module):
                 ROOT.gROOT.ProcessLine(
                     ".L %s/include/H4LTools.h" % base_path)
 
+        # Load the C++ GEN module
+        if "/GenAnalysis_cc.so" not in ROOT.gSystem.GetLibraries():
+            print("Load GenAnalysis C++ module")
+            if base_path:
+                ROOT.gROOT.ProcessLine(
+                    ".L %s/src/GenAnalysis.cc+O" % base_path)
+            else:
+                base_path = "$CMSSW_BASE//src/PhysicsTools/NanoAODTools"
+                ROOT.gSystem.Load("libPhysicsToolsNanoAODTools.so")
+                ROOT.gROOT.ProcessLine(
+                    ".L %s/include/GenAnalysis.h" % base_path)
+
     def _load_config(self, cfgFile):
         with open(cfgFile, 'r') as ymlfile:
             return yaml.safe_load(ymlfile)
 
     def _initialize_worker(self, cfg):
+        print("Initializing worker")
+        if self.DEBUG:
+            print("Config file loaded: ", cfg)
+        if self.year == 2012:
+            self.PUweightfile = cfg["outputdataNPV"]
+            self.PUweighthisto = cfg["PUweightHistoName"]
         self.worker.InitializeElecut(*self._get_nested_values(cfg['Electron'], [
-            'pTcut', 'Etacut', 'Loosedxycut', 'Loosedzcut',
+            'pTcut', 'Etacut', 'Sip3dcut', 'Loosedxycut', 'Loosedzcut',
             'Isocut', ['BDTWP', 'LowEta', 'LowPT'], ['BDTWP', 'MedEta', 'LowPT'],
             ['BDTWP', 'HighEta', 'LowPT'], ['BDTWP', 'LowEta', 'HighPT'],
             ['BDTWP', 'MedEta', 'HighPT'], ['BDTWP', 'HighEta', 'HighPT']
         ]))
 
         self.worker.InitializeMucut(*self._get_nested_values(cfg['Muon'], [
-            'pTcut', 'Etacut', 'Loosedxycut', 'Loosedzcut', 'Isocut',
+            'pTcut', 'Etacut', 'Sip3dcut', 'Loosedxycut', 'Loosedzcut', 'Isocut',
             'Tightdxycut', 'Tightdzcut', 'TightTrackerLayercut', 'TightpTErrorcut',
             'HighPtBound'
         ]))
@@ -135,6 +163,9 @@ class HZZAnalysisCppProducer(Module):
             self.worker.InitializeHZZ2l2nuCut(*self._get_nested_values(cfg['HZZ2l2nu'],
                                                                    ['Leading_Lep_pT', 'SubLeading_Lep_pT', 'Lep_eta', 'Pt_ll',
                                                                     'M_ll_Window', 'dPhi_jetMET', ['MZLepcut', 'down'], ['MZLepcut', 'up']]))
+
+        print("Worker initialized")
+
 
     def _get_nested_values(self, dictionary, keys):
         values = []
@@ -161,6 +192,8 @@ class HZZAnalysisCppProducer(Module):
         pass
 
     def endJob(self):
+        print("Total events: ", self.passAllEvts)
+        print("End job")
         pass
 
     def beginFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
@@ -517,22 +550,33 @@ class HZZAnalysisCppProducer(Module):
 
         for xe in electrons:
             self.worker.SetElectrons(xe.pt, xe.eta, xe.phi, xe.mass, xe.dxy,
-                                      xe.dz, xe.mvaFall17V2Iso_WP90, xe.pdgId, xe.pfRelIso03_all)
+                                      xe.dz, xe.sip3d, xe.mvaFall17V2Iso, xe.mvaFall17V2Iso_WP90, xe.pdgId, xe.pfRelIso03_all)
             if self.DEBUG:
                 print("Electrons: pT, eta: {}, {}".format(xe.pt, xe.eta))
 
         for xm in muons:
             self.worker.SetMuons(xm.corrected_pt, xm.eta, xm.phi, xm.mass, xm.isGlobal, xm.isTracker, xm.mediumId,
-                                xm.dxy, xm.dz, xm.ptErr, xm.nTrackerLayers, xm.isPFcand,
+                                xm.dxy, xm.dz, xm.sip3d, xm.ptErr, xm.nTrackerLayers, xm.isPFcand,
                                  xm.pdgId, xm.charge, xm.pfRelIso03_all)
             if self.DEBUG:
                 print("Muons: pT, eta: {}, {}".format(xm.corrected_pt, xm.eta))
 
         for xf in fsrPhotons:
-            self.worker.SetFsrPhotons(xf.dROverEt2,xf.eta,xf.phi,xf.pt,xf.relIso03)
+            if self.DEBUG:
+                print("FsrPhotons: pT, eta: {}, {}".format(xf.pt, xf.eta))
+                print("Year: ", self.year)
+            if str(self.year) == '2022':
+                self.worker.SetFsrPhotons(xf.dROverEt2, xf.eta, xf.phi, xf.pt, xf.relIso03, xf.electronIdx, xf.muonIdx)
+            else:
+                self.worker.SetFsrPhotons(xf.dROverEt2, xf.eta, xf.phi, xf.pt, xf.relIso03, 0, 0) # FIXME: need to update the FSR photon index
 
         for xj in jets:
-            self.worker.SetJets(xj.pt,xj.eta,xj.phi,xj.mass,xj.jetId, xj.btagDeepFlavB, xj.puId)
+            if str(self.year) == '2022':
+                self.worker.SetJets(xj.pt, xj.eta, xj.phi, xj.mass, xj.jetId, 0.8, 7) # FIXME: need to update the btagDeepFlavB and puId currently these branches are not available
+            else:
+                self.worker.SetJets(xj.pt, xj.eta, xj.phi, xj.mass, xj.jetId, xj.btagDeepFlavB, xj.puId)
+
+
 
         for xj in FatJets:
             self.worker.SetFatJets(xj.pt, xj.eta, xj.phi, xj.msoftdrop, xj.jetId, xj.btagDeepB, xj.particleNet_ZvsQCD)
@@ -563,8 +607,11 @@ class HZZAnalysisCppProducer(Module):
                 foundZZCandidate_2l2nu = self.worker.ZZSelection_2l2nu()  #commented out for now
         if (self.channels == "all"  or self.channels == "4l"):
             foundZZCandidate_4l = self.worker.ZZSelection_4l()
-        if self.worker.GetZ1_emuCR() and (self.channels == "all"  or self.channels == "2l2v"):
-            foundZZCandidate_2l2nu_emuCR = self.worker.ZZSelection_2l2nu()
+        # if self.worker.GetZ1_emuCR() and (self.channels == "all"  or self.channels == "2l2v"):
+        #     foundZZCandidate_2l2nu_emuCR = self.worker.ZZSelection_2l2nu()
+
+        if self.DEBUG:
+            print("Found ZZ candidate (4l, 2l2q, 2l2nu): ({}, {}, {})".format(foundZZCandidate_4l, foundZZCandidate_2l2q, foundZZCandidate_2l2nu))
 
         HZZ2l2q_boostedJet_PNScore = self.worker.boostedJet_PNScore
         HZZ2l2q_boostedJet_Index = self.worker.boostedJet_Index

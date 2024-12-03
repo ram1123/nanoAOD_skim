@@ -71,3 +71,33 @@ Jet:
         Medium: 0.2770
         Tight: 0.7264
 
+
+HZZ2l2q:
+    Leading_Lep_pT: 40
+    SubLeading_Lep_pT: 24
+    Lep_eta: 2.4
+    MZLepcut:
+        down: 60
+        up: 120
+
+HZZ2l2nu:
+    Leading_Lep_pT: 25.0
+    SubLeading_Lep_pT: 25.0
+    Lep_eta: 2.5
+    Pt_ll: 10.0
+    M_ll_Window: 15.0
+    dPhi_jetMET: 0.0
+    MZLepcut:
+        down: 60.0
+        up: 120.0
+
+
+inputdataNPV: "data/pileupHistogram-Cert_Collisions2022_355100_362760_GoldenJson-13p6TeV-69200ub-99bins.root"
+inputdataNPVup: "data/pileupHistogram-Cert_Collisions2022_355100_362760_GoldenJson-13p6TeV-72400ub-99bins.root"
+inputdataNPVdown: "data/pileupHistogram-Cert_Collisions2022_355100_362760_GoldenJson-13p6TeV-66000ub-99bins.root"
+
+"outputdataNPV": "data/pileupHistogram_2022.root"
+outputdataNPVup: "data/pileupHistogram_2022up.root"
+outputdataNPVdown: "data/pileupHistogram_2022down.root"
+
+PUweightHistoName: "pileupWeight"
