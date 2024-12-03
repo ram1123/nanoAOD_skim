@@ -549,7 +549,11 @@ class HZZAnalysisCppProducer(Module):
                 self.worker.SetMuonsGen(xm.genPartIdx)
 
         for xe in electrons:
-            self.worker.SetElectrons(xe.pt, xe.eta, xe.phi, xe.mass, xe.dxy,
+            if str(self.year) == "2022":
+                self.worker.SetElectrons(xe.pt, xe.eta, xe.phi, xe.mass, xe.dxy,
+                                      xe.dz, xe.sip3d, xe.mvaHZZIso, xe.mvaIso_WP90, xe.pdgId, xe.pfRelIso03_all)
+            else:
+                self.worker.SetElectrons(xe.pt, xe.eta, xe.phi, xe.mass, xe.dxy,
                                       xe.dz, xe.sip3d, xe.mvaFall17V2Iso, xe.mvaFall17V2Iso_WP90, xe.pdgId, xe.pfRelIso03_all)
             if self.DEBUG:
                 print("Electrons: pT, eta: {}, {}".format(xe.pt, xe.eta))
@@ -579,9 +583,11 @@ class HZZAnalysisCppProducer(Module):
 
 
         for xj in FatJets:
-            self.worker.SetFatJets(xj.pt, xj.eta, xj.phi, xj.msoftdrop, xj.jetId, xj.btagDeepB, xj.particleNet_ZvsQCD)
+            ZvsQCD = xj.particleNetWithMass_ZvsQCD if str(self.year) == '2022' else xj.particleNet_ZvsQCD
+            self.worker.SetFatJets(xj.pt, xj.eta, xj.phi, xj.msoftdrop, xj.jetId, xj.btagDeepB, ZvsQCD)
 
         self.worker.SetMET(met.pt,met.phi,met.sumEt)
+        self.worker.BatchFsrRecovery_Run3()
 
         self.worker.LeptonSelection()
         foundZZCandidate_4l = False    # for 4l
@@ -607,8 +613,8 @@ class HZZAnalysisCppProducer(Module):
                 foundZZCandidate_2l2nu = self.worker.ZZSelection_2l2nu()  #commented out for now
         if (self.channels == "all"  or self.channels == "4l"):
             foundZZCandidate_4l = self.worker.ZZSelection_4l()
-        # if self.worker.GetZ1_emuCR() and (self.channels == "all"  or self.channels == "2l2v"):
-        #     foundZZCandidate_2l2nu_emuCR = self.worker.ZZSelection_2l2nu()
+        if self.worker.GetZ1_emuCR() and (self.channels == "all"  or self.channels == "2l2v"):
+            foundZZCandidate_2l2nu_emuCR = self.worker.ZZSelection_2l2nu()
 
         if self.DEBUG:
             print("Found ZZ candidate (4l, 2l2q, 2l2nu): ({}, {}, {})".format(foundZZCandidate_4l, foundZZCandidate_2l2q, foundZZCandidate_2l2nu))

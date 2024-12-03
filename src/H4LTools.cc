@@ -258,6 +258,7 @@ void H4LTools::BatchFsrRecovery_Run3(){
         TLorentzVector fsr,lep;
         lep.SetPtEtaPhiM(Muon_pt[j],Muon_eta[j],Muon_phi[j],Muon_mass[j]);
         fsridx = doFsrRecovery_Run3(fsrlist,j,13);
+        if (DEBUG) std::cout << "fsridx = " << fsridx << std::endl;
         if(fsridx<900){
             fsr.SetPtEtaPhiM(FsrPhoton_pt[fsrlist[fsridx]], FsrPhoton_eta[fsrlist[fsridx]], FsrPhoton_phi[fsrlist[fsridx]], 0);
             lep = lep + fsr;
@@ -480,9 +481,8 @@ void H4LTools::LeptonSelection(){
         std::cout << "Inside LeptonSelection:: Mulist size = " << Mulist.size() << std::endl;
         std::cout << "Inside LeptonSelection:: Muondressed_Run3 size = " << Muondressed_Run3.size() << std::endl;
         std::cout << "Inside LeptonSelection:: Muonindex[" << imu << "] = " << Muonindex[imu] << std::endl;
-            if (DEBUG)
-                std::cout
-                  << "Muondressed_Run3[" << Muonindex[imu] << "].Pt() = " << Muondressed_Run3[Muonindex[imu]].Pt() << std::endl;
+        if (DEBUG)
+            std::cout << "Muondressed_Run3[" << Muonindex[imu] << "].Pt() = " << Muondressed_Run3[Muonindex[imu]].Pt() << std::endl;
         MulistFsr.push_back(Muondressed_Run3[Muonindex[imu]]);
         if (DEBUG) std::cout << "Muondressed_Run3[" << Muonindex[imu] << "].Pt() = " << Muondressed_Run3[Muonindex[imu]].Pt() << std::endl;
         muid.push_back(AllMuid[Muonindex[imu]]);
@@ -510,6 +510,9 @@ void H4LTools::LeptonSelection(){
             std::cout << "Eid[" << i << "] = " << Eid[i] << std::endl;
         }
     }
+
+    if (DEBUG)
+        std::cout << "Size of Eid = " << Eid.size() << std::endl;
 
     for(unsigned int ae=0; ae<Eid.size();ae++){
         float RelEleIsoNoFsr;
