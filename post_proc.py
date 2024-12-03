@@ -23,7 +23,6 @@ def parse_arguments():
     parser.add_argument("-i", "--inputFile", default="", type=str, help="Input file name")
     parser.add_argument('-o', '--outputFile', default="skimmed_nano.root", type=str, help="Output file name")
     parser.add_argument('-outDir', '--outputDir', default=".", type=str, help="Output directory")
-    parser.add_argument('-c', '--cutFlowFile', default="cutFlow.json", type=str, help="Cut flow file name")
     parser.add_argument("-n", "--entriesToRun", default=100, type=int, help="Set  to 0 if need to run over all entries else put number of entries to run")
     parser.add_argument("-d", "--DownloadFileToLocalThenRun", default=True, type=bool, help="Download file to local then run")
     parser.add_argument("--WithSyst", default=False, action="store_true", help="Do not run systematics")
@@ -112,7 +111,6 @@ def main():
 
     H4LCppModule = lambda: HZZAnalysisCppProducer(year=year, cfgFile=cfgFile,
                                                   isMC=isMC, isFSR=isFSR,
-                                                  cutFlowJSONFile=args.cutFlowFile,
                                                   channels=args.channels,
                                                   DEBUG=args.DEBUG
                                                   )

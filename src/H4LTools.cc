@@ -60,28 +60,21 @@ std::vector<unsigned int> H4LTools::goodElectrons2015_noIso_noBdt(std::vector<un
 
     return bestElectronindex;
 }
-std::vector<bool> H4LTools::passTight_BDT_Id(){
+
+std::vector<bool> H4LTools::passTight_BDT_Id()
+{
     std::vector<bool> tightid;
-    float cutVal,mvaVal;
+    float cutVal, mvaVal;
     cutVal = 1000;
     mvaVal = -1;
-    //unsigned nE = (*nElectron).Get()[0];
-    for (unsigned int i=0; i<Electron_pt.size(); i++){
-
+    for (unsigned int i = 0; i < Electron_pt.size(); i++)
+    {
         mvaVal = Electron_mvaFall17V2Iso_WP90[i];
-//        if(mvaVal > cutVal){
-            tightid.push_back(mvaVal);
-            //std::cout << nElectron << std::endl;
-   //     }
-     //   else{
-       //     tightid.push_back(false);
-     //   }
-
+        tightid.push_back(mvaVal);
     }
-
     return tightid;
-
 }
+
 std::vector<bool> H4LTools::passTight_Id(){
     std::vector<bool> tightid;
     //unsigned nMu = (*nMuon).Get()[0];
@@ -469,26 +462,31 @@ void H4LTools::LeptonSelection(){
         }
         TLorentzVector Mu(0.,0.,0.,0.);
         if (DEBUG)
+        {
             std::cout << "Inside LeptonSelection:: Muon_pt[" << Muonindex[imu] << "] = " << Muon_pt[Muonindex[imu]] << std::endl;
             std::cout << "Inside LeptonSelection:: Muon_eta[" << Muonindex[imu] << "] = " << Muon_eta[Muonindex[imu]] << std::endl;
             std::cout << "Inside LeptonSelection:: Muon_phi[" << Muonindex[imu] << "] = " << Muon_phi[Muonindex[imu]] << std::endl;
             std::cout << "Inside LeptonSelection:: Muon_mass[" << Muonindex[imu] << "] = " << Muon_mass[Muonindex[imu]] << std::endl;
+        }
         Mu.SetPtEtaPhiM(Muon_pt[Muonindex[imu]],Muon_eta[Muonindex[imu]],Muon_phi[Muonindex[imu]],Muon_mass[Muonindex[imu]]);
 
-        std::cout << "Inside LeptonSelection:: Mulist size = " << Mulist.size() << std::endl;
+        if (DEBUG) std::cout << "Inside LeptonSelection:: Mulist size = " << Mulist.size() << std::endl;
 
         Mulist.push_back(Mu);
-        std::cout << "Inside LeptonSelection:: Mulist size = " << Mulist.size() << std::endl;
-        std::cout << "Inside LeptonSelection:: Muondressed_Run3 size = " << Muondressed_Run3.size() << std::endl;
-        std::cout << "Inside LeptonSelection:: Muonindex[" << imu << "] = " << Muonindex[imu] << std::endl;
+
         if (DEBUG)
+        {
+            std::cout << "Inside LeptonSelection:: Mulist size = " << Mulist.size() << std::endl;
+            std::cout << "Inside LeptonSelection:: Muondressed_Run3 size = " << Muondressed_Run3.size() << std::endl;
+            std::cout << "Inside LeptonSelection:: Muonindex[" << imu << "] = " << Muonindex[imu] << std::endl;
             std::cout << "Muondressed_Run3[" << Muonindex[imu] << "].Pt() = " << Muondressed_Run3[Muonindex[imu]].Pt() << std::endl;
+            std::cout << "Muondressed_Run3[" << Muonindex[imu] << "].Pt() = " << Muondressed_Run3[Muonindex[imu]].Pt() << std::endl;
+            std::cout << "Muon_pfRelIso03_all[" << Muonindex[imu] << "] = " << Muon_pfRelIso03_all[Muonindex[imu]] << std::endl;
+            std::cout << "Muon_pfRelIso03_all[" << Muonindex[imu] << "] = " << Muon_pfRelIso03_all[Muonindex[imu]] << std::endl;
+        }
         MulistFsr.push_back(Muondressed_Run3[Muonindex[imu]]);
-        if (DEBUG) std::cout << "Muondressed_Run3[" << Muonindex[imu] << "].Pt() = " << Muondressed_Run3[Muonindex[imu]].Pt() << std::endl;
         muid.push_back(AllMuid[Muonindex[imu]]);
-        if (DEBUG) std::cout << "Muon_pfRelIso03_all[" << Muonindex[imu] << "] = " << Muon_pfRelIso03_all[Muonindex[imu]] << std::endl;
         Muiso.push_back(Muon_pfRelIso03_all[Muonindex[imu]]);
-        if (DEBUG) std::cout << "Muon_pfRelIso03_all[" << Muonindex[imu] << "] = " << Muon_pfRelIso03_all[Muonindex[imu]] << std::endl;
     }
 
     if (DEBUG)

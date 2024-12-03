@@ -2,7 +2,6 @@ from PhysicsTools.NanoAODTools.postprocessing.framework.eventloop import Module
 from PhysicsTools.NanoAODTools.postprocessing.framework.datamodel import Collection,Object
 import ROOT
 import yaml
-import json
 import os
 from collections import OrderedDict
 
@@ -14,11 +13,10 @@ ROOT.PyConfig.IgnoreCommandLineOptions = True
 
 class HZZAnalysisCppProducer(Module):
 
-    def __init__(self, year, cfgFile, isMC, isFSR, cutFlowJSONFile, channels, DEBUG=False):
+    def __init__(self, year, cfgFile, isMC, isFSR, channels, DEBUG=False):
         self.loadLibraries()
         self.year = year
         self.isMC = isMC
-        self.cutFlowJSONFile = cutFlowJSONFile
         self.channels = channels # choices=["all", "4l", "2l2q", "2l2v"],
         self.DEBUG = DEBUG
         self.cfgFile = cfgFile
@@ -341,47 +339,30 @@ class HZZAnalysisCppProducer(Module):
             "PassZZ2l2nu_emuCR_Selection": self.passZZ2l2nu_emuCR_Evts
         }
 
-        # Cut flow data for 4l, 2l2q, 2l2nu channels for json output
-        cutFlowData = {
-            "General": self.cutFlowCounts,
-            "4l_Channel": {},
-            "2l2q_Channel": {},
-            "2l2nu_Channel": {},
-            "2l2nu_Channel_emu_CR": {}
-        }
-
         for key, value in self.cutFlowCounts.items():
             print("{:27}:{:7} {}".format(key, str(value), " Events"))
 
         print("\n4l channel cut flow table:")
         for idx, cut in enumerate(self.dynamicCuts_4l):
             print("{:2} {:27}:{:7} {}".format(8 + idx, cut, str(getattr(self.worker, cut)), " Events"))
-            cutFlowData["4l_Channel"][cut] = getattr(self.worker, cut, 'N/A')
             self.CutFlowTable.SetBinContent(8 + idx, getattr(self.worker, cut, 'N/A'))
 
         print("\n2l2q channel cut flow table:")
         for idx, cut in enumerate(self.dynamicCuts_2l2q):
             print("{:2} {:27}:{:7} {}".format(8 + len(self.dynamicCuts_4l) + idx, cut, str(getattr(self.worker, cut)), " Events"))
-            cutFlowData["2l2q_Channel"][cut] = getattr(self.worker, cut, 'N/A')
             self.CutFlowTable.SetBinContent(8 + len(self.dynamicCuts_4l) + idx, getattr(self.worker, cut, 'N/A'))
 
         print("\n2l2nu channel cut flow table:")
         for idx, cut in enumerate(self.dynamicCuts_2l2nu):
             print("{:2} {:27}:{:7} {}".format(8 + len(self.dynamicCuts_4l) + len(self.dynamicCuts_2l2q) + idx, cut, str(getattr(self.worker, cut)), " Events"))
-            cutFlowData["2l2nu_Channel"][cut] = getattr(self.worker, cut, 'N/A')
             self.CutFlowTable.SetBinContent(8 + len(self.dynamicCuts_4l) + len(self.dynamicCuts_2l2q) + idx, getattr(self.worker, cut, 'N/A'))
 
         print("\n2l2nu channel emu control region cut flow table:")
         for idx, cut in enumerate(self.dynamicCuts_2l2nu_emu_CR):
             print("{:2} {:27}:{:7} {}".format(8 + len(self.dynamicCuts_4l) + len(self.dynamicCuts_2l2q) + len(self.dynamicCuts_2l2nu) + idx, cut, str(getattr(self.worker, cut)), " Events"))
-            cutFlowData["2l2nu_Channel_emu_CR"][cut] = getattr(self.worker, cut, 'N/A')
             self.CutFlowTable.SetBinContent(8 + len(self.dynamicCuts_4l) + len(self.dynamicCuts_2l2q) + len(self.dynamicCuts_2l2nu) + idx, getattr(self.worker, cut, 'N/A'))
 
         print("\n========== END: Print Cut flow table  ====================\n")
-
-        # Write the cut flow data to a json file
-        with open(self.cutFlowJSONFile, "w") as jsonFile:
-            json.dump(cutFlowData, jsonFile, indent=5)
 
         outputFile.cd()
         self.CutFlowTable.Write()
