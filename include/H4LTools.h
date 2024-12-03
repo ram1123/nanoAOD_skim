@@ -232,331 +232,331 @@ public:
     std::vector<float> MuonFsrPhi();
     std::vector<unsigned int> SelectedJets(std::vector<unsigned int> ele, std::vector<unsigned int> mu);
     std::vector<unsigned int> SelectedFatJets(std::vector<unsigned int> ele, std::vector<unsigned int> mu);
-      std::vector<TLorentzVector> Electrondressed_Run3;
-      std::vector<TLorentzVector> Muondressed_Run3;
-      std::vector<TLorentzVector> Zlist;
-      std::vector<TLorentzVector> Zlistnofsr;
-      std::vector<int> Zflavor; // mu->13, e->11
-      std::vector<int> Zlep1index;
-      std::vector<int> Zlep2index;
-      std::vector<int> Zlep1lepindex;
-      std::vector<int> Zlep2lepindex;
-      std::vector<float> Zlep1pt; // leading lepton from each Z boson
-      std::vector<float> Zlep1eta;
-      std::vector<float> Zlep1phi;
-      std::vector<float> Zlep1mass;
-      std::vector<float> Zlep1chg;
-      std::vector<float> Zlep2pt; // subleading lepton from each Z boson
-      std::vector<float> Zlep2eta;
-      std::vector<float> Zlep2phi;
-      std::vector<float> Zlep2mass;
-      std::vector<float> Zlep2chg;
-      std::vector<float> Zlep1ptNoFsr;
-      std::vector<float> Zlep1etaNoFsr;
-      std::vector<float> Zlep1phiNoFsr;
-      std::vector<float> Zlep1massNoFsr;
-      std::vector<float> Zlep2ptNoFsr;
-      std::vector<float> Zlep2etaNoFsr;
-      std::vector<float> Zlep2phiNoFsr;
-      std::vector<float> Zlep2massNoFsr;
-      std::vector<unsigned int> jetidx;
-      std::vector<unsigned int> FatJetidx;
-      std::vector<float> Z_emuCRlep1pt;
-      std::vector<float> Z_emuCRlep2pt;
-      std::vector<float> Z_emuCRlep1eta;
-      std::vector<float> Z_emuCRlep2eta;
-      std::vector<float> Z_emuCRlep1phi;
-      std::vector<float> Z_emuCRlep2phi;
-      std::vector<float> Z_emuCRlep1mass;
-      std::vector<float> Z_emuCRlep2mass;
+    std::vector<TLorentzVector> Electrondressed_Run3;
+    std::vector<TLorentzVector> Muondressed_Run3;
+    std::vector<TLorentzVector> Zlist;
+    std::vector<TLorentzVector> Zlistnofsr;
+    std::vector<int> Zflavor; // mu->13, e->11
+    std::vector<int> Zlep1index;
+    std::vector<int> Zlep2index;
+    std::vector<int> Zlep1lepindex;
+    std::vector<int> Zlep2lepindex;
+    std::vector<float> Zlep1pt; // leading lepton from each Z boson
+    std::vector<float> Zlep1eta;
+    std::vector<float> Zlep1phi;
+    std::vector<float> Zlep1mass;
+    std::vector<float> Zlep1chg;
+    std::vector<float> Zlep2pt; // subleading lepton from each Z boson
+    std::vector<float> Zlep2eta;
+    std::vector<float> Zlep2phi;
+    std::vector<float> Zlep2mass;
+    std::vector<float> Zlep2chg;
+    std::vector<float> Zlep1ptNoFsr;
+    std::vector<float> Zlep1etaNoFsr;
+    std::vector<float> Zlep1phiNoFsr;
+    std::vector<float> Zlep1massNoFsr;
+    std::vector<float> Zlep2ptNoFsr;
+    std::vector<float> Zlep2etaNoFsr;
+    std::vector<float> Zlep2phiNoFsr;
+    std::vector<float> Zlep2massNoFsr;
+    std::vector<unsigned int> jetidx;
+    std::vector<unsigned int> FatJetidx;
+    std::vector<float> Z_emuCRlep1pt;
+    std::vector<float> Z_emuCRlep2pt;
+    std::vector<float> Z_emuCRlep1eta;
+    std::vector<float> Z_emuCRlep2eta;
+    std::vector<float> Z_emuCRlep1phi;
+    std::vector<float> Z_emuCRlep2phi;
+    std::vector<float> Z_emuCRlep1mass;
+    std::vector<float> Z_emuCRlep2mass;
 
-      int nTightEle;
-      int nTightMu;
-      int nTightEleChgSum;
-      int nTightMuChgSum;
-      int njets_pt30_eta4p7;
-      int Lepointer;
+    int nTightEle;
+    int nTightMu;
+    int nTightEleChgSum;
+    int nTightMuChgSum;
+    int njets_pt30_eta4p7;
+    int Lepointer;
 
-      bool flag4e;
-      bool flag4mu;
-      bool flag2e2mu;
+    bool flag4e;
+    bool flag4mu;
+    bool flag2e2mu;
 
-      bool isBoosted2l2q;
-      bool flag2e;
-      bool flag2mu;
-      bool flag2l;
-      bool HZZ2l2qNu_isELE;
-      bool HZZ2l2qNu_cutOppositeChargeFlag;
-      bool HZZ2l2nu_flag2e_met;
-      bool HZZ2l2nu_flag2mu_met;
-      bool HZZ2l2nu_flag2l_met;
+    bool isBoosted2l2q;
+    bool flag2e;
+    bool flag2mu;
+    bool flag2l;
+    bool HZZ2l2qNu_isELE;
+    bool HZZ2l2qNu_cutOppositeChargeFlag;
+    bool HZZ2l2nu_flag2e_met;
+    bool HZZ2l2nu_flag2mu_met;
+    bool HZZ2l2nu_flag2l_met;
 
-      // count number of tight, medium and loose b-tagged jets
-      // FIXME: For now these b-tag numbers are only for 2l2nu case
-      bool HZZ2l2nu_ifVBF;
-      bool HZZ2l2nu_isEMuCR;
-      int HZZ2l2qNu_nJets;
-      int HZZ2l2qNu_nTightBtagJets;
-      int HZZ2l2qNu_nMediumBtagJets;
-      int HZZ2l2qNu_nLooseBtagJets;
-      float minDeltaPhi;
-      float Pz_neutrino;
+    // count number of tight, medium and loose b-tagged jets
+    // FIXME: For now these b-tag numbers are only for 2l2nu case
+    bool HZZ2l2nu_ifVBF;
+    bool HZZ2l2nu_isEMuCR;
+    int HZZ2l2qNu_nJets;
+    int HZZ2l2qNu_nTightBtagJets;
+    int HZZ2l2qNu_nMediumBtagJets;
+    int HZZ2l2qNu_nLooseBtagJets;
+    float minDeltaPhi;
+    float Pz_neutrino;
 
-      float boostedJet_PNScore;
-      int boostedJet_Index;      // Contains the inded of 2l2q case; the boosted jet index that satisfies the P/N score and pT cut>200 GeV; No mass cut
-      int resolvedJet1_Index;    // Contains the index of 2l2q case; when paired using mass close to Z-boson mass
-      int resolvedJet2_Index;    // Contains the index of 2l2q case; when paired using mass close to Z-boson mass
-      int HZZ2l2nu_VBFIndexJet1; // Contains the index of 2l2nu case
-      int HZZ2l2nu_VBFIndexJet2;
+    float boostedJet_PNScore;
+    int boostedJet_Index;      // Contains the inded of 2l2q case; the boosted jet index that satisfies the P/N score and pT cut>200 GeV; No mass cut
+    int resolvedJet1_Index;    // Contains the index of 2l2q case; when paired using mass close to Z-boson mass
+    int resolvedJet2_Index;    // Contains the index of 2l2q case; when paired using mass close to Z-boson mass
+    int HZZ2l2nu_VBFIndexJet1; // Contains the index of 2l2nu case
+    int HZZ2l2nu_VBFIndexJet2;
 
-      void LeptonSelection();
-      std::vector<unsigned int> looseEle, looseMu, bestEle, bestMu, tighteleforjetidx, tightmuforjetidx;
-      std::vector<unsigned int> Electronindex;
-      std::vector<unsigned int> Muonindex;
-      std::vector<bool> AllEid;
-      std::vector<bool> AllMuid;
-      std::vector<TLorentzVector> Elelist;
-      std::vector<TLorentzVector> Mulist;
-      std::vector<TLorentzVector> ElelistFsr;
-      std::vector<TLorentzVector> MulistFsr;
-      std::vector<int> Elechg;
-      std::vector<int> Muchg;
-      std::vector<float> Muiso, Eiso;
-      std::vector<bool> Eid;
-      std::vector<bool> muid;
-      std::vector<int> lep_genindex;
-      std::vector<int> TightElelep_index;
-      std::vector<int> TightMulep_index;
-      int lep_Hindex[4];
+    void LeptonSelection();
+    std::vector<unsigned int> looseEle, looseMu, bestEle, bestMu, tighteleforjetidx, tightmuforjetidx;
+    std::vector<unsigned int> Electronindex;
+    std::vector<unsigned int> Muonindex;
+    std::vector<bool> AllEid;
+    std::vector<bool> AllMuid;
+    std::vector<TLorentzVector> Elelist;
+    std::vector<TLorentzVector> Mulist;
+    std::vector<TLorentzVector> ElelistFsr;
+    std::vector<TLorentzVector> MulistFsr;
+    std::vector<int> Elechg;
+    std::vector<int> Muchg;
+    std::vector<float> Muiso, Eiso;
+    std::vector<bool> Eid;
+    std::vector<bool> muid;
+    std::vector<int> lep_genindex;
+    std::vector<int> TightElelep_index;
+    std::vector<int> TightMulep_index;
+    int lep_Hindex[4];
 
-      std::vector<int> TightEleindex;
-      std::vector<int> TightMuindex;
-      void Initialize()
-      {
-          looseEle.clear();
-          looseMu.clear();
-          bestEle.clear();
-          bestMu.clear();
-          tighteleforjetidx.clear();
-          tightmuforjetidx.clear();
-          Electronindex.clear();
-          Muonindex.clear();
-          AllEid.clear();
-          AllMuid.clear();
-          Elelist.clear();
-          Mulist.clear();
-          ElelistFsr.clear();
-          MulistFsr.clear();
+    std::vector<int> TightEleindex;
+    std::vector<int> TightMuindex;
+    void Initialize()
+    {
+        looseEle.clear();
+        looseMu.clear();
+        bestEle.clear();
+        bestMu.clear();
+        tighteleforjetidx.clear();
+        tightmuforjetidx.clear();
+        Electronindex.clear();
+        Muonindex.clear();
+        AllEid.clear();
+        AllMuid.clear();
+        Elelist.clear();
+        Mulist.clear();
+        ElelistFsr.clear();
+        MulistFsr.clear();
 
-          // Electron related variables
-          nElectron = 0;
-          Electron_pt.clear();
-          Electron_phi.clear();
-          Electron_eta.clear();
-          Electron_mass.clear();
-          Electron_dxy.clear();
-          Electron_dz.clear();
-          Electron_sip3d.clear();
-          Electron_mvaFall17V2Iso.clear();
-          Electron_mvaFall17V2Iso_WP90.clear();
-          Electron_pdgId.clear();
-          Electron_genPartIdx.clear();
-          Electron_pfRelIso03_all.clear();
-          Elechg.clear();
-          Eiso.clear();
-          Eid.clear();
-          TightEleindex.clear();
-          nTightEle = 0;
-          nTightEleChgSum = 0;
+        // Electron related variables
+        nElectron = 0;
+        Electron_pt.clear();
+        Electron_phi.clear();
+        Electron_eta.clear();
+        Electron_mass.clear();
+        Electron_dxy.clear();
+        Electron_dz.clear();
+        Electron_sip3d.clear();
+        Electron_mvaFall17V2Iso.clear();
+        Electron_mvaFall17V2Iso_WP90.clear();
+        Electron_pdgId.clear();
+        Electron_genPartIdx.clear();
+        Electron_pfRelIso03_all.clear();
+        Elechg.clear();
+        Eiso.clear();
+        Eid.clear();
+        TightEleindex.clear();
+        nTightEle = 0;
+        nTightEleChgSum = 0;
 
-          // Muon related variables
-          nMuon = 0;
-          Muon_pt.clear();
-          Muon_phi.clear();
-          Muon_eta.clear();
-          Muon_mass.clear();
-          Muon_dxy.clear();
-          Muon_dz.clear();
-          Muon_sip3d.clear();
-          Muon_ptErr.clear();
-          Muon_pfRelIso03_all.clear();
-          Muon_nTrackerLayers.clear();
-          Muon_genPartIdx.clear();
-          Muon_pdgId.clear();
-          Muon_charge.clear();
-          Muon_isTracker.clear();
-          Muon_isGlobal.clear();
-          Muon_mediumId.clear();
-          Muon_isPFcand.clear();
-          Muchg.clear();
-          Muiso.clear();
-          muid.clear();
-          TightMuindex.clear();
-          nTightMu = 0;
-          nTightMuChgSum = 0;
-          njets_pt30_eta4p7 = 0;
-          RecoFourMuEvent=false;
-          RecoFourEEvent=false;
-          RecoTwoETwoMuEvent=false;
-          RecoTwoMuTwoEEvent=false;
+        // Muon related variables
+        nMuon = 0;
+        Muon_pt.clear();
+        Muon_phi.clear();
+        Muon_eta.clear();
+        Muon_mass.clear();
+        Muon_dxy.clear();
+        Muon_dz.clear();
+        Muon_sip3d.clear();
+        Muon_ptErr.clear();
+        Muon_pfRelIso03_all.clear();
+        Muon_nTrackerLayers.clear();
+        Muon_genPartIdx.clear();
+        Muon_pdgId.clear();
+        Muon_charge.clear();
+        Muon_isTracker.clear();
+        Muon_isGlobal.clear();
+        Muon_mediumId.clear();
+        Muon_isPFcand.clear();
+        Muchg.clear();
+        Muiso.clear();
+        muid.clear();
+        TightMuindex.clear();
+        nTightMu = 0;
+        nTightMuChgSum = 0;
+        njets_pt30_eta4p7 = 0;
+        RecoFourMuEvent=false;
+        RecoFourEEvent=false;
+        RecoTwoETwoMuEvent=false;
+        RecoTwoMuTwoEEvent=false;
 
-          // Jet related variables
-          nJet = 0;
-          Jet_pt.clear();
-          Jet_phi.clear();
-          Jet_eta.clear();
-          Jet_mass.clear();
-          Jet_btagDeepFlavB.clear();
-          Jet_jetId.clear();
-          Jet_puId.clear();
-          Zlep1lepindex.clear();
-          Zlep2lepindex.clear();
-          FatJet_pt.clear();
-          FatJet_phi.clear();
-          FatJet_eta.clear();
-          FatJet_SDmass.clear();
-          FatJet_btagDeepB.clear();
-          FatJet_PNZvsQCD.clear();
-          FatJet_jetId.clear();
-          jetidx.clear();
-          FatJetidx.clear();
+        // Jet related variables
+        nJet = 0;
+        Jet_pt.clear();
+        Jet_phi.clear();
+        Jet_eta.clear();
+        Jet_mass.clear();
+        Jet_btagDeepFlavB.clear();
+        Jet_jetId.clear();
+        Jet_puId.clear();
+        Zlep1lepindex.clear();
+        Zlep2lepindex.clear();
+        FatJet_pt.clear();
+        FatJet_phi.clear();
+        FatJet_eta.clear();
+        FatJet_SDmass.clear();
+        FatJet_btagDeepB.clear();
+        FatJet_PNZvsQCD.clear();
+        FatJet_jetId.clear();
+        jetidx.clear();
+        FatJetidx.clear();
 
-          // MET related variables
-          MET_pt = -999.0;
-          MET_phi = -999.0; ////new
-          MET_sumEt = -999.0;
+        // MET related variables
+        MET_pt = -999.0;
+        MET_phi = -999.0; ////new
+        MET_sumEt = -999.0;
 
-          // FsrPhoton related variables
-          nFsrPhoton = 0;
-          FsrPhoton_dROverEt2.clear();
-          FsrPhoton_phi.clear();
-          FsrPhoton_eta.clear();
-          FsrPhoton_pt.clear();
-          FsrPhoton_relIso03.clear();
-          FsrPhoton_electronIdx.clear();
-          FsrPhoton_muonIdx.clear();
+        // FsrPhoton related variables
+        nFsrPhoton = 0;
+        FsrPhoton_dROverEt2.clear();
+        FsrPhoton_phi.clear();
+        FsrPhoton_eta.clear();
+        FsrPhoton_pt.clear();
+        FsrPhoton_relIso03.clear();
+        FsrPhoton_electronIdx.clear();
+        FsrPhoton_muonIdx.clear();
 
-          // Generator  related variables
-          nGenPart = 0;
-          GenPart_pt.clear();
+        // Generator  related variables
+        nGenPart = 0;
+        GenPart_pt.clear();
 
-          // Reconstructed variables
-          Zlist.clear();
-          Zlistnofsr.clear();
-          Zflavor.clear();
-          Electrondressed_Run3.clear();
-          Muondressed_Run3.clear();
-          Zlep1index.clear();
-          Zlep2index.clear();
-          Zlep1lepindex.clear();
-          Zlep2lepindex.clear();
-          Zlep1pt.clear();
-          Zlep1eta.clear();
-          Zlep1phi.clear();
-          Zlep1mass.clear();
-          Zlep2pt.clear();
-          Zlep2eta.clear();
-          Zlep2phi.clear();
-          Zlep2mass.clear();
-          Zlep1chg.clear();
-          Zlep2chg.clear();
-          Zlep1ptNoFsr.clear();
-          Zlep1etaNoFsr.clear();
-          Zlep1phiNoFsr.clear();
-          Zlep1massNoFsr.clear();
-          Zlep2ptNoFsr.clear();
-          Zlep2etaNoFsr.clear();
-          Zlep2phiNoFsr.clear();
-          Zlep2massNoFsr.clear();
-          Z_emuCRlep1pt.clear();
-          Z_emuCRlep2pt.clear();
-          Z_emuCRlep1eta.clear();
-          Z_emuCRlep2eta.clear();
-          Z_emuCRlep1phi.clear();
-          Z_emuCRlep2phi.clear();
-          Z_emuCRlep1mass.clear();
-          Z_emuCRlep2mass.clear();
+        // Reconstructed variables
+        Zlist.clear();
+        Zlistnofsr.clear();
+        Zflavor.clear();
+        Electrondressed_Run3.clear();
+        Muondressed_Run3.clear();
+        Zlep1index.clear();
+        Zlep2index.clear();
+        Zlep1lepindex.clear();
+        Zlep2lepindex.clear();
+        Zlep1pt.clear();
+        Zlep1eta.clear();
+        Zlep1phi.clear();
+        Zlep1mass.clear();
+        Zlep2pt.clear();
+        Zlep2eta.clear();
+        Zlep2phi.clear();
+        Zlep2mass.clear();
+        Zlep1chg.clear();
+        Zlep2chg.clear();
+        Zlep1ptNoFsr.clear();
+        Zlep1etaNoFsr.clear();
+        Zlep1phiNoFsr.clear();
+        Zlep1massNoFsr.clear();
+        Zlep2ptNoFsr.clear();
+        Zlep2etaNoFsr.clear();
+        Zlep2phiNoFsr.clear();
+        Zlep2massNoFsr.clear();
+        Z_emuCRlep1pt.clear();
+        Z_emuCRlep2pt.clear();
+        Z_emuCRlep1eta.clear();
+        Z_emuCRlep2eta.clear();
+        Z_emuCRlep1phi.clear();
+        Z_emuCRlep2phi.clear();
+        Z_emuCRlep1mass.clear();
+        Z_emuCRlep2mass.clear();
 
-          pTL1 = -999.0;
-          MT_2l2nu = -999.0;
-          etaL1 = -999.0;
-          phiL1 = -999.0;
-          massL1 = -999.0;
-          pTL2 = -999.0;
-          etaL2 = -999.0;
-          phiL2 = -999.0;
-          massL2 = -999.0;
-          pTL3 = -999.0;
-          etaL3 = -999.0;
-          phiL3 = -999.0;
-          massL3 = -999.0;
-          pTL4 = -999.0;
-          etaL4 = -999.0;
-          phiL4 = -999.0;
-          massL4 = -999.0;
-          pTL1_emu = -999.0;
-          etaL1_emu = -999.0;
-          phiL1_emu = -999.0;
-          massL1_emu = -999.0;
-          pTL2_emu = -999.0;
-          etaL2_emu = -999.0;
-          phiL2_emu = -999.0;
-          massL2_emu = -999.0;
+        pTL1 = -999.0;
+        MT_2l2nu = -999.0;
+        etaL1 = -999.0;
+        phiL1 = -999.0;
+        massL1 = -999.0;
+        pTL2 = -999.0;
+        etaL2 = -999.0;
+        phiL2 = -999.0;
+        massL2 = -999.0;
+        pTL3 = -999.0;
+        etaL3 = -999.0;
+        phiL3 = -999.0;
+        massL3 = -999.0;
+        pTL4 = -999.0;
+        etaL4 = -999.0;
+        phiL4 = -999.0;
+        massL4 = -999.0;
+        pTL1_emu = -999.0;
+        etaL1_emu = -999.0;
+        phiL1_emu = -999.0;
+        massL1_emu = -999.0;
+        pTL2_emu = -999.0;
+        etaL2_emu = -999.0;
+        phiL2_emu = -999.0;
+        massL2_emu = -999.0;
 
-          pTj1 = -999.0;
-          etaj1 = -999.0;
-          phij1 = -999.0;
-          mj1 = -999.0;
-          pTj2 = -999.0;
-          etaj2 = -999.0;
-          phij2 = -999.0;
-          mj2 = -999.0;
+        pTj1 = -999.0;
+        etaj1 = -999.0;
+        phij1 = -999.0;
+        mj1 = -999.0;
+        pTj2 = -999.0;
+        etaj2 = -999.0;
+        phij2 = -999.0;
+        mj2 = -999.0;
 
-          HZZ2l2nu_ifVBF = false;
-          HZZ2l2qNu_nJets = 0;
-          HZZ2l2qNu_nTightBtagJets = 0;
-          HZZ2l2qNu_nMediumBtagJets = 0;
-          HZZ2l2qNu_nLooseBtagJets = 0;
-          minDeltaPhi = 999.0;
-          Pz_neutrino = -999.0;
+        HZZ2l2nu_ifVBF = false;
+        HZZ2l2qNu_nJets = 0;
+        HZZ2l2qNu_nTightBtagJets = 0;
+        HZZ2l2qNu_nMediumBtagJets = 0;
+        HZZ2l2qNu_nLooseBtagJets = 0;
+        minDeltaPhi = 999.0;
+        Pz_neutrino = -999.0;
 
-          boostedJet_PNScore = -999.0;
-          boostedJet_Index = -999;
-          resolvedJet1_Index = -999;
-          resolvedJet2_Index = -999;
-          HZZ2l2nu_VBFIndexJet1 = -999;
-          HZZ2l2nu_VBFIndexJet2 = -999;
+        boostedJet_PNScore = -999.0;
+        boostedJet_Index = -999;
+        resolvedJet1_Index = -999;
+        resolvedJet2_Index = -999;
+        HZZ2l2nu_VBFIndexJet1 = -999;
+        HZZ2l2nu_VBFIndexJet2 = -999;
 
-          // Flags for various final states
-          isBoosted2l2q = false;
-          flag4e = false;
-          flag4mu = false;
-          flag2e2mu = false;
-          flag2e = false;
-          flag2mu = false;
-          flag2l = false;
-          HZZ2l2qNu_isELE = false;
-          HZZ2l2qNu_cutOppositeChargeFlag = false;
+        // Flags for various final states
+        isBoosted2l2q = false;
+        flag4e = false;
+        flag4mu = false;
+        flag2e2mu = false;
+        flag2e = false;
+        flag2mu = false;
+        flag2l = false;
+        HZZ2l2qNu_isELE = false;
+        HZZ2l2qNu_cutOppositeChargeFlag = false;
 
-          HZZ2l2nu_flag2e_met = false;
-          HZZ2l2nu_flag2l_met = false;
-          HZZ2l2nu_flag2mu_met = false;
-          Z1.SetPtEtaPhiM(0.0, 0.0, 0.0, 0.0);
-          Z1nofsr.SetPtEtaPhiM(0.0, 0.0, 0.0, 0.0);
-          Z1_emuCR.SetPtEtaPhiM(0.0, 0.0, 0.0, 0.0);
-          Z1_emuCRnofsr.SetPtEtaPhiM(0.0, 0.0, 0.0, 0.0);
-          Z2.SetPtEtaPhiM(0.0, 0.0, 0.0, 0.0);
-          Z2_2j.SetPtEtaPhiM(0.0, 0.0, 0.0, 0.0);
-          Z2_met.SetPtEtaPhiM(0.0, 0.0, 0.0, 0.0);
-          Z2nofsr.SetPtEtaPhiM(0.0, 0.0, 0.0, 0.0);
-          ZZsystem.SetPtEtaPhiM(0.0, 0.0, 0.0, 0.0);
-          ZZsystemnofsr.SetPtEtaPhiM(0.0, 0.0, 0.0, 0.0);
-          ZZ_2jsystem.SetPtEtaPhiM(0.0, 0.0, 0.0, 0.0);
-          ZZ_metsystem.SetPtEtaPhiM(0.0, 0.0, 0.0, 0.0);
-          ZZ_2jsystemnofsr.SetPtEtaPhiM(0.0, 0.0, 0.0, 0.0);
-          ZZ_metsystemnofsr.SetPtEtaPhiM(0.0, 0.0, 0.0, 0.0);
-          ZZ_emuCRsystemnofsr.SetPtEtaPhiM(0.0, 0.0, 0.0, 0.0);
-          ZZ_emuCRsystem.SetPtEtaPhiM(0.0, 0.0, 0.0, 0.0);
+        HZZ2l2nu_flag2e_met = false;
+        HZZ2l2nu_flag2l_met = false;
+        HZZ2l2nu_flag2mu_met = false;
+        Z1.SetPtEtaPhiM(0.0, 0.0, 0.0, 0.0);
+        Z1nofsr.SetPtEtaPhiM(0.0, 0.0, 0.0, 0.0);
+        Z1_emuCR.SetPtEtaPhiM(0.0, 0.0, 0.0, 0.0);
+        Z1_emuCRnofsr.SetPtEtaPhiM(0.0, 0.0, 0.0, 0.0);
+        Z2.SetPtEtaPhiM(0.0, 0.0, 0.0, 0.0);
+        Z2_2j.SetPtEtaPhiM(0.0, 0.0, 0.0, 0.0);
+        Z2_met.SetPtEtaPhiM(0.0, 0.0, 0.0, 0.0);
+        Z2nofsr.SetPtEtaPhiM(0.0, 0.0, 0.0, 0.0);
+        ZZsystem.SetPtEtaPhiM(0.0, 0.0, 0.0, 0.0);
+        ZZsystemnofsr.SetPtEtaPhiM(0.0, 0.0, 0.0, 0.0);
+        ZZ_2jsystem.SetPtEtaPhiM(0.0, 0.0, 0.0, 0.0);
+        ZZ_metsystem.SetPtEtaPhiM(0.0, 0.0, 0.0, 0.0);
+        ZZ_2jsystemnofsr.SetPtEtaPhiM(0.0, 0.0, 0.0, 0.0);
+        ZZ_metsystemnofsr.SetPtEtaPhiM(0.0, 0.0, 0.0, 0.0);
+        ZZ_emuCRsystemnofsr.SetPtEtaPhiM(0.0, 0.0, 0.0, 0.0);
+        ZZ_emuCRsystem.SetPtEtaPhiM(0.0, 0.0, 0.0, 0.0);
     }
 
     bool isFSR = true;
