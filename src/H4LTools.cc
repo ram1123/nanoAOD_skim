@@ -611,7 +611,7 @@ void H4LTools::LeptonSelection(){
             Lepointer++;
             if (DEBUG)
                 std::cout << "Line#612: isMC = " << isMC << std::endl;
-            if (isMC)
+            if (isMC && year == 2022) // FIXME: Generalise this for all years
             {
                 if (DEBUG)
                     std::cout << "Length of Electron_genPartIdx = " << Electron_genPartIdx.size() << " ae = " << ae << std::endl;
@@ -661,8 +661,10 @@ void H4LTools::LeptonSelection(){
             Lepointer++;
             if (DEBUG)
                 std::cout << "Line#662: isMC = " << isMC <<  " nTightMu : " << nTightMu << std::endl;
-            if (isMC) lep_genindex.push_back(Muon_genPartIdx[Muonindex[amu]]);
-            else lep_genindex.push_back(-1);
+            if (isMC && year == 2022) // FIXME: Generalise this for all years
+                lep_genindex.push_back(Muon_genPartIdx[Muonindex[amu]]);
+            else
+                lep_genindex.push_back(-1);
             if (DEBUG)
                 std::cout << "Line#666: lep_genindex[" << amu << "] = " << lep_genindex[amu] << std::endl;
         }
