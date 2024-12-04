@@ -571,7 +571,7 @@ void H4LTools::LeptonSelection(){
     }
 
     if (DEBUG)
-        std::cout << "Size of Eid = " << Eid.size() << std::endl;
+        std::cout << "Line#574: Size of Eid = " << Eid.size() << std::endl;
 
     for (unsigned int ae = 0; ae < Eid.size(); ae++)
     {
@@ -628,7 +628,13 @@ void H4LTools::LeptonSelection(){
             std::cout << "nTightEle = " << nTightEle << std::endl;
     }
 
-    for(unsigned int amu=0; amu<muid.size();amu++){
+    if (DEBUG)
+        std::cout << "Line#632: Size of Muid = " << muid.size() << std::endl;
+
+    for(unsigned int amu=0; amu<muid.size();amu++)
+    {
+        if (DEBUG)
+            std::cout << "amu = " << amu << " Muiso size: " << Muiso.size() << " year: " << year << std::endl;
         float RelIsoNoFsr;
         RelIsoNoFsr = Muiso[amu];
         unsigned int FsrMuonidx;
@@ -636,6 +642,8 @@ void H4LTools::LeptonSelection(){
             FsrMuonidx = doFsrRecovery_Run3(goodFsrPhotons(), Muonindex[amu], 13);
         else
             FsrMuonidx = doFsrRecovery(Mulist[amu]);
+
+        if (DEBUG) std::cout << "FsrMuonidx = " << FsrMuonidx << std::endl;
         if (isFSR && (FsrMuonidx < 900)){
             TLorentzVector fsrmuon;
             fsrmuon.SetPtEtaPhiM(FsrPhoton_pt[FsrMuonidx],FsrPhoton_eta[FsrMuonidx],FsrPhoton_phi[FsrMuonidx],0);
@@ -643,19 +651,26 @@ void H4LTools::LeptonSelection(){
                 RelIsoNoFsr = RelIsoNoFsr - FsrPhoton_pt[FsrMuonidx]/Mulist[amu].Pt();
             }
         }
+        if (DEBUG)
+            std::cout << "RelIsoNoFsr = " << RelIsoNoFsr << " " << "muid[amu] " << muid[amu] << " size of Muchg = " << Muchg.size() <<  std::endl;
         if((muid[amu]==true)&&(RelIsoNoFsr<0.35)){
             nTightMu++;
             TightMuindex.push_back(amu);
             nTightMuChgSum += Muchg[amu];
             TightMulep_index.push_back(Lepointer);
             Lepointer++;
+            if (DEBUG)
+                std::cout << "Line#662: isMC = " << isMC <<  " nTightMu : " << nTightMu << std::endl;
             if (isMC) lep_genindex.push_back(Muon_genPartIdx[Muonindex[amu]]);
             else lep_genindex.push_back(-1);
+            if (DEBUG)
+                std::cout << "Line#666: lep_genindex[" << amu << "] = " << lep_genindex[amu] << std::endl;
         }
     }
-
-
+    if (DEBUG)
+        std::cout << "nTightMu = " << nTightMu << std::endl;
 }
+
 bool H4LTools::findZCandidate(){
 
     TLorentzVector z1,z2;

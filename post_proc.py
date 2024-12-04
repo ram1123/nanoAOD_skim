@@ -121,8 +121,15 @@ def main():
     print("isFSR: {}".format(isFSR))
 
     if isMC:
-        GenVarModule = lambda : GenVarsProducer() # FIXME: Gen variable producer module is not working
-        modulesToRun.extend([H4LCppModule(), GenVarModule()])
+        if args.DEBUG: print("INFO: Running over MC")
+        if year == 2022: # FIXME: Generalize this
+            print("INFO: Running over 2022 MC")
+            modulesToRun.extend([H4LCppModule()])
+        else:
+            print("INFO: Running over 2016-2018 MC")
+            GenVarModule = lambda : GenVarsProducer() # FIXME: Gen variable producer module is not working
+            modulesToRun.extend([H4LCppModule(), GenVarModule()])
+
         if (args.WithSyst):
             jetmetCorrector = createJMECorrector(isMC=isMC, dataYear=year, jesUncert="All", jetType = "AK4PFchs")
             fatJetCorrector = createJMECorrector(isMC=isMC, dataYear=year, jesUncert="All", jetType = "AK8PFPuppi")

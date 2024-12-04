@@ -325,6 +325,18 @@ class HZZAnalysisCppProducer(Module):
         self.out.branch("Muon_Fsr_eta",  "F", lenVar = "nMuon_Fsr")
         self.out.branch("Muon_Fsr_phi",  "F", lenVar = "nMuon_Fsr")
 
+        # GENHlepNum = 4
+        # GENZNum = 2
+        # self.out.branch("GENlep_MomId",  "I", lenVar = "nGenPart")
+        # self.out.branch("GENlep_MomMomId",  "I", lenVar = "nGenPart")
+        # self.out.branch("GENZ_MomId",  "I", lenVar = "nVECZ")
+        # self.out.branch("GENZ_DaughtersId",  "I", lenVar = "GENZNum")
+        # self.out.branch("GENlep_Hindex",  "I", lenVar = "GENHlepNum")
+        # self.out.branch("lep_Hindex",  "I", lenVar = "GENHlepNum")
+        # self.out.branch("GENlep_id",  "I", lenVar = "nGENLeptons")
+        # self.out.branch("lep_genindex",  "I", lenVar = "Lepointer")
+
+
     def endFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
         print("\n========== Print Cut flow table  ====================\n")
         self.cutFlowCounts = {
@@ -566,8 +578,6 @@ class HZZAnalysisCppProducer(Module):
             else:
                 self.worker.SetJets(xj.pt, xj.eta, xj.phi, xj.mass, xj.jetId, xj.btagDeepFlavB, xj.puId)
 
-
-
         for xj in FatJets:
             ZvsQCD = xj.particleNetWithMass_ZvsQCD if str(self.year) == '2022' else xj.particleNet_ZvsQCD
             self.worker.SetFatJets(xj.pt, xj.eta, xj.phi, xj.msoftdrop, xj.jetId, xj.btagDeepB, ZvsQCD)
@@ -576,6 +586,77 @@ class HZZAnalysisCppProducer(Module):
         self.worker.BatchFsrRecovery_Run3()
 
         self.worker.LeptonSelection()
+        if self.DEBUG:
+            print("Lepton selection done")
+
+        if isMC:
+            self.genworker.SetGenVariables()
+            GENmass4l = self.genworker.GENmass4l
+            GENpT4l = self.genworker.GENpT4l
+            GENrapidity4l = self.genworker.GENrapidity4l
+            GENnjets_pt30_eta4p7 = self.genworker.GENnjets_pt30_eta4p7
+            nGENLeptons = self.genworker.nGENLeptons
+            passedFiducialSelection = self.genworker.passedFiducialSelection
+
+        Electron_Fsr_pt_vec = self.worker.ElectronFsrPt()
+        Electron_Fsr_eta_vec = self.worker.ElectronFsrEta()
+        Electron_Fsr_phi_vec = self.worker.ElectronFsrPhi()
+        Muon_Fsr_pt_vec = self.worker.MuonFsrPt()
+        Muon_Fsr_eta_vec = self.worker.MuonFsrEta()
+        Muon_Fsr_phi_vec = self.worker.MuonFsrPhi()
+
+        Electron_Fsr_pt = []
+        Electron_Fsr_eta = []
+        Electron_Fsr_phi = []
+        Muon_Fsr_pt = []
+        Muon_Fsr_eta = []
+        Muon_Fsr_phi = []
+
+        if len(Electron_Fsr_pt_vec)>0:
+            for i in range(len(Electron_Fsr_pt_vec)):
+                Electron_Fsr_pt.append(Electron_Fsr_pt_vec[i])
+                Electron_Fsr_eta.append(Electron_Fsr_eta_vec[i])
+                Electron_Fsr_phi.append(Electron_Fsr_phi_vec[i])
+        if len(Muon_Fsr_pt_vec)>0:
+            for i in range(len(Muon_Fsr_pt_vec)):
+                Muon_Fsr_pt.append(Muon_Fsr_pt_vec[i])
+                Muon_Fsr_eta.append(Muon_Fsr_eta_vec[i])
+                Muon_Fsr_phi.append(Muon_Fsr_phi_vec[i])
+        GENlep_id = []
+        GENlep_Hindex = []
+        GENZ_DaughtersId = []
+        GENZ_MomId = []
+        GENlep_MomId = []
+        GENlep_MomMomId = []
+
+        if isMC:
+            GENlep_id_vec = self.genworker.GENlep_id
+            if len(GENlep_id_vec)>0:
+                for i in range(len(GENlep_id_vec)):
+                    GENlep_id.append(GENlep_id_vec[i])
+            GENlep_Hindex_vec = self.genworker.GENlep_Hindex
+            if len(GENlep_Hindex_vec)>0:
+                for i in range(len(GENlep_Hindex_vec)):
+                    GENlep_Hindex.append(GENlep_Hindex_vec[i])
+            GENZ_DaughtersId_vec = self.genworker.GENZ_DaughtersId
+            if len(GENZ_DaughtersId_vec)>0:
+                for i in range(len(GENZ_DaughtersId_vec)):
+                    GENZ_DaughtersId.append(GENZ_DaughtersId_vec[i])
+            nVECZ = self.genworker.nVECZ
+            GENZ_MomId_vec = self.genworker.GENZ_MomId
+            if len(GENZ_MomId_vec)>0:
+                for i in range(len(GENZ_MomId_vec)):
+                    GENZ_MomId.append(GENZ_MomId_vec[i])
+            GENlep_MomId_vec = self.genworker.GENlep_MomId
+            if len(GENlep_MomId_vec)>0:
+                for i in range(len(GENlep_MomId_vec)):
+                    GENlep_MomId.append(GENlep_MomId_vec[i])
+            GENlep_MomMomId_vec = self.genworker.GENlep_MomMomId
+            if len(GENlep_MomMomId_vec)>0:
+                for i in range(len(GENlep_MomMomId_vec)):
+                    GENlep_MomMomId.append(GENlep_MomMomId_vec[i])
+
+
         foundZZCandidate_4l = False    # for 4l
         passZZ4lSelection = False
         foundZZCandidate_2l2q = False # for 2l2q
@@ -599,12 +680,34 @@ class HZZAnalysisCppProducer(Module):
                 foundZZCandidate_2l2nu = self.worker.ZZSelection_2l2nu()  #commented out for now
         if (self.channels == "all"  or self.channels == "4l"):
             foundZZCandidate_4l = self.worker.ZZSelection_4l()
+            passedFullSelection=foundZZCandidate_4l
+            Lepointer = self.worker.Lepointer
+            lep_Hindex = []
+            lep_Hindex_vec = self.worker.lep_Hindex
+            if len(lep_Hindex_vec)>0:
+                for i in range(len(lep_Hindex_vec)):
+                    lep_Hindex.append(lep_Hindex_vec[i])
+            lep_genindex = []
+            if isMC:
+                lep_genindex_vec = self.worker.lep_genindex
+                if len(lep_genindex_vec)>0:
+                    for i in range(len(lep_genindex_vec)):
+                        lep_genindex.append(lep_genindex_vec[i])
+            if self.worker.RecoFourMuEvent: finalState = 1
+            if self.worker.RecoFourEEvent: finalState = 2
+            if self.worker.RecoTwoETwoMuEvent: finalState = 3
+            if self.worker.RecoTwoMuTwoEEvent: finalState = 4
+            if self.worker.flag4e: mass4e = mass4l
+            if self.worker.flag2e2mu: mass2e2mu = mass4l
+            if self.worker.flag4mu: mass4mu = mass4l
+
         if self.worker.GetZ1_emuCR() and (self.channels == "all"  or self.channels == "2l2v"):
             foundZZCandidate_2l2nu_emuCR = self.worker.ZZSelection_2l2nu()
 
         if self.DEBUG:
             print("Found ZZ candidate (4l, 2l2q, 2l2nu): ({}, {}, {})".format(foundZZCandidate_4l, foundZZCandidate_2l2q, foundZZCandidate_2l2nu))
 
+        njets_pt30_eta4p7 = self.worker.njets_pt30_eta4p7
         HZZ2l2q_boostedJet_PNScore = self.worker.boostedJet_PNScore
         HZZ2l2q_boostedJet_Index = self.worker.boostedJet_Index
         HZZ2l2q_resolvedJet1_Index = self.worker.resolvedJet1_Index
@@ -889,6 +992,29 @@ class HZZAnalysisCppProducer(Module):
         self.out.fillBranch("HZZ2l2qNu_nTightBtagJets",HZZ2l2qNu_nTightBtagJets)
         self.out.fillBranch("HZZ2l2qNu_nMediumBtagJets",HZZ2l2qNu_nMediumBtagJets)
         self.out.fillBranch("HZZ2l2qNu_nLooseBtagJets",HZZ2l2qNu_nLooseBtagJets)
+
+        # self.out.fillBranch("pileupWeight",pileupWeight)
+        # self.out.fillBranch("dataMCWeight_new",dataMCWeight_new)
+        # self.out.fillBranch("prefiringWeight",prefiringWeight)
+        # self.out.fillBranch("Weight",Weight)
+        # self.out.fillBranch("nElectron_Fsr", len(electrons))
+        # self.out.fillBranch("nMuon_Fsr", len(muons))
+
+        # self.out.fillBranch("GENlep_id",GENlep_id)
+        # self.out.fillBranch("GENlep_Hindex",GENlep_Hindex)
+        # self.out.fillBranch("GENZ_DaughtersId",GENZ_DaughtersId)
+        # self.out.fillBranch("GENZ_MomId",GENZ_MomId)
+        # self.out.fillBranch("GENlep_MomId",GENlep_MomId)
+        # self.out.fillBranch("GENlep_MomMomId",GENlep_MomMomId)
+        # self.out.fillBranch("Electron_Fsr_pt",Electron_Fsr_pt)
+        # self.out.fillBranch("Electron_Fsr_eta",Electron_Fsr_eta)
+        # self.out.fillBranch("Electron_Fsr_phi",Electron_Fsr_phi)
+
+        # self.out.fillBranch("lep_Hindex",lep_Hindex)
+        # self.out.fillBranch("lep_genindex",lep_genindex)
+        # self.out.fillBranch("Muon_Fsr_pt",Muon_Fsr_pt)
+        # self.out.fillBranch("Muon_Fsr_eta",Muon_Fsr_eta)
+        # self.out.fillBranch("Muon_Fsr_phi",Muon_Fsr_phi)
 
         # FIXME: Add weight branch having following:
         # puWeight*btagWeight_DeepCSVB*L1PreFiringWeight_ECAL_Nom*L1PreFiringWeight_Muon_Nom*L1PreFiringWeight_Nom

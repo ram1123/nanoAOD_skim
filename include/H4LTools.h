@@ -423,6 +423,7 @@ public:
         FatJet_PNZvsQCD.clear();
         FatJet_jetId.clear();
         jetidx.clear();
+        lep_genindex.clear();
         FatJetidx.clear();
 
         // MET related variables

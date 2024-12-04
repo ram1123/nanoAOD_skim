@@ -48,6 +48,8 @@ class GenVarsProducer(Module):
     def endFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
         pass
     def getParentID(self,particle,genParticles):
+        print("DEBUG: Size of genParticles: {}".format(len(genParticles)))
+        print("DEBUG: particle.genPartIdxMother = {}".format(particle.genPartIdxMother))
         if particle.genPartIdxMother == -1: #No parent in record, return ID of original particle
             return particle.pdgId
         elif genParticles[particle.genPartIdxMother].pdgId is particle.pdgId: #'Parent' is self, keep iterating
@@ -56,6 +58,10 @@ class GenVarsProducer(Module):
             return genParticles[particle.genPartIdxMother].pdgId
     def analyze(self, event):
         """process event, return True (go to next module) or False (fail, go to next event)"""
+        ## To obtain GenMET
+        # nGenPart = event.nGenPart
+        # print("nGenPart: {}".format(nGenPart))
+
         genParticles = Collection(event, "GenPart")
         ## To obtain GenMET
         genmet = Object(event, "GenMET", None)
