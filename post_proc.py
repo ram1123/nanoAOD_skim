@@ -128,7 +128,8 @@ def main():
         else:
             print("INFO: Running over 2016-2018 MC")
             GenVarModule = lambda : GenVarsProducer() # FIXME: Gen variable producer module is not working
-            modulesToRun.extend([H4LCppModule(), GenVarModule()])
+            # modulesToRun.extend([H4LCppModule(), GenVarModule()])
+            modulesToRun.extend([H4LCppModule()])
 
         if (args.WithSyst):
             jetmetCorrector = createJMECorrector(isMC=isMC, dataYear=year, jesUncert="All", jetType = "AK4PFchs")

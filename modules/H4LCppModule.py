@@ -191,9 +191,36 @@ class HZZAnalysisCppProducer(Module):
         pass
 
     def endJob(self):
-        print("Total events: ", self.passAllEvts)
-        print("End job")
-        pass
+        print("PassTrig: "+str(self.passtrigEvts)+" Events")
+        print("Pass4eCut: "+str(self.worker.cut4e)+" Events")
+        print("Pass4eGhostRemoval: "+str(self.worker.cutghost4e)+" Events")
+        print("Pass4eLepPtCut: "+str(self.worker.cutLepPt4e)+" Events")
+        print("Pass4eQCDSupress: "+str(self.worker.cutQCD4e)+" Events")
+        print("PassmZ1mZ2Cut_4e: "+str(self.worker.cutZZ4e)+" Events")
+        print("Passm4l_105_160_Cut_4e: "+str(self.worker.cutm4l4e)+" Events")
+        print("Pass4muCut: "+str(self.worker.cut4mu)+" Events")
+        print("Pass4muGhostRemoval: "+str(self.worker.cutghost4mu)+" Events")
+        print("Pass4muLepPtCut: "+str(self.worker.cutLepPt4mu)+" Events")
+        print("Pass4muQCDSupress: "+str(self.worker.cutQCD4mu)+" Events")
+        print("PassmZ1mZ2Cut_4mu: "+str(self.worker.cutZZ4mu)+" Events")
+        print("Passm4l_105_160_Cut_4mu: "+str(self.worker.cutm4l4mu)+" Events")
+        print("Pass2e2muCut: "+str(self.worker.cut2e2mu)+" Events")
+        print("Pass2e2muGhostRemoval: "+str(self.worker.cutghost2e2mu)+" Events")
+        print("Pass2e2muLepPtCut: "+str(self.worker.cutLepPt2e2mu)+" Events")
+        print("Pass2e2muQCDSupress: "+str(self.worker.cutQCD2e2mu)+" Events")
+        print("PassmZ1mZ2Cut_2e2mu: "+str(self.worker.cutZZ2e2mu)+" Events")
+        print("Passm4l_105_160_Cut_2e2mu: "+str(self.worker.cutm4l2e2mu)+" Events")
+        print("PassZZSelection: "+str(self.passZZEvts)+" Events")
+        if self.isMC:
+            print("PassGEN4eCut: "+str(self.genworker.nGEN4e)+" Events")
+            print("PassGEN4eZ1Cut: "+str(self.genworker.nGEN4epassZ1)+" Events")
+            print("PassGEN4efidCut: "+str(self.genworker.nGEN4epassFid)+" Events")
+            print("PassGEN2e2muCut: "+str(self.genworker.nGEN2e2mu)+" Events")
+            print("PassGEN2e2muZ1Cut: "+str(self.genworker.nGEN2e2mupassZ1)+" Events")
+            print("PassGEN2e2mufidCut: "+str(self.genworker.nGEN2e2mupassFid)+" Events")
+            print("PassGEN4muCut: "+str(self.genworker.nGEN4mu)+" Events")
+            print("PassGEN4muZ1Cut: "+str(self.genworker.nGEN4mupassZ1)+" Events")
+            print("PassGEN4mufidCut: "+str(self.genworker.nGEN4mupassFid)+" Events")
 
     def beginFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
         self.initReaders(inputTree)  # initReaders must be called in beginFile
@@ -203,9 +230,9 @@ class HZZAnalysisCppProducer(Module):
         for TriggerChannel in self.cfg['TriggerChannels']:
             self.out.branch(TriggerChannel, "O")
         # boolean branches for 4l, 2l2q, 2l2nu channels
-        self.out.branch("passZZ4lSelection",  "O")
-        self.out.branch("passZZ2l2qSelection",  "O")
-        self.out.branch("passZZ2l2nuSelection",  "O")
+        self.out.branch("foundZZCandidate_4l",  "O")
+        self.out.branch("foundZZCandidate_2l2q",  "O")
+        self.out.branch("foundZZCandidate_2l2nu",  "O")
         self.out.branch("passZZ2l2nu_emuCR_Selection", "O")
         self.out.branch("isBoosted2l2q",  "O")
         self.out.branch("HZZ2l2nu_ifVBF", "O")
@@ -233,7 +260,17 @@ class HZZAnalysisCppProducer(Module):
 
         # Branches for 4l channel: ZZ kinematics
         self.out.branch("mass4l",  "F")
+        self.out.branch("GENmass4l",  "F")
+        self.out.branch("mass4e",  "F")
+        self.out.branch("mass4mu",  "F")
+        self.out.branch("mass2e2mu",  "F")
         self.out.branch("pT4l",  "F")
+        self.out.branch("GENpT4l",  "F")
+        self.out.branch("rapidity4l",  "F")
+        self.out.branch("njets_pt30_eta4p7", "I")
+        self.out.branch("finalState", "I")
+        self.out.branch("GENnjets_pt30_eta4p7", "I")
+        self.out.branch("GENrapidity4l",  "F")
         self.out.branch("eta4l",  "F")
         self.out.branch("phi4l",  "F")
 
@@ -266,6 +303,38 @@ class HZZAnalysisCppProducer(Module):
         self.out.branch("pTZ2",  "F")
         self.out.branch("etaZ2",  "F")
         self.out.branch("phiZ2",  "F")
+
+
+        self.out.branch("mj2",  "F")
+        self.out.branch("EvtNum",  "I")
+        self.out.branch("Weight",  "F")
+        self.out.branch("pileupWeight",  "F")
+        self.out.branch("dataMCWeight_new",  "F")
+        self.out.branch("prefiringWeight",  "F")
+        self.out.branch("passedTrig",  "O")
+        self.out.branch("passedFullSelection",  "O")
+        self.out.branch("passedZ4lSelection",  "O")
+        self.out.branch("passedZ4lZ1LSelection",  "O")
+        self.out.branch("passedZ4lZXCRSelection",  "O")
+        self.out.branch("passedZXCRSelection",  "O")
+        self.out.branch("passedFiducialSelection",  "O")
+        GENHlepNum = 4
+        GENZNum = 2
+        self.out.branch("GENlep_MomId",  "I", lenVar = "nGenPart")
+        self.out.branch("GENlep_MomMomId",  "I", lenVar = "nGenPart")
+        self.out.branch("GENZ_MomId",  "I", lenVar = "nVECZ")
+        self.out.branch("GENZ_DaughtersId",  "I", lenVar = "GENZNum")
+        self.out.branch("GENlep_Hindex",  "I", lenVar = "GENHlepNum")
+        self.out.branch("lep_Hindex",  "I", lenVar = "GENHlepNum")
+        self.out.branch("GENlep_id",  "I", lenVar = "nGENLeptons")
+        self.out.branch("lep_genindex",  "I", lenVar = "Lepointer")
+        # FSR branches for leptons
+        self.out.branch("Electron_Fsr_pt",  "F", lenVar = "nElectron_Fsr")
+        self.out.branch("Electron_Fsr_eta",  "F", lenVar = "nElectron_Fsr")
+        self.out.branch("Electron_Fsr_phi",  "F", lenVar = "nElectron_Fsr")
+        self.out.branch("Muon_Fsr_pt",  "F", lenVar = "nMuon_Fsr")
+        self.out.branch("Muon_Fsr_eta",  "F", lenVar = "nMuon_Fsr")
+        self.out.branch("Muon_Fsr_phi",  "F", lenVar = "nMuon_Fsr")
 
         # Branches for 2l2q channel
         self.out.branch("massZ2_2j",  "F")
@@ -317,65 +386,8 @@ class HZZAnalysisCppProducer(Module):
         self.out.branch("HZZ2l2q_resolvedJet1_Index", "I")
         self.out.branch("HZZ2l2q_resolvedJet2_Index", "I")
 
-        # FSR branches for leptons
-        self.out.branch("Electron_Fsr_pt",  "F", lenVar = "nElectron_Fsr")
-        self.out.branch("Electron_Fsr_eta",  "F", lenVar = "nElectron_Fsr")
-        self.out.branch("Electron_Fsr_phi",  "F", lenVar = "nElectron_Fsr")
-        self.out.branch("Muon_Fsr_pt",  "F", lenVar = "nMuon_Fsr")
-        self.out.branch("Muon_Fsr_eta",  "F", lenVar = "nMuon_Fsr")
-        self.out.branch("Muon_Fsr_phi",  "F", lenVar = "nMuon_Fsr")
-
-        # GENHlepNum = 4
-        # GENZNum = 2
-        # self.out.branch("GENlep_MomId",  "I", lenVar = "nGenPart")
-        # self.out.branch("GENlep_MomMomId",  "I", lenVar = "nGenPart")
-        # self.out.branch("GENZ_MomId",  "I", lenVar = "nVECZ")
-        # self.out.branch("GENZ_DaughtersId",  "I", lenVar = "GENZNum")
-        # self.out.branch("GENlep_Hindex",  "I", lenVar = "GENHlepNum")
-        # self.out.branch("lep_Hindex",  "I", lenVar = "GENHlepNum")
-        # self.out.branch("GENlep_id",  "I", lenVar = "nGENLeptons")
-        # self.out.branch("lep_genindex",  "I", lenVar = "Lepointer")
-
 
     def endFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
-        print("\n========== Print Cut flow table  ====================\n")
-        self.cutFlowCounts = {
-            "Total": self.passAllEvts,
-            "PassTrig": self.passtrigEvts,
-            "PassMETFilters": self.passMETFilters,
-            "PassZZSelection": self.passZZ4lEvts,
-            "PassZZ2l2qSelection": self.passZZ2l2qEvts,
-            "PassZZ2l2nuSelection": self.passZZ2l2nuEvts,
-            "PassZZ2l2nu_emuCR_Selection": self.passZZ2l2nu_emuCR_Evts
-        }
-
-        for key, value in self.cutFlowCounts.items():
-            print("{:27}:{:7} {}".format(key, str(value), " Events"))
-
-        print("\n4l channel cut flow table:")
-        for idx, cut in enumerate(self.dynamicCuts_4l):
-            print("{:2} {:27}:{:7} {}".format(8 + idx, cut, str(getattr(self.worker, cut)), " Events"))
-            self.CutFlowTable.SetBinContent(8 + idx, getattr(self.worker, cut, 'N/A'))
-
-        print("\n2l2q channel cut flow table:")
-        for idx, cut in enumerate(self.dynamicCuts_2l2q):
-            print("{:2} {:27}:{:7} {}".format(8 + len(self.dynamicCuts_4l) + idx, cut, str(getattr(self.worker, cut)), " Events"))
-            self.CutFlowTable.SetBinContent(8 + len(self.dynamicCuts_4l) + idx, getattr(self.worker, cut, 'N/A'))
-
-        print("\n2l2nu channel cut flow table:")
-        for idx, cut in enumerate(self.dynamicCuts_2l2nu):
-            print("{:2} {:27}:{:7} {}".format(8 + len(self.dynamicCuts_4l) + len(self.dynamicCuts_2l2q) + idx, cut, str(getattr(self.worker, cut)), " Events"))
-            self.CutFlowTable.SetBinContent(8 + len(self.dynamicCuts_4l) + len(self.dynamicCuts_2l2q) + idx, getattr(self.worker, cut, 'N/A'))
-
-        print("\n2l2nu channel emu control region cut flow table:")
-        for idx, cut in enumerate(self.dynamicCuts_2l2nu_emu_CR):
-            print("{:2} {:27}:{:7} {}".format(8 + len(self.dynamicCuts_4l) + len(self.dynamicCuts_2l2q) + len(self.dynamicCuts_2l2nu) + idx, cut, str(getattr(self.worker, cut)), " Events"))
-            self.CutFlowTable.SetBinContent(8 + len(self.dynamicCuts_4l) + len(self.dynamicCuts_2l2q) + len(self.dynamicCuts_2l2nu) + idx, getattr(self.worker, cut, 'N/A'))
-
-        print("\n========== END: Print Cut flow table  ====================\n")
-
-        outputFile.cd()
-        self.CutFlowTable.Write()
         pass
 
     # this function gets the pointers to Value and ArrayReaders and sets
@@ -401,8 +413,25 @@ class HZZAnalysisCppProducer(Module):
         self.worker.SetObjectNum(event.nElectron,event.nMuon,event.nJet,event.nFsrPhoton)
         if isMC:
             self.worker.SetObjectNumGen(event.nGenPart)
-
+            self.genworker.Initialize()
+            self.genworker.SetObjectNumGen(event.nGenPart, event.nGenJet)
         keepIt = False
+        self.passAllEvts += 1
+        self.CutFlowTable.Fill(0)
+        Lepointer = 0
+        EvtNum = 0
+        Weight = 1
+
+        foundZZCandidate_4l = False    # for 4l
+        foundZZCandidate_2l2q = False # for 2l2q
+        foundZZCandidate_2l2nu = False # for 2l2nu
+        foundZZCandidate_2l2nu_emuCR = False   # for 2l2nu emu control region
+        passZZ2l2nu_emuCR_Selection = False    # for 2l2nu emu control region
+        HZZ2l2nu_ifVBF = False
+        HZZ2l2qNu_isELE = False
+        HZZ2l2nu_isEMuCR = False
+        HZZ2l2qNu_cutOppositeChargeFlag = False
+        isBoosted2l2q = False
 
         passedTrig=False
         passedFullSelection=False
@@ -414,8 +443,33 @@ class HZZAnalysisCppProducer(Module):
         passedZXCRSelection=False
         passedFiducialSelection=False
         nZXCRFailedLeptons=0
-        self.passAllEvts += 1
-        self.CutFlowTable.Fill(0)
+        prefiringWeight = 1
+        dataMCWeight_new = 1
+        pileupWeight = 1
+        mass4e=0
+        mass2e2mu=0
+        mass4mu=0
+        finalState=-1
+        GENmass4l = -99
+        GENpT4l = -99
+        nVECZ = 2
+        GENrapidity4l = -99
+        GENnjets_pt30_eta4p7 = -1
+        nGENLeptons = 0
+        nGenPart = 0
+        pTZ1 = -99
+        etaZ1 = -99
+        phiZ1 = -99
+        massZ1 = 0
+        pTZ2 = -99
+        etaZ2 = -99
+        phiZ2 = -99
+        massZ2 = -99
+        pT4l = -99
+        eta4l = -99
+        phi4l = -99
+        mass4l = 0
+        rapidity4l = -99
 
         massZ2_2j = -999.
         phiZ2_2j = -999.
@@ -519,6 +573,9 @@ class HZZAnalysisCppProducer(Module):
             self.CutFlowTable.Fill(2)
         else:
             return keepIt
+
+        if(isMC and self.year == 2022):
+            pileupWeight = self.PUweight_list[event.Pileup_nPU]
         electrons = Collection(event, "Electron")
         muons = Collection(event, "Muon")
         fsrPhotons = Collection(event, "FsrPhoton")
@@ -656,21 +713,6 @@ class HZZAnalysisCppProducer(Module):
                 for i in range(len(GENlep_MomMomId_vec)):
                     GENlep_MomMomId.append(GENlep_MomMomId_vec[i])
 
-
-        foundZZCandidate_4l = False    # for 4l
-        passZZ4lSelection = False
-        foundZZCandidate_2l2q = False # for 2l2q
-        passZZ2l2qSelection = False
-        foundZZCandidate_2l2nu = False # for 2l2nu
-        passZZ2l2nuSelection = False
-        foundZZCandidate_2l2nu_emuCR = False   # for 2l2nu emu control region
-        passZZ2l2nu_emuCR_Selection = False    # for 2l2nu emu control region
-        HZZ2l2nu_ifVBF = False
-        HZZ2l2qNu_isELE = False
-        HZZ2l2nu_isEMuCR = False
-        HZZ2l2qNu_cutOppositeChargeFlag = False
-        isBoosted2l2q = False
-
         if self.worker.GetZ1_2l2qOR2l2nu() and (self.channels == "all"  or self.channels == "2l2v" or self.channels == "2l2q"):  #commented out for now
             if self.channels == "2l2q" or self.channels == "all":
                 foundZZCandidate_2l2q = self.worker.ZZSelection_2l2q()
@@ -681,6 +723,11 @@ class HZZAnalysisCppProducer(Module):
         if (self.channels == "all"  or self.channels == "4l"):
             foundZZCandidate_4l = self.worker.ZZSelection_4l()
             passedFullSelection=foundZZCandidate_4l
+            if foundZZCandidate_4l:
+                self.passZZEvts += 1
+            if (foundZZCandidate_4l |passedFiducialSelection ):
+                EvtNum += 1
+                keepIt = True
             Lepointer = self.worker.Lepointer
             lep_Hindex = []
             lep_Hindex_vec = self.worker.lep_Hindex
@@ -759,7 +806,7 @@ class HZZAnalysisCppProducer(Module):
 
         if (foundZZCandidate_2l2q):
             keepIt = True
-            passZZ2l2qSelection = True
+            foundZZCandidate_2l2q = True
             self.passZZ2l2qEvts += 1
             self.CutFlowTable.Fill(4)
 
@@ -771,7 +818,7 @@ class HZZAnalysisCppProducer(Module):
 
         if (foundZZCandidate_2l2nu):
             keepIt = True
-            passZZ2l2nuSelection = True
+            foundZZCandidate_2l2nu = True
             self.passZZ2l2nuEvts += 1
             self.CutFlowTable.Fill(5)
 
@@ -824,24 +871,12 @@ class HZZAnalysisCppProducer(Module):
                 HZZ2l2nu_VBFdEta_jj = abs(VBF_jet1.Eta() - VBF_jet2.Eta())
                 HZZ2l2nu_VBFdPhi_jj = abs(VBF_jet1.DeltaPhi(VBF_jet2))
                 HZZ2l2nu_VBFdR_jj = VBF_jet1.DeltaR(VBF_jet2)
-
-            # print("inside 2l2nu loop")
-        # self.out.fillBranch("phiZ2_met",phiZ2_met)
-        # self.out.fillBranch("pTZ2_met",pTZ2_met)
-        # self.out.fillBranch("EneZ2_met",EneZ2_met)
-
-        #if (foundZZCandidate_2l2nu_emuCR):
-            #keepIt = True
-            #passZZ2l2nu_emuCR_Selection = True
-            #self.passZZ2l2nu_emuCR_Evts += 1
-
-
         if (foundZZCandidate_4l):
             keepIt = True
             self.passZZ4lEvts += 1
             self.CutFlowTable.Fill(3)
-            passZZ4lSelection = True
-            # print("Inside 4l loop: ",passZZ2l2qSelection)
+            foundZZCandidate_4l = True
+            print("Inside 4l loop: ",foundZZCandidate_4l)
             D_CP = self.worker.D_CP
             D_0m = self.worker.D_0m
             D_0hp = self.worker.D_0hp
@@ -876,11 +911,24 @@ class HZZAnalysisCppProducer(Module):
             eta4l = self.worker.ZZsystem.Eta()
             phi4l = self.worker.ZZsystem.Phi()
             mass4l = self.worker.ZZsystem.M()
-            if self.worker.isFSR==False:
+            rapidity4l = self.worker.ZZsystem.Rapidity()
+            njets_pt30_eta4p7 = self.worker.njets_pt30_eta4p7
+            if self.worker.flag4e:
+                mass4e = mass4l
+            if self.worker.flag2e2mu:
+                mass2e2mu = mass4l
+            if self.worker.flag4mu:
+                mass4mu = mass4l
+
+            if (self.worker.isFSR==False & passedFullSelection):
                 pT4l = self.worker.ZZsystemnofsr.Pt()
                 eta4l = self.worker.ZZsystemnofsr.Eta()
                 phi4l = self.worker.ZZsystemnofsr.Phi()
                 mass4l = self.worker.ZZsystemnofsr.M()
+                rapidity4l = self.worker.ZZsystemnofsr.Rapidity()
+
+                Weight = event.genWeight * pileupWeight * dataMCWeight_new * prefiringWeight
+
 
         if self.DEBUG:
             print("(found candidates: 2l2q, 2l2nu, 4l): ({:1}, {:1}, {:1}), pTL1: {:7.3f}, pTL2: {:7.3f}, pTZ1: {:7.3f}, pTZ2: {:7.3f}, pTZ2_2j: {:7.3f}, pTZ2_met: {:7.3f}".format(foundZZCandidate_2l2q, foundZZCandidate_2l2nu, foundZZCandidate_4l, pTL1, pTL2, pTZ1, pTZ2, pTZ2_2j, pTZ2_met))
@@ -890,6 +938,91 @@ class HZZAnalysisCppProducer(Module):
         # Fill the branches with the Trigger information for each channel
         for TriggerChannel in self.cfg['TriggerChannels']:
             self.out.fillBranch(TriggerChannel, TriggerMap[TriggerChannel])
+        self.out.fillBranch("mass4l",mass4l)
+        self.out.fillBranch("GENmass4l",GENmass4l)
+        self.out.fillBranch("mass4e",mass4e)
+        self.out.fillBranch("mass2e2mu",mass2e2mu)
+        self.out.fillBranch("mass4mu",mass4mu)
+        self.out.fillBranch("pT4l",pT4l)
+        self.out.fillBranch("GENpT4l",GENpT4l)
+        self.out.fillBranch("rapidity4l",rapidity4l)
+        self.out.fillBranch("GENrapidity4l",GENrapidity4l)
+        self.out.fillBranch("njets_pt30_eta4p7",njets_pt30_eta4p7)
+        self.out.fillBranch("finalState",finalState)
+        self.out.fillBranch("GENnjets_pt30_eta4p7",GENnjets_pt30_eta4p7)
+        self.out.fillBranch("eta4l",eta4l)
+        self.out.fillBranch("phi4l",phi4l)
+        self.out.fillBranch("massZ1",massZ1)
+        self.out.fillBranch("pTZ1",pTZ1)
+        self.out.fillBranch("etaZ1",etaZ1)
+        self.out.fillBranch("phiZ1",phiZ1)
+        self.out.fillBranch("massZ2",massZ2)
+        self.out.fillBranch("pTZ2",pTZ2)
+        self.out.fillBranch("etaZ2",etaZ2)
+        self.out.fillBranch("phiZ2",phiZ2)
+        self.out.fillBranch("D_CP",D_CP)
+        self.out.fillBranch("D_0m",D_0m)
+        self.out.fillBranch("D_0hp",D_0hp)
+        self.out.fillBranch("D_int",D_int)
+        self.out.fillBranch("D_L1",D_L1)
+        self.out.fillBranch("D_L1Zg",D_L1Zg)
+        self.out.fillBranch("passedTrig",  passedTrig)
+        self.out.fillBranch("passedFullSelection",  passedFullSelection)
+        self.out.fillBranch("passedZ4lSelection", passedZ4lSelection)
+        self.out.fillBranch("passedZ4lZ1LSelection",  passedZ4lZ1LSelection)
+        self.out.fillBranch("passedZ4lZXCRSelection",  passedZ4lZXCRSelection)
+        self.out.fillBranch("passedZXCRSelection",  passedZXCRSelection)
+        self.out.fillBranch("passedFiducialSelection",  passedFiducialSelection)
+        self.out.fillBranch("EvtNum",EvtNum)
+        self.out.fillBranch("massL1",massL1)
+        self.out.fillBranch("pTL1",pTL1)
+        self.out.fillBranch("etaL1",etaL1)
+        self.out.fillBranch("phiL1",phiL1)
+        self.out.fillBranch("massL2",massL2)
+        self.out.fillBranch("pTL2",pTL2)
+        self.out.fillBranch("etaL2",etaL2)
+        self.out.fillBranch("phiL2",phiL2)
+        self.out.fillBranch("massL3",massL3)
+        self.out.fillBranch("pTL3",pTL3)
+        self.out.fillBranch("etaL3",etaL3)
+        self.out.fillBranch("phiL3",phiL3)
+        self.out.fillBranch("massL4",massL4)
+        self.out.fillBranch("pTL4",pTL4)
+        self.out.fillBranch("etaL4",etaL4)
+        self.out.fillBranch("phiL4",phiL4)
+
+        self.out.fillBranch("mj1",mj1)
+        self.out.fillBranch("pTj1",pTj1)
+        self.out.fillBranch("etaj1",etaj1)
+        self.out.fillBranch("phij1",phij1)
+        self.out.fillBranch("mj2",mj2)
+        self.out.fillBranch("pTj2",pTj2)
+        self.out.fillBranch("etaj2",etaj2)
+        self.out.fillBranch("phij2",phij2)
+        self.out.fillBranch("pileupWeight",pileupWeight)
+        self.out.fillBranch("dataMCWeight_new",dataMCWeight_new)
+        self.out.fillBranch("prefiringWeight",prefiringWeight)
+        self.out.fillBranch("Weight",Weight)
+        # self.out.fillBranch("nElectron_Fsr", len(electrons))
+        # self.out.fillBranch("nMuon_Fsr", len(muons))
+
+        self.out.fillBranch("GENlep_id",GENlep_id)
+        self.out.fillBranch("GENlep_Hindex",GENlep_Hindex)
+        self.out.fillBranch("GENZ_DaughtersId",GENZ_DaughtersId)
+        self.out.fillBranch("GENZ_MomId",GENZ_MomId)
+        self.out.fillBranch("GENlep_MomId",GENlep_MomId)
+        self.out.fillBranch("GENlep_MomMomId",GENlep_MomMomId)
+        self.out.fillBranch("Electron_Fsr_pt",Electron_Fsr_pt)
+        self.out.fillBranch("Electron_Fsr_eta",Electron_Fsr_eta)
+        self.out.fillBranch("Electron_Fsr_phi",Electron_Fsr_phi)
+
+        self.out.fillBranch("lep_Hindex",lep_Hindex)
+        self.out.fillBranch("lep_genindex",lep_genindex)
+        self.out.fillBranch("Muon_Fsr_pt",Muon_Fsr_pt)
+        self.out.fillBranch("Muon_Fsr_eta",Muon_Fsr_eta)
+        self.out.fillBranch("Muon_Fsr_phi",Muon_Fsr_phi)
+
+
         self.out.fillBranch("phiZ2_met",phiZ2_met)
         self.out.fillBranch("pTZ2_met",pTZ2_met)
         self.out.fillBranch("EneZ2_met",EneZ2_met)
@@ -919,109 +1052,10 @@ class HZZAnalysisCppProducer(Module):
         self.out.fillBranch("HZZ2l2nu_VBFdPhi_jj", HZZ2l2nu_VBFdPhi_jj)
         self.out.fillBranch("HZZ2l2nu_VBFdR_jj", HZZ2l2nu_VBFdR_jj)
 
-        self.out.fillBranch("massZ2_2j",massZ2_2j)
-        self.out.fillBranch("phiZ2_2j",phiZ2_2j)
-        self.out.fillBranch("etaZ2_2j",etaZ2_2j)
-        self.out.fillBranch("pTZ2_2j",pTZ2_2j)
-        self.out.fillBranch("EneZ2_2j",EneZ2_2j)
-
-        self.out.fillBranch("massL1",massL1)
-        self.out.fillBranch("pTL1",pTL1)
-        self.out.fillBranch("etaL1",etaL1)
-        self.out.fillBranch("phiL1",phiL1)
-        self.out.fillBranch("massL2",massL2)
-        self.out.fillBranch("pTL2",pTL2)
-        self.out.fillBranch("etaL2",etaL2)
-        self.out.fillBranch("phiL2",phiL2)
-
-        self.out.fillBranch("pTZ1",pTZ1)
-        self.out.fillBranch("etaZ1",etaZ1)
-        self.out.fillBranch("phiZ1",phiZ1)
-        self.out.fillBranch("massZ1",massZ1)
-        self.out.fillBranch("pTZ2",pTZ2)
-        self.out.fillBranch("etaZ2",etaZ2)
-        self.out.fillBranch("phiZ2",phiZ2)
-        self.out.fillBranch("massZ2",massZ2)
-
-        self.out.fillBranch("mass4l",mass4l)
-        self.out.fillBranch("pT4l",pT4l)
-        self.out.fillBranch("eta4l",eta4l)
-        self.out.fillBranch("phi4l",phi4l)
-        self.out.fillBranch("D_CP",D_CP)
-        self.out.fillBranch("D_0m",D_0m)
-        self.out.fillBranch("D_0hp",D_0hp)
-        self.out.fillBranch("D_int",D_int)
-        self.out.fillBranch("D_L1",D_L1)
-        self.out.fillBranch("D_L1Zg",D_L1Zg)
-
-        self.out.fillBranch("massL3",massL3)
-        self.out.fillBranch("pTL3",pTL3)
-        self.out.fillBranch("etaL3",etaL3)
-        self.out.fillBranch("phiL3",phiL3)
-        self.out.fillBranch("massL4",massL4)
-        self.out.fillBranch("pTL4",pTL4)
-        self.out.fillBranch("etaL4",etaL4)
-        self.out.fillBranch("phiL4",phiL4)
-
-        self.out.fillBranch("mj1",mj1)
-        self.out.fillBranch("pTj1",pTj1)
-        self.out.fillBranch("etaj1",etaj1)
-        self.out.fillBranch("phij1",phij1)
-        self.out.fillBranch("mj2",mj2)
-        self.out.fillBranch("pTj2",pTj2)
-        self.out.fillBranch("etaj2",etaj2)
-        self.out.fillBranch("phij2",phij2)
-
-        self.out.fillBranch("passZZ4lSelection",passZZ4lSelection)
-        self.out.fillBranch("passZZ2l2qSelection",passZZ2l2qSelection)
-        self.out.fillBranch("passZZ2l2nuSelection",passZZ2l2nuSelection)
-        self.out.fillBranch("passZZ2l2nu_emuCR_Selection",passZZ2l2nu_emuCR_Selection)
-        self.out.fillBranch("isBoosted2l2q",isBoosted2l2q)
-
-        self.out.fillBranch("HZZ2l2q_boostedJet_PNScore", HZZ2l2q_boostedJet_PNScore)
-        self.out.fillBranch("HZZ2l2q_boostedJet_Index", HZZ2l2q_boostedJet_Index)
-
-        self.out.fillBranch("HZZ2l2q_resolvedJet1_Index",HZZ2l2q_resolvedJet1_Index)
-        self.out.fillBranch("HZZ2l2q_resolvedJet2_Index",HZZ2l2q_resolvedJet2_Index)
-
-        self.out.fillBranch("HZZ2l2nu_ifVBF",HZZ2l2nu_ifVBF)
-        self.out.fillBranch("HZZ2l2qNu_isELE",HZZ2l2qNu_isELE)
-        self.out.fillBranch("HZZ2l2nu_isEMuCR",HZZ2l2nu_isEMuCR)
-        self.out.fillBranch("HZZ2l2qNu_cutOppositeChargeFlag",HZZ2l2qNu_cutOppositeChargeFlag)
-        self.out.fillBranch("HZZ2l2qNu_nJets",HZZ2l2qNu_nJets)
-        self.out.fillBranch("HZZ2l2qNu_nTightBtagJets",HZZ2l2qNu_nTightBtagJets)
-        self.out.fillBranch("HZZ2l2qNu_nMediumBtagJets",HZZ2l2qNu_nMediumBtagJets)
-        self.out.fillBranch("HZZ2l2qNu_nLooseBtagJets",HZZ2l2qNu_nLooseBtagJets)
-
-        # self.out.fillBranch("pileupWeight",pileupWeight)
-        # self.out.fillBranch("dataMCWeight_new",dataMCWeight_new)
-        # self.out.fillBranch("prefiringWeight",prefiringWeight)
-        # self.out.fillBranch("Weight",Weight)
-        # self.out.fillBranch("nElectron_Fsr", len(electrons))
-        # self.out.fillBranch("nMuon_Fsr", len(muons))
-
-        # self.out.fillBranch("GENlep_id",GENlep_id)
-        # self.out.fillBranch("GENlep_Hindex",GENlep_Hindex)
-        # self.out.fillBranch("GENZ_DaughtersId",GENZ_DaughtersId)
-        # self.out.fillBranch("GENZ_MomId",GENZ_MomId)
-        # self.out.fillBranch("GENlep_MomId",GENlep_MomId)
-        # self.out.fillBranch("GENlep_MomMomId",GENlep_MomMomId)
-        # self.out.fillBranch("Electron_Fsr_pt",Electron_Fsr_pt)
-        # self.out.fillBranch("Electron_Fsr_eta",Electron_Fsr_eta)
-        # self.out.fillBranch("Electron_Fsr_phi",Electron_Fsr_phi)
-
-        # self.out.fillBranch("lep_Hindex",lep_Hindex)
-        # self.out.fillBranch("lep_genindex",lep_genindex)
-        # self.out.fillBranch("Muon_Fsr_pt",Muon_Fsr_pt)
-        # self.out.fillBranch("Muon_Fsr_eta",Muon_Fsr_eta)
-        # self.out.fillBranch("Muon_Fsr_phi",Muon_Fsr_phi)
-
-        # FIXME: Add weight branch having following:
-        # puWeight*btagWeight_DeepCSVB*L1PreFiringWeight_ECAL_Nom*L1PreFiringWeight_Muon_Nom*L1PreFiringWeight_Nom
-
         return keepIt
+
 
 # define modules using the syntax 'name = lambda : constructor' to avoid
 # having them loaded when not needed
 
-# H4LCppModulie() = lambda: HZZAnalysisCppProducer(year)
+#H4LCppModule() = lambda: HZZAnalysisCppProducer(year)
