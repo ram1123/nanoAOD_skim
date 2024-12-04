@@ -509,7 +509,7 @@ void H4LTools::LeptonSelection(){
             std::cout << "Inside LeptonSelection:: Electron_pt[" << Electronindex[ie] << "] = " << Electron_pt[Electronindex[ie]] << std::endl;
         Ele.SetPtEtaPhiM(Electron_pt[Electronindex[ie]],Electron_eta[Electronindex[ie]],Electron_phi[Electronindex[ie]],Electron_mass[Electronindex[ie]]);
         Elelist.push_back(Ele);
-        ElelistFsr.push_back(Electrondressed_Run3[Electronindex[ie]]);
+        //ElelistFsr.push_back(Electrondressed_Run3[Electronindex[ie]]);
         Eiso.push_back(Electron_pfRelIso03_all[Electronindex[ie]]);
         Eid.push_back(AllEid[Electronindex[ie]]);
     }
@@ -545,7 +545,7 @@ void H4LTools::LeptonSelection(){
             std::cout << "Muon_pfRelIso03_all[" << Muonindex[imu] << "] = " << Muon_pfRelIso03_all[Muonindex[imu]] << std::endl;
             std::cout << "Muon_pfRelIso03_all[" << Muonindex[imu] << "] = " << Muon_pfRelIso03_all[Muonindex[imu]] << std::endl;
         }
-        MulistFsr.push_back(Muondressed_Run3[Muonindex[imu]]);
+        //MulistFsr.push_back(Muondressed_Run3[Muonindex[imu]]);  //
         muid.push_back(AllMuid[Muonindex[imu]]);
         Muiso.push_back(Muon_pfRelIso03_all[Muonindex[imu]]);
     }
@@ -556,8 +556,8 @@ void H4LTools::LeptonSelection(){
         std::cout << "Muonindex.size() = " << Muonindex.size() << std::endl;
     }
 
-    //ElelistFsr = BatchFsrRecovery(Elelist);
-    //MulistFsr = BatchFsrRecovery(Mulist);
+    ElelistFsr = BatchFsrRecovery(Elelist);
+    MulistFsr = BatchFsrRecovery(Mulist);
 
     if (DEBUG)
     {
@@ -582,6 +582,7 @@ void H4LTools::LeptonSelection(){
             FsrEleidx = doFsrRecovery_Run3(goodFsrPhotons(), Electronindex[ae], 11);
         else
             FsrEleidx = doFsrRecovery(Elelist[ae]);
+	
         if (DEBUG)
             std::cout << "FsrEleidx = " << FsrEleidx << std::endl;
         if (isFSR && (FsrEleidx < 900))
@@ -640,9 +641,9 @@ void H4LTools::LeptonSelection(){
         unsigned int FsrMuonidx;
         if (year == 2022)
             FsrMuonidx = doFsrRecovery_Run3(goodFsrPhotons(), Muonindex[amu], 13);
-        else
+	else
             FsrMuonidx = doFsrRecovery(Mulist[amu]);
-
+      
         if (DEBUG) std::cout << "FsrMuonidx = " << FsrMuonidx << std::endl;
         if (isFSR && (FsrMuonidx < 900)){
             TLorentzVector fsrmuon;
@@ -1204,7 +1205,6 @@ bool H4LTools::GetZ1_2l2qOR2l2nu()
     }
     if (DEBUG)
         std::cout << "Number of leptons: (Mu, Ele, Total): " << nTightMu << ", " << nTightEle << ", " << nTightMu + nTightEle << std::endl;
-
     // Set HZZ2l2qNu_isELE to true if there are 2 tight electrons, false if there are 2 tight muons
     HZZ2l2qNu_isELE = (nTightEle == 2);
     HZZ2l2qNu_cut2l++;
@@ -1252,7 +1252,6 @@ bool H4LTools::GetZ1_2l2qOR2l2nu()
     Z1index = Z1CanIndex[0];
     Z1 = Zlist[Z1index];
     Z1nofsr = Zlistnofsr[Z1index];
-
     // The invariant mass of dilepton system within 15 GeV of the known Z boson mass, ensuring that the pair likely originates from a Z-boson decay
     if (fabs(Z1.M() - Zmass) > HZZ2l2nu_M_ll_Window)
     {
