@@ -34,14 +34,21 @@ std::vector<unsigned int> H4LTools::goodLooseMuons2012(){
     return LooseMuonindex;
 }
 
-std::vector<unsigned int> H4LTools::goodMuons2015_noIso_noPf(std::vector<unsigned int> Muonindex){
+std::vector<unsigned int> H4LTools::goodMuons2015_noIso_noPf(std::vector<unsigned int> Muonindex)
+{
     std::vector<unsigned int> bestMuonindex;
     for (unsigned int i=0; i<Muonindex.size(); i++){
         if (Muon_pt[Muonindex[i]] < MuPtcut) continue;
         if (fabs(Muon_eta[Muonindex[i]]) > MuEtacut) continue;
-        if ((Muon_isGlobal[Muonindex[i]]||Muon_isTracker[Muonindex[i]])&&(Muon_mediumId[Muonindex[i]])){
-            if (Muon_sip3d[Muonindex[i]] < Musip3dCut){
-                if ((fabs(Muon_dxy[Muonindex[i]]) < MuLoosedxycut) && (fabs(Muon_dz[Muonindex[i]]) < MuLoosedzcut)){
+        if ((Muon_isGlobal[Muonindex[i]]||Muon_isTracker[Muonindex[i]])&&(Muon_mediumId[Muonindex[i]]))
+        {
+            if ((fabs(Muon_dxy[Muonindex[i]]) < MuLoosedxycut) && (fabs(Muon_dz[Muonindex[i]]) < MuLoosedzcut))
+            {
+                if (Muon_sip3d[Muonindex[i]] < Musip3dCut && year == 2022)
+                {
+                    bestMuonindex.push_back(Muonindex[i]);
+                } else
+                {
                     bestMuonindex.push_back(Muonindex[i]);
                 }
             }
@@ -49,9 +56,11 @@ std::vector<unsigned int> H4LTools::goodMuons2015_noIso_noPf(std::vector<unsigne
     }
     return bestMuonindex;
 }
-std::vector<unsigned int> H4LTools::goodElectrons2015_noIso_noBdt(std::vector<unsigned int> Electronindex){
+std::vector<unsigned int> H4LTools::goodElectrons2015_noIso_noBdt(std::vector<unsigned int> Electronindex)
+{
     std::vector<unsigned int> bestElectronindex;
-    for (unsigned int i=0; i<Electronindex.size(); i++){
+    for (unsigned int i=0; i<Electronindex.size(); i++)
+    {
         if (Electronindex[i] >= Electron_pt.size())
         {
             std::cerr << "ERROR: Electronindex out of bounds! i = " << i
@@ -59,12 +68,18 @@ std::vector<unsigned int> H4LTools::goodElectrons2015_noIso_noBdt(std::vector<un
                       << ", Electron_pt.size() = " << Electron_pt.size() << std::endl;
             continue;
         }
-        if ((Electron_pt[Electronindex[i]])>elePtcut){
-           if(Electron_sip3d[Electronindex[i]]<elesip3dCut){
-                if((fabs(Electron_dxy[Electronindex[i]])<eleLoosedxycut)&&(fabs(Electron_dz[Electronindex[i]])<eleLoosedzcut)){
-                    bestElectronindex.push_back(Electronindex[i]);
+        if ((Electron_pt[Electronindex[i]])>elePtcut)
+        {
+                if((fabs(Electron_dxy[Electronindex[i]])<eleLoosedxycut)&&(fabs(Electron_dz[Electronindex[i]])<eleLoosedzcut))
+                {
+                    if (Electron_sip3d[Electronindex[i]] < elesip3dCut && year == 2022)
+                    {
+                        bestElectronindex.push_back(Electronindex[i]);
+                    } else
+                    {
+                        bestElectronindex.push_back(Electronindex[i]);
+                    }
                 }
-            }
         }
     }
 
@@ -509,7 +524,10 @@ void H4LTools::LeptonSelection(){
             std::cout << "Inside LeptonSelection:: Electron_pt[" << Electronindex[ie] << "] = " << Electron_pt[Electronindex[ie]] << std::endl;
         Ele.SetPtEtaPhiM(Electron_pt[Electronindex[ie]],Electron_eta[Electronindex[ie]],Electron_phi[Electronindex[ie]],Electron_mass[Electronindex[ie]]);
         Elelist.push_back(Ele);
-        //ElelistFsr.push_back(Electrondressed_Run3[Electronindex[ie]]);
+        if (year != 2022)
+        {
+            ElelistFsr.push_back(Electrondressed_Run3[Electronindex[ie]]);
+        }
         Eiso.push_back(Electron_pfRelIso03_all[Electronindex[ie]]);
         Eid.push_back(AllEid[Electronindex[ie]]);
     }
@@ -545,7 +563,10 @@ void H4LTools::LeptonSelection(){
             std::cout << "Muon_pfRelIso03_all[" << Muonindex[imu] << "] = " << Muon_pfRelIso03_all[Muonindex[imu]] << std::endl;
             std::cout << "Muon_pfRelIso03_all[" << Muonindex[imu] << "] = " << Muon_pfRelIso03_all[Muonindex[imu]] << std::endl;
         }
-        //MulistFsr.push_back(Muondressed_Run3[Muonindex[imu]]);  //
+        if (year != 2022)
+        {
+            MulistFsr.push_back(Muondressed_Run3[Muonindex[imu]]);
+        }
         muid.push_back(AllMuid[Muonindex[imu]]);
         Muiso.push_back(Muon_pfRelIso03_all[Muonindex[imu]]);
     }
@@ -582,7 +603,7 @@ void H4LTools::LeptonSelection(){
             FsrEleidx = doFsrRecovery_Run3(goodFsrPhotons(), Electronindex[ae], 11);
         else
             FsrEleidx = doFsrRecovery(Elelist[ae]);
-	
+
         if (DEBUG)
             std::cout << "FsrEleidx = " << FsrEleidx << std::endl;
         if (isFSR && (FsrEleidx < 900))
@@ -643,7 +664,7 @@ void H4LTools::LeptonSelection(){
             FsrMuonidx = doFsrRecovery_Run3(goodFsrPhotons(), Muonindex[amu], 13);
 	else
             FsrMuonidx = doFsrRecovery(Mulist[amu]);
-      
+
         if (DEBUG) std::cout << "FsrMuonidx = " << FsrMuonidx << std::endl;
         if (isFSR && (FsrMuonidx < 900)){
             TLorentzVector fsrmuon;

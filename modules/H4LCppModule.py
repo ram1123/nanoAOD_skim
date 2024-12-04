@@ -5,6 +5,7 @@ import yaml
 import os
 from modules.Helper import *
 from modules.METFilters import passFilters
+from config.branch_config import branch_definitions
 
 ROOT.PyConfig.IgnoreCommandLineOptions = True
 
@@ -18,6 +19,7 @@ class HZZAnalysisCppProducer(Module):
         self.DEBUG = DEBUG
         self.cfgFile = cfgFile
         self.cfg = self._load_config(cfgFile)
+        self.branch_definitions = branch_definitions
         self.worker = ROOT.H4LTools(self.year, self.isMC, self.DEBUG)
         self.genworker = ROOT.GenAnalysis(self.DEBUG)
         self._initialize_worker()
@@ -239,113 +241,16 @@ class HZZAnalysisCppProducer(Module):
         self.initReaders(inputTree)  # initReaders must be called in beginFile
         self.out = wrappedOutputTree
 
-        # Boolean branches for Trigger channels
-        for TriggerChannel in self.cfg['TriggerChannels']:
-            self.out.branch(TriggerChannel, "O", title=f"Trigger channel: {TriggerChannel}")
-
-        # Boolean branches for channel candidates
-        self.out.branch("foundZZCandidate_4l", "O", title="ZZ Candidate found in 4l channel")
-        self.out.branch("foundZZCandidate_2l2q", "O", title="ZZ Candidate found in 2l2q channel")
-        self.out.branch("foundZZCandidate_2l2nu", "O", title="ZZ Candidate found in 2l2nu channel")
-        self.out.branch("passZZ2l2nu_emuCR_Selection", "O", title="Pass 2l2nu emu control region selection")
-        self.out.branch("isBoosted2l2q", "O", title="Boosted topology in 2l2q channel")
-        self.out.branch("HZZ2l2nu_ifVBF", "O", title="VBF topology in 2l2nu channel")
-        self.out.branch("HZZ2l2qNu_isELE", "O", title="Electron topology in 2l2q channel")
-        self.out.branch("HZZ2l2qNu_cutOppositeChargeFlag", "O", title="Opposite charge cut passed for 2l2qNu")
-        self.out.branch("HZZ2l2nu_isEMuCR", "O", title="EMU control region in 2l2nu channel")
-
-        # Branches for lepton-related variables
-        for i in range(1, 5):
-            self.out.branch(f"massL{i}", "F", title=f"Mass of lepton {i}")
-            self.out.branch(f"pTL{i}", "F", title=f"Transverse momentum (pT) of lepton {i}")
-            self.out.branch(f"etaL{i}", "F", title=f"Pseudo-rapidity (eta) of lepton {i}")
-            self.out.branch(f"phiL{i}", "F", title=f"Azimuthal angle (phi) of lepton {i}")
-
-        # Branches for 4l channel: ZZ kinematics
-        self.out.branch("mass4l", "F", title="Mass of ZZ system in 4l channel")
-        self.out.branch("GENmass4l", "F", title="Generated mass of ZZ system in 4l channel")
-        self.out.branch("mass4e", "F", title="Mass of 4 electrons")
-        self.out.branch("mass4mu", "F", title="Mass of 4 muons")
-        self.out.branch("mass2e2mu", "F", title="Mass of 2 electrons and 2 muons")
-        self.out.branch("pT4l", "F", title="Transverse momentum (pT) of ZZ system")
-        self.out.branch("GENpT4l", "F", title="Generated transverse momentum (pT) of ZZ system")
-        self.out.branch("rapidity4l", "F", title="Rapidity of ZZ system")
-        self.out.branch("njets_pt30_eta4p7", "I", title="Number of jets with pT > 30 GeV and |eta| < 4.7")
-        self.out.branch("finalState", "I", title="Final state identifier for 4l channel")
-        self.out.branch("GENnjets_pt30_eta4p7", "I", title="Generated number of jets with pT > 30 GeV and |eta| < 4.7")
-        self.out.branch("GENrapidity4l", "F", title="Generated rapidity of ZZ system")
-        self.out.branch("eta4l", "F", title="Pseudo-rapidity (eta) of ZZ system")
-        self.out.branch("phi4l", "F", title="Azimuthal angle (phi) of ZZ system")
-
-        # Branches for 4l channel: MELA discriminants
-        mela_discriminants = ["D_CP", "D_0m", "D_0hp", "D_int", "D_L1", "D_L1Zg"]
-        for discriminant in mela_discriminants:
-            self.out.branch(discriminant, "F", title=f"MELA discriminant: {discriminant}")
-
-        # Branches for jets in the 4l channel
-        for i in range(1, 3):
-            self.out.branch(f"mj{i}", "F", title=f"Mass of jet {i}")
-            self.out.branch(f"pTj{i}", "F", title=f"Transverse momentum (pT) of jet {i}")
-            self.out.branch(f"etaj{i}", "F", title=f"Pseudo-rapidity (eta) of jet {i}")
-            self.out.branch(f"phij{i}", "F", title=f"Azimuthal angle (phi) of jet {i}")
-
-        # Branches common to 4l, 2l2q, and 2l2nu channels
-        for z in range(1, 3):
-            self.out.branch(f"massZ{z}", "F", title=f"Mass of Z boson {z}")
-            self.out.branch(f"pTZ{z}", "F", title=f"Transverse momentum (pT) of Z boson {z}")
-            self.out.branch(f"etaZ{z}", "F", title=f"Pseudo-rapidity (eta) of Z boson {z}")
-            self.out.branch(f"phiZ{z}", "F", title=f"Azimuthal angle (phi) of Z boson {z}")
-
-        # Additional general branches
-        self.out.branch("EvtNum", "I", title="Event number")
-        self.out.branch("Weight", "F", title="Event weight")
-        self.out.branch("pileupWeight", "F", title="Pileup reweighting factor")
-        self.out.branch("dataMCWeight_new", "F", title="Data/MC weight")
-        self.out.branch("prefiringWeight", "F", title="Prefiring weight correction")
-        self.out.branch("passedTrig", "O", title="Event passed trigger")
-        self.out.branch("passedFullSelection", "O", title="Event passed full selection criteria")
-        self.out.branch("passedZ4lSelection", "O", title="Event passed 4l ZZ selection")
-        self.out.branch("passedZ4lZ1LSelection", "O", title="Event passed Z1+lepton selection in 4l channel")
-        self.out.branch("passedZ4lZXCRSelection", "O", title="Event passed Z+X control region selection")
-        self.out.branch("passedZXCRSelection", "O", title="Event passed ZX control region selection")
-        self.out.branch("passedFiducialSelection", "O", title="Event passed fiducial selection")
-
-        # GEN-level branches
-        GENHlepNum = 4
-        GENZNum = 2
-        self.out.branch("GENlep_MomId", "I", lenVar="nGenPart", title="GEN lepton mother ID")
-        self.out.branch("GENlep_MomMomId", "I", lenVar="nGenPart", title="GEN lepton grandmother ID")
-        self.out.branch("GENZ_MomId", "I", lenVar="nVECZ", title="GEN Z boson mother ID")
-        self.out.branch("GENZ_DaughtersId", "I", lenVar="GENZNum", title="GEN Z boson daughter IDs")
-        self.out.branch("GENlep_Hindex", "I", lenVar="GENHlepNum", title="GEN lepton Higgs indices")
-        self.out.branch("lep_Hindex", "I", lenVar="GENHlepNum", title="Reco lepton Higgs indices")
-        self.out.branch("GENlep_id", "I", lenVar="nGENLeptons", title="GEN lepton IDs")
-        self.out.branch("lep_genindex", "I", lenVar="Lepointer", title="Reco lepton GEN indices")
-
-        # FSR branches for leptons
-        for particle in ["Electron", "Muon"]:
-            self.out.branch(f"{particle}_Fsr_pt", "F", lenVar=f"n{particle}_Fsr", title=f"{particle} FSR photon transverse momentum")
-            self.out.branch(f"{particle}_Fsr_eta", "F", lenVar=f"n{particle}_Fsr", title=f"{particle} FSR photon pseudo-rapidity")
-            self.out.branch(f"{particle}_Fsr_phi", "F", lenVar=f"n{particle}_Fsr", title=f"{particle} FSR photon azimuthal angle")
-
-        # Branches for 2l2q channel
-        for var in ["massZ2_2j", "phiZ2_2j", "etaZ2_2j", "pTZ2_2j", "EneZ2_2j", "phiZ2_met", "pTZ2_met", "EneZ2_met", "MT_2l2nu"]:
-            self.out.branch(var, "F", title=f"Variable {var} for 2l2q/2l2nu channel")
-
-
-        # VBF jets and dijet kinematics for 2l2nu channel
-        for var in [ "HZZ2l2qNu_nJets", "HZZ2l2qNu_nTightBtagJets", "HZZ2l2qNu_nMediumBtagJets", "HZZ2l2qNu_nLooseBtagJets"]:
-            self.out.branch(var, "I", title=f"Variable {var} for VBF jets")
-
-        for jet in ["VBFjet1", "VBFjet2", "VBFdijet"]:
-            for attr in ["pT", "eta", "phi", "mass", "E"]:
-                self.out.branch(f"HZZ2l2nu_{jet}_{attr}", "F", title=f"{jet} {attr} for 2l2nu channel")
-
-        for var in ["HZZ2l2nu_VBFIndexJet1", "HZZ2l2nu_VBFIndexJet2"]:
-            self.out.branch(var, "I", title=f"Variable {var} for VBF jets")
-
-        for var in ["HZZ2l2nu_ZZmT", "HZZ2l2nu_ZZpT", "HZZ2l2nu_minDPhi_METAK4", "HZZ2l2nu_VBFdEta_jj", "HZZ2l2nu_VBFdPhi_jj", "HZZ2l2nu_VBFdR_jj"]:
-            self.out.branch(var, "F", title=f"Variable {var} for VBF jets")
+        for branch_name, details in self.branch_definitions.items():
+            if ("GEN" in branch_name or "lep_Hindex" in branch_name or "lep_genindex" in branch_name) and self.year != 2022:
+                # FIXME: need to fix this for other years
+                continue
+            # if "GEN" in branch_name and self.year == 2022: continue
+            if "lenVar" in details:
+                if self.DEBUG: print(f"Defining the branch: {branch_name} {details['type']} {details['lenVar']}")
+                self.out.branch(branch_name, details["type"], lenVar=f'{details["lenVar"]}', title=details.get("title", ""))
+            else:
+                self.out.branch(branch_name, details["type"], title=details.get("title", ""))
 
     def endFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
          print("\n========== Print Cut flow table  ====================\n")
@@ -418,147 +323,7 @@ class HZZAnalysisCppProducer(Module):
         self.passAllEvts += 1
         self.CutFlowTable.Fill(0)
 
-        # Initialize variables for ZZ candidates
-        pTZ1 = -99
-        etaZ1 = -99
-        phiZ1 = -99
-        massZ1 = 0
-        pTZ2 = -99
-        etaZ2 = -99
-        phiZ2 = -99
-        massZ2 = -99
-
-        # Initialize variables for lepton properties
-        pTL1 = -99
-        etaL1 = -99
-        phiL1 = -99
-        massL1 = -99
-        pTL2 = -99
-        etaL2 = -99
-        phiL2 = -99
-        massL2 = -99
-        pTL3 = -99
-        etaL3 = -99
-        phiL3 = -99
-        massL3 = -99
-        pTL4 = -99
-        etaL4 = -99
-        phiL4 = -99
-        massL4 = -99
-
-        # Initialize variables for ZZ system properties
-        mass4l = -99
-        GENmass4l = -99
-        mass4e = -99
-        mass4mu = -99
-        mass2e2mu = -99
-        pT4l = -99
-        GENpT4l = -99
-        rapidity4l = -99
-        GENrapidity4l = -99
-        eta4l = -99
-        phi4l = -99
-        njets_pt30_eta4p7 = -1
-        GENnjets_pt30_eta4p7 = -1
-
-        # Initialize MELA discriminants
-        D_CP = -99
-        D_0m = -99
-        D_0hp = -99
-        D_int = -99
-        D_L1 = -99
-        D_L1Zg = -99
-
-        # Initialize jet properties for 4l channel
-        pTj1 = -99
-        etaj1 = -99
-        phij1 = -99
-        mj1 = -99
-        pTj2 = -99
-        etaj2 = -99
-        phij2 = -99
-        mj2 = -99
-
-        # Initialize 2l2q-specific variables
-        massZ2_2j = -99
-        phiZ2_2j = -99
-        etaZ2_2j = -99
-        pTZ2_2j = -99
-        EneZ2_2j = -99
-
-        # Initialize 2l2nu-specific variables
-        phiZ2_met = -99
-        pTZ2_met = -99
-        EneZ2_met = -99
-        MT_2l2nu = -99
-        HZZ2l2nu_ZZmT = -99
-        HZZ2l2nu_ZZpT = -99
-        HZZ2l2nu_minDPhi_METAK4 = -99
-
-        # Initialize VBF jet and dijet properties
-        HZZ2l2nu_VBFIndexJet1 = -1
-        HZZ2l2nu_VBFIndexJet2 = -1
-        HZZ2l2nu_VBFjet1_pT = -99
-        HZZ2l2nu_VBFjet1_eta = -99
-        HZZ2l2nu_VBFjet1_phi = -99
-        HZZ2l2nu_VBFjet1_mass = -99
-        HZZ2l2nu_VBFjet2_pT = -99
-        HZZ2l2nu_VBFjet2_eta = -99
-        HZZ2l2nu_VBFjet2_phi = -99
-        HZZ2l2nu_VBFjet2_mass = -99
-        HZZ2l2nu_VBFdijet_mass = -99
-        HZZ2l2nu_VBFdijet_pT = -99
-        HZZ2l2nu_VBFdijet_E = -99
-        HZZ2l2nu_VBFdEta_jj = -99
-        HZZ2l2nu_VBFdPhi_jj = -99
-        HZZ2l2nu_VBFdR_jj = -99
-
-        # Initialize GEN-level variables
-        GENlep_MomId = []
-        GENlep_MomMomId = []
-        GENlep_id = []
-        GENlep_Hindex = []
-        lep_Hindex = []
-        lep_genindex = []
-        GENZ_DaughtersId = []
-        GENZ_MomId = []
-        Electron_Fsr_pt = []
-        Electron_Fsr_eta = []
-        Electron_Fsr_phi = []
-        Muon_Fsr_pt = []
-        Muon_Fsr_eta = []
-        Muon_Fsr_phi = []
-
-        # Initialize event-level variables
-        EvtNum = 0
-        Weight = 1
-        pileupWeight = 1
-        dataMCWeight_new = 1
-        prefiringWeight = 1
-        finalState = -1
-
-        # Initialize flags
-        foundZZCandidate_4l = False
-        foundZZCandidate_2l2q = False
-        foundZZCandidate_2l2nu = False
-        foundZZCandidate_2l2nu_emuCR = False   # for 2l2nu emu control region
-        passZZ2l2nu_emuCR_Selection = False
-        isBoosted2l2q = False
-        HZZ2l2nu_ifVBF = False
-        HZZ2l2qNu_isELE = False
-        HZZ2l2nu_isEMuCR = False
-        HZZ2l2qNu_cutOppositeChargeFlag = False
-        passedTrig = False
-        passedFullSelection = False
-        passedZ4lSelection = False
-        passedZ4lZ1LSelection = False
-        passedZ4lZXCRSelection = False
-        passedZXCRSelection = False
-        passedFiducialSelection = False
-
-        # Other variables
-        GENHlepNum = 4
-        GENZNum = 2
+        self.branch_values = {branch: details["default"] for branch, details in self.branch_definitions.items()}
 
         TriggerMap = {}
         passedTrig = False
@@ -609,51 +374,52 @@ class HZZAnalysisCppProducer(Module):
             for xe in electrons:
                 self.worker.SetElectronsGen(xe.genPartIdx)
 
-            lep_genindex = []
+            self.branch_values["lep_genindex"] = []
             lep_genindex_vec = self.worker.lep_genindex
             if len(lep_genindex_vec)>0:
+                print("RAM: len(lep_genindex_vec): ", len(lep_genindex_vec))
                 for i in range(len(lep_genindex_vec)):
-                    lep_genindex.append(lep_genindex_vec[i])
+                    self.branch_values["lep_genindex"].append(lep_genindex_vec[i])
 
-            GENlep_id = []
-            GENlep_Hindex = []
-            GENZ_DaughtersId = []
-            GENZ_MomId = []
-            GENlep_MomId = []
-            GENlep_MomMomId = []
+            self.branch_values["GENlep_id"] = []
+            self.branch_values["GENlep_Hindex"] = []
+            self.branch_values["GENZ_DaughtersId"] = []
+            self.branch_values["GENZ_MomId"] = []
+            self.branch_values["GENlep_MomId"] = []
+            self.branch_values["GENlep_MomMomId"] = []
             self.genworker.SetGenVariables()
-            GENmass4l = self.genworker.GENmass4l
-            GENpT4l = self.genworker.GENpT4l
-            GENrapidity4l = self.genworker.GENrapidity4l
-            GENnjets_pt30_eta4p7 = self.genworker.GENnjets_pt30_eta4p7
-            nGENLeptons = self.genworker.nGENLeptons
-            passedFiducialSelection = self.genworker.passedFiducialSelection
+            self.branch_values["GENmass4l"] = self.genworker.GENmass4l
+            self.branch_values["GENpT4l"] = self.genworker.GENpT4l
+            self.branch_values["GENrapidity4l"] = self.genworker.GENrapidity4l
+            self.branch_values["GENnjets_pt30_eta4p7"] = self.genworker.GENnjets_pt30_eta4p7
+            self.branch_values["nGENLeptons"] = self.genworker.nGENLeptons
+            self.branch_values["passedFiducialSelection"] = self.genworker.passedFiducialSelection
 
             GENlep_id_vec = self.genworker.GENlep_id
             if len(GENlep_id_vec)>0:
                 for i in range(len(GENlep_id_vec)):
-                    GENlep_id.append(GENlep_id_vec[i])
+                    self.branch_values["GENlep_id"].append(GENlep_id_vec[i])
             GENlep_Hindex_vec = self.genworker.GENlep_Hindex
             if len(GENlep_Hindex_vec)>0:
                 for i in range(len(GENlep_Hindex_vec)):
-                    GENlep_Hindex.append(GENlep_Hindex_vec[i])
+                    self.branch_values["GENlep_Hindex"].append(GENlep_Hindex_vec[i])
             GENZ_DaughtersId_vec = self.genworker.GENZ_DaughtersId
             if len(GENZ_DaughtersId_vec)>0:
                 for i in range(len(GENZ_DaughtersId_vec)):
-                    GENZ_DaughtersId.append(GENZ_DaughtersId_vec[i])
+                    self.branch_values["GENZ_DaughtersId"].append(GENZ_DaughtersId_vec[i])
             nVECZ = self.genworker.nVECZ
             GENZ_MomId_vec = self.genworker.GENZ_MomId
             if len(GENZ_MomId_vec)>0:
                 for i in range(len(GENZ_MomId_vec)):
-                    GENZ_MomId.append(GENZ_MomId_vec[i])
+                    self.branch_values["GENZ_MomId"].append(GENZ_MomId_vec[i])
             GENlep_MomId_vec = self.genworker.GENlep_MomId
             if len(GENlep_MomId_vec)>0:
                 for i in range(len(GENlep_MomId_vec)):
-                    GENlep_MomId.append(GENlep_MomId_vec[i])
+                    self.branch_values["GENlep_MomId"].append(GENlep_MomId_vec[i])
             GENlep_MomMomId_vec = self.genworker.GENlep_MomMomId
             if len(GENlep_MomMomId_vec)>0:
                 for i in range(len(GENlep_MomMomId_vec)):
-                    GENlep_MomMomId.append(GENlep_MomMomId_vec[i])
+                    self.branch_values["GENlep_MomMomId"].append(GENlep_MomMomId_vec[i])
 
 
         for xe in electrons:
@@ -706,45 +472,45 @@ class HZZAnalysisCppProducer(Module):
         Muon_Fsr_eta_vec = self.worker.MuonFsrEta()
         Muon_Fsr_phi_vec = self.worker.MuonFsrPhi()
 
-        Electron_Fsr_pt = []
-        Electron_Fsr_eta = []
-        Electron_Fsr_phi = []
-        Muon_Fsr_pt = []
-        Muon_Fsr_eta = []
-        Muon_Fsr_phi = []
+        self.branch_values["Electron_Fsr_pt"] = []
+        self.branch_values["Electron_Fsr_eta"] = []
+        self.branch_values["Electron_Fsr_phi"] = []
+        self.branch_values["Muon_Fsr_pt"] = []
+        self.branch_values["Muon_Fsr_eta"] = []
+        self.branch_values["Muon_Fsr_phi"] = []
 
         if len(Electron_Fsr_pt_vec)>0:
             for i in range(len(Electron_Fsr_pt_vec)):
-                Electron_Fsr_pt.append(Electron_Fsr_pt_vec[i])
-                Electron_Fsr_eta.append(Electron_Fsr_eta_vec[i])
-                Electron_Fsr_phi.append(Electron_Fsr_phi_vec[i])
+                self.branch_values["Electron_Fsr_pt"].append(Electron_Fsr_pt_vec[i])
+                self.branch_values["Electron_Fsr_eta"].append(Electron_Fsr_eta_vec[i])
+                self.branch_values["Electron_Fsr_phi"].append(Electron_Fsr_phi_vec[i])
         if len(Muon_Fsr_pt_vec)>0:
             for i in range(len(Muon_Fsr_pt_vec)):
-                Muon_Fsr_pt.append(Muon_Fsr_pt_vec[i])
-                Muon_Fsr_eta.append(Muon_Fsr_eta_vec[i])
-                Muon_Fsr_phi.append(Muon_Fsr_phi_vec[i])
+                self.branch_values["Muon_Fsr_pt"].append(Muon_Fsr_pt_vec[i])
+                self.branch_values["Muon_Fsr_eta"].append(Muon_Fsr_eta_vec[i])
+                self.branch_values["Muon_Fsr_phi"].append(Muon_Fsr_phi_vec[i])
 
         if self.worker.GetZ1_2l2qOR2l2nu() and (self.channels == "all"  or self.channels == "2l2v" or self.channels == "2l2q"):  #commented out for now
             if self.channels == "2l2q" or self.channels == "all":
-                foundZZCandidate_2l2q = self.worker.ZZSelection_2l2q()
-                isBoosted2l2q = self.worker.isBoosted2l2q
-                if self.DEBUG: print("isBoosted2l2q: ", isBoosted2l2q)
+                self.branch_values["foundZZCandidate_2l2q"] = self.worker.ZZSelection_2l2q()
+                self.branch_values["isBoosted2l2q"] = self.worker.isBoosted2l2q
+                if self.DEBUG: print("isBoosted2l2q: ", self.branch_values["isBoosted2l2q"])
             if self.channels == "2l2v" or self.channels == "all":
-                foundZZCandidate_2l2nu = self.worker.ZZSelection_2l2nu()  #commented out for now
+                self.branch_values["foundZZCandidate_2l2nu"] = self.worker.ZZSelection_2l2nu()  #commented out for now
         if (self.channels == "all"  or self.channels == "4l"):
-            foundZZCandidate_4l = self.worker.ZZSelection_4l()
-            passedFullSelection=foundZZCandidate_4l
-            if foundZZCandidate_4l:
+            self.branch_values["foundZZCandidate_4l"] = self.worker.ZZSelection_4l()
+            self.branch_values["passedFullSelection"]= self.branch_values["foundZZCandidate_4l"]
+            if  self.branch_values["foundZZCandidate_4l"]:
                 self.passZZEvts += 1
-            if (foundZZCandidate_4l |passedFiducialSelection ):
+            if (self.branch_values["foundZZCandidate_4l"] |self.branch_values["passedFiducialSelection"] ):
                 EvtNum += 1
                 keepIt = True
             Lepointer = self.worker.Lepointer
-            lep_Hindex = []
+            self.branch_values["lep_Hindex"] = []
             lep_Hindex_vec = self.worker.lep_Hindex
             if len(lep_Hindex_vec)>0:
                 for i in range(len(lep_Hindex_vec)):
-                    lep_Hindex.append(lep_Hindex_vec[i])
+                    self.branch_values["lep_Hindex"].append(lep_Hindex_vec[i])
             if self.worker.RecoFourMuEvent: finalState = 1
             if self.worker.RecoFourEEvent: finalState = 2
             if self.worker.RecoTwoETwoMuEvent: finalState = 3
@@ -754,10 +520,10 @@ class HZZAnalysisCppProducer(Module):
             if self.worker.flag4mu: mass4mu = mass4l
 
         if self.worker.GetZ1_emuCR() and (self.channels == "all"  or self.channels == "2l2v"):
-            foundZZCandidate_2l2nu_emuCR = self.worker.ZZSelection_2l2nu()
+            self.branch_values["foundZZCandidate_2l2nu_emuCR"] = self.worker.ZZSelection_2l2nu()
 
         if self.DEBUG:
-            print("Found ZZ candidate (4l, 2l2q, 2l2nu): ({}, {}, {})".format(foundZZCandidate_4l, foundZZCandidate_2l2q, foundZZCandidate_2l2nu))
+            print("Found ZZ candidate (4l, 2l2q, 2l2nu): ({}, {}, {})".format(self.branch_values["foundZZCandidate_4l"], self.branch_values["foundZZCandidate_2l2q"], self.branch_values["foundZZCandidate_2l2nu"]))
 
         njets_pt30_eta4p7 = self.worker.njets_pt30_eta4p7
         HZZ2l2q_boostedJet_PNScore = self.worker.boostedJet_PNScore
@@ -778,75 +544,75 @@ class HZZAnalysisCppProducer(Module):
         HZZ2l2qNu_nMediumBtagJets = self.worker.HZZ2l2qNu_nMediumBtagJets
         HZZ2l2qNu_nLooseBtagJets = self.worker.HZZ2l2qNu_nLooseBtagJets
 
-        if (foundZZCandidate_4l or foundZZCandidate_2l2q or foundZZCandidate_2l2nu or foundZZCandidate_2l2nu_emuCR):
-            if self.DEBUG: print("Found ZZ candidate (4l, 2l2q, 2l2nu): ({}, {}, {})".format(foundZZCandidate_4l, foundZZCandidate_2l2q, foundZZCandidate_2l2nu))
-            pTL1 = self.worker.pTL1
-            etaL1 = self.worker.etaL1
-            phiL1 = self.worker.phiL1
-            massL1 = self.worker.massL1
-            pTL2 = self.worker.pTL2
-            etaL2 = self.worker.etaL2
-            phiL2 = self.worker.phiL2
-            massL2 = self.worker.massL2
+        # if (self.branch_definitions["found"]
+        if (self.branch_values["foundZZCandidate_4l"] or self.branch_values["foundZZCandidate_2l2q"] or self.branch_values["foundZZCandidate_2l2nu"] or self.branch_values["foundZZCandidate_2l2nu_emuCR"]):
+            if self.DEBUG: print("Found ZZ candidate (4l, 2l2q, 2l2nu): ({}, {}, {})".format(self.branch_values["foundZZCandidate_4l"], self.branch_values["foundZZCandidate_2l2q"], self.branch_values["foundZZCandidate_2l2nu"]))
+            self.branch_values["pTL1"] = self.worker.pTL1
+            self.branch_values["etaL1"] = self.worker.etaL1
+            self.branch_values["phiL1"] = self.worker.phiL1
+            self.branch_values["massL1"] = self.worker.massL1
+            self.branch_values["pTL2"] = self.worker.pTL2
+            self.branch_values["etaL2"] = self.worker.etaL2
+            self.branch_values["phiL2"] = self.worker.phiL2
+            self.branch_values["massL2"] = self.worker.massL2
 
-            if pTL2>pTL1:
-                pTL1, pTl2 = pTL2, pTL1
-                etaL1, etaL2 = etaL2, etaL1
-                phiL1, phiL2 = phiL2, phiL1
-                massL1,massL2 = massL2, massL1
+            if self.branch_values["pTL2"] > self.branch_values["pTL1"]:
+                self.branch_values["pTL1"], self.branch_values["pTL2"] = self.branch_values["pTL2"], self.branch_values["pTL1"]
+                self.branch_values["etaL1"], self.branch_values["etaL2"] = self.branch_values["etaL2"], self.branch_values["etaL1"]
+                self.branch_values["phiL1"], self.branch_values["phiL2"] = self.branch_values["phiL2"], self.branch_values["phiL1"]
+                self.branch_values["massL1"], self.branch_values["massL2"] = self.branch_values["massL2"], self.branch_values["massL1"]
 
             # Kinematics of Z1: Obtained from pair of leptons with mass closest to Z mass
-            pTZ1 = self.worker.Z1.Pt()
-            etaZ1 = self.worker.Z1.Eta()
-            phiZ1 = self.worker.Z1.Phi()
-            massZ1 = self.worker.Z1.M()
+            self.branch_values["pTZ1"] = self.worker.Z1.Pt()
+            self.branch_values["etaZ1"] = self.worker.Z1.Eta()
+            self.branch_values["phiZ1"] = self.worker.Z1.Phi()
+            self.branch_values["massZ1"] = self.worker.Z1.M()
 
             # Kinematics of Z2: Only for 4l and 2l2q channels
             # For 2l2nu channel, Z2 kinematics are obtained from MET
             # For 2l2q channel, Z2 represents the kinamatics of the boosted Z topology
-            pTZ2 = self.worker.Z2.Pt()
-            etaZ2 = self.worker.Z2.Eta()
-            phiZ2 = self.worker.Z2.Phi()
-            massZ2 = self.worker.Z2.M()
+            self.branch_values["pTZ2"] = self.worker.Z2.Pt()
+            self.branch_values["etaZ2"] = self.worker.Z2.Eta()
+            self.branch_values["phiZ2"] = self.worker.Z2.Phi()
+            self.branch_values["massZ2"] = self.worker.Z2.M()
 
-        if (foundZZCandidate_2l2q):
+        if (self.branch_values["foundZZCandidate_2l2q"]):
             keepIt = True
-            foundZZCandidate_2l2q = True
+            self.branch_values["foundZZCandidate_2l2q"] = True
             self.passZZ2l2qEvts += 1
             self.CutFlowTable.Fill(4)
 
-            massZ2_2j = self.worker.Z2_2j.M()
-            phiZ2_2j = self.worker.Z2_2j.Phi()
-            etaZ2_2j = self.worker.Z2_2j.Eta()
-            pTZ2_2j = self.worker.Z2_2j.Pt()
-            EneZ2_2j = self.worker.Z2_2j.E()
+            self.branch_values["massZ2_2j"] = self.worker.Z2_2j.M()
+            self.branch_values["phiZ2_2j"] = self.worker.Z2_2j.Phi()
+            self.branch_values["etaZ2_2j"] = self.worker.Z2_2j.Eta()
+            self.branch_values["pTZ2_2j"] = self.worker.Z2_2j.Pt()
+            self.branch_values["EneZ2_2j"] = self.worker.Z2_2j.E()
 
-        if (foundZZCandidate_2l2nu):
+        if (self.branch_values["foundZZCandidate_2l2nu"]):
             keepIt = True
-            foundZZCandidate_2l2nu = True
             self.passZZ2l2nuEvts += 1
             self.CutFlowTable.Fill(5)
 
             #     FatJet_PNZvsQCD = self.worker.FatJet_PNZvsQCD
             #     self.out.fillBranch("FatJet_PNZvsQCD",FatJet_PNZvsQCD)
 
-        if (foundZZCandidate_2l2nu_emuCR):
+        if (self.branch_values["foundZZCandidate_2l2nu_emuCR"]):
             keepIt = True
             passZZ2l2nu_emuCR_Selection = True
             self.passZZ2l2nu_emuCR_Evts += 1
             self.CutFlowTable.Fill(6)
 
-        if (foundZZCandidate_2l2nu or foundZZCandidate_2l2nu_emuCR):
-            phiZ2_met = self.worker.Z2_met.Phi()
-            pTZ2_met = self.worker.Z2_met.Pt()
-            EneZ2_met = self.worker.Z2_met.E()
-            MT_2l2nu = self.worker.ZZ_metsystem.Mt()
+        if (self.branch_values["foundZZCandidate_2l2nu"] or self.branch_values["foundZZCandidate_2l2nu_emuCR"]):
+            self.branch_values["phiZ2_met"] = self.worker.Z2_met.Phi()
+            self.branch_values["pTZ2_met"] = self.worker.Z2_met.Pt()
+            self.branch_values["EneZ2_met"] = self.worker.Z2_met.E()
+            self.branch_values["MT_2l2nu"] = self.worker.ZZ_metsystem.Mt()
 
-            HZZ2l2nu_ZZmT = self.worker.ZZ_metsystem.Mt()
-            HZZ2l2nu_ZZpT = self.worker.ZZ_metsystem.Pt()
+            self.branch_values["HZZ2l2nu_ZZmT"] = self.worker.ZZ_metsystem.Mt()
+            self.branch_values["HZZ2l2nu_ZZpT"] = self.worker.ZZ_metsystem.Pt()
 
-            HZZ2l2nu_ZZmT = self.worker.ZZ_metsystem.Mt()
-            HZZ2l2nu_ZZpT = self.worker.ZZ_metsystem.Pt()
+            self.branch_values["HZZ2l2nu_ZZmT"] = self.worker.ZZ_metsystem.Mt()
+            self.branch_values["HZZ2l2nu_ZZpT"] = self.worker.ZZ_metsystem.Pt()
 
             #Pz_neutrino = self.worker.Pz_neutrino
 
@@ -859,193 +625,98 @@ class HZZAnalysisCppProducer(Module):
                 VBF_dijet = VBF_jet1 + VBF_jet2
                 if self.DEBUG: print("in .py file: VBF_dijet_mass: ", VBF_dijet.M())
 
-                HZZ2l2nu_VBFjet1_pT = jets[HZZ2l2nu_VBFIndexJet1].pt
-                HZZ2l2nu_VBFjet1_eta = jets[HZZ2l2nu_VBFIndexJet1].eta
-                HZZ2l2nu_VBFjet1_phi = jets[HZZ2l2nu_VBFIndexJet1].phi
-                HZZ2l2nu_VBFjet1_mass = jets[HZZ2l2nu_VBFIndexJet1].mass
+                self.branch_values["HZZ2l2nu_VBFjet1_pT"] = jets[HZZ2l2nu_VBFIndexJet1].pt
+                self.branch_values["HZZ2l2nu_VBFjet1_eta"] = jets[HZZ2l2nu_VBFIndexJet1].eta
+                self.branch_values["HZZ2l2nu_VBFjet1_phi"] = jets[HZZ2l2nu_VBFIndexJet1].phi
+                self.branch_values["HZZ2l2nu_VBFjet1_mass"] = jets[HZZ2l2nu_VBFIndexJet1].mass
 
-                HZZ2l2nu_VBFjet2_pT = jets[HZZ2l2nu_VBFIndexJet2].pt
-                HZZ2l2nu_VBFjet2_eta = jets[HZZ2l2nu_VBFIndexJet2].eta
-                HZZ2l2nu_VBFjet2_phi = jets[HZZ2l2nu_VBFIndexJet2].phi
-                HZZ2l2nu_VBFjet2_mass = jets[HZZ2l2nu_VBFIndexJet2].mass
+                self.branch_values["HZZ2l2nu_VBFjet2_pT"] = jets[HZZ2l2nu_VBFIndexJet2].pt
+                self.branch_values["HZZ2l2nu_VBFjet2_eta"] = jets[HZZ2l2nu_VBFIndexJet2].eta
+                self.branch_values["HZZ2l2nu_VBFjet2_phi"] = jets[HZZ2l2nu_VBFIndexJet2].phi
+                self.branch_values["HZZ2l2nu_VBFjet2_mass"] = jets[HZZ2l2nu_VBFIndexJet2].mass
 
-                HZZ2l2nu_VBFdijet_mass = VBF_dijet.M()
-                HZZ2l2nu_VBFdijet_pT = VBF_dijet.Pt()
-                HZZ2l2nu_VBFdijet_E = VBF_dijet.E()
+                self.branch_values["HZZ2l2nu_VBFdijet_mass"] = VBF_dijet.M()
+                self.branch_values["HZZ2l2nu_VBFdijet_pT"] = VBF_dijet.Pt()
+                self.branch_values["HZZ2l2nu_VBFdijet_E"] = VBF_dijet.E()
+                self.branch_values["HZZ2l2nu_VBFdEta_jj"] = abs(VBF_jet1.Eta() - VBF_jet2.Eta())
+                self.branch_values["HZZ2l2nu_VBFdPhi_jj"] = abs(VBF_jet1.DeltaPhi(VBF_jet2))
+                self.branch_values["HZZ2l2nu_VBFdR_jj"] = VBF_jet1.DeltaR(VBF_jet2)
 
-                HZZ2l2nu_VBFdEta_jj = abs(VBF_jet1.Eta() - VBF_jet2.Eta())
-                HZZ2l2nu_VBFdPhi_jj = abs(VBF_jet1.DeltaPhi(VBF_jet2))
-                HZZ2l2nu_VBFdR_jj = VBF_jet1.DeltaR(VBF_jet2)
-        if (foundZZCandidate_4l):
+        if (self.branch_values["foundZZCandidate_4l"]):
             keepIt = True
             self.passZZ4lEvts += 1
             self.CutFlowTable.Fill(3)
-            foundZZCandidate_4l = True
-            print("Inside 4l loop: ",foundZZCandidate_4l)
-            D_CP = self.worker.D_CP
-            D_0m = self.worker.D_0m
-            D_0hp = self.worker.D_0hp
-            D_int = self.worker.D_int
-            D_L1 = self.worker.D_L1
-            D_L1Zg = self.worker.D_L1Zg
+            self.branch_values["foundZZCandidate_4l"] = True
+            print("Inside 4l loop: ",self.branch_values["foundZZCandidate_4l"])
+            self.branch_values["D_CP"] = self.worker.D_CP
+            self.branch_values["D_0m"] = self.worker.D_0m
+            self.branch_values["D_0hp"] = self.worker.D_0hp
+            self.branch_values["D_int"] = self.worker.D_int
+            self.branch_values["D_L1"] = self.worker.D_L1
+            self.branch_values["D_L1Zg"] = self.worker.D_L1Zg
 
-            pTL3 = self.worker.pTL3
-            etaL3 = self.worker.etaL3
-            phiL3 = self.worker.phiL3
-            massL3 = self.worker.massL3
-            pTL4 = self.worker.pTL4
-            etaL4 = self.worker.etaL4
-            phiL4 = self.worker.phiL4
-            massL4 = self.worker.massL4
-            pTj1 = self.worker.pTj1
-            etaj1 = self.worker.etaj1
-            phij1 = self.worker.phij1
-            mj1 = self.worker.mj1
-            pTj2 = self.worker.pTj2
-            etaj2 = self.worker.etaj2
-            phij2 = self.worker.phij2
-            mj2 = self.worker.mj2
+            self.branch_values["pTL3"] = self.worker.pTL3
+            self.branch_values["etaL3"] = self.worker.etaL3
+            self.branch_values["phiL3"] = self.worker.phiL3
+            self.branch_values["massL3"] = self.worker.massL3
+            self.branch_values["pTL4"] = self.worker.pTL4
+            self.branch_values["etaL4"] = self.worker.etaL4
+            self.branch_values["phiL4"] = self.worker.phiL4
+            self.branch_values["massL4"] = self.worker.massL4
+            self.branch_values["pTj1"] = self.worker.pTj1
+            self.branch_values["etaj1"] = self.worker.etaj1
+            self.branch_values["phij1"] = self.worker.phij1
+            self.branch_values["mj1"] = self.worker.mj1
+            self.branch_values["pTj2"] = self.worker.pTj2
+            self.branch_values["etaj2"] = self.worker.etaj2
+            self.branch_values["phij2"] = self.worker.phij2
+            self.branch_values["mj2"] = self.worker.mj2
 
-            if pTL4>pTL3:
-                pTL3, pTL4 = pTL4, pTL3
-                etaL3, etaL4 = etaL4, etaL3
-                phiL3, phiL4 = phiL4, phiL3
-                massL3, massL4 = massL4, massL3
+            if self.branch_values["pTL4"] > self.branch_values["pTL3"]:
+                self.branch_values["pTL3"], self.branch_values["pTL4"] = self.branch_values["pTL4"], self.branch_values["pTL3"]
+                self.branch_values["etaL3"], self.branch_values["etaL4"] = self.branch_values["etaL4"], self.branch_values["etaL3"]
+                self.branch_values["phiL3"], self.branch_values["phiL4"] = self.branch_values["phiL4"], self.branch_values["phiL3"]
+                self.branch_values["massL3"], self.branch_values["massL4"] = self.branch_values["massL4"], self.branch_values["massL3"]
 
-            pT4l = self.worker.ZZsystem.Pt()
-            eta4l = self.worker.ZZsystem.Eta()
-            phi4l = self.worker.ZZsystem.Phi()
-            mass4l = self.worker.ZZsystem.M()
-            rapidity4l = self.worker.ZZsystem.Rapidity()
-            njets_pt30_eta4p7 = self.worker.njets_pt30_eta4p7
+            self.branch_values["pT4l"] = self.worker.ZZsystem.Pt()
+            self.branch_values["eta4l"] = self.worker.ZZsystem.Eta()
+            self.branch_values["phi4l"] = self.worker.ZZsystem.Phi()
+            self.branch_values["mass4l"] = self.worker.ZZsystem.M()
+            self.branch_values["rapidity4l"] = self.worker.ZZsystem.Rapidity()
+            self.branch_values["njets_pt30_eta4p7"] = self.worker.njets_pt30_eta4p7
             if self.worker.flag4e:
-                mass4e = mass4l
+                self.branch_values["mass4e"] = mass4l
             if self.worker.flag2e2mu:
-                mass2e2mu = mass4l
+                self.branch_values["mass2e2mu"] = mass4l
             if self.worker.flag4mu:
-                mass4mu = mass4l
+                self.branch_values["mass4mu"] = mass4l
 
-            if (self.worker.isFSR==False & passedFullSelection):
-                pT4l = self.worker.ZZsystemnofsr.Pt()
-                eta4l = self.worker.ZZsystemnofsr.Eta()
-                phi4l = self.worker.ZZsystemnofsr.Phi()
-                mass4l = self.worker.ZZsystemnofsr.M()
-                rapidity4l = self.worker.ZZsystemnofsr.Rapidity()
+            if (self.worker.isFSR==False & self.branch_values["passedFullSelection"]):
+                self.branch_values["pT4l"] = self.worker.ZZsystemnofsr.Pt()
+                self.branch_values["eta4l"] = self.worker.ZZsystemnofsr.Eta()
+                self.branch_values["phi4l"] = self.worker.ZZsystemnofsr.Phi()
+                self.branch_values["mass4l"] = self.worker.ZZsystemnofsr.M()
+                self.branch_values["rapidity4l"] = self.worker.ZZsystemnofsr.Rapidity()
 
                 genWeight = 1 if event.genWeight > 0 else -1
-                Weight = genWeight * pileupWeight * dataMCWeight_new * prefiringWeight
+                self.branch_values["Weight"] = genWeight * pileupWeight * dataMCWeight_new * prefiringWeight
 
 
         if self.DEBUG:
-            print("(found candidates: 2l2q, 2l2nu, 4l): ({:1}, {:1}, {:1}), pTL1: {:7.3f}, pTL2: {:7.3f}, pTZ1: {:7.3f}, pTZ2: {:7.3f}, pTZ2_2j: {:7.3f}, pTZ2_met: {:7.3f}".format(foundZZCandidate_2l2q, foundZZCandidate_2l2nu, foundZZCandidate_4l, pTL1, pTL2, pTZ1, pTZ2, pTZ2_2j, pTZ2_met))
-            if (foundZZCandidate_2l2q):
-                print("==> pTL1: {}, \t pTL2: {}".format(pTL1, pTL2))
+            print("(found candidates: 2l2q, 2l2nu, 4l): ({:1}, {:1}, {:1}), pTL1: {:7.3f}, pTL2: {:7.3f}, pTZ1: {:7.3f}, pTZ2: {:7.3f}, pTZ2_2j: {:7.3f}, pTZ2_met: {:7.3f}".format(self.branch_values["foundZZCandidate_2l2q"], self.branch_values["foundZZCandidate_2l2nu"], self.branch_values["foundZZCandidate_4l"], self.branch_values["pTL1"], self.branch_values["pTL2"], self.branch_values["pTZ1"], self.branch_values["pTZ2"], self.branch_values["pTZ2_2j"], self.branch_values["pTZ2_met"]))
+            if (self.branch_values["foundZZCandidate_2l2q"]):
+                print("==> pTL1: {}, \t pTL2: {}".format(self.branch_values["pTL1"], self.branch_values["pTL2"]))
 
         # Filling the branches with values
         # Fill the branches with the Trigger information for each channel
-        for TriggerChannel in self.cfg['TriggerChannels']:
-            self.out.fillBranch(TriggerChannel, TriggerMap[TriggerChannel])
+        for branch, value in self.branch_values.items():
+            # Skip filling the branch if it contains "GEN" and the year is not 2022
+            # FIXME: Fix it for other years
+            if ("GEN" in branch or "lep_Hindex" in branch or "lep_genindex" in branch) and self.year != 2022:
+                if self.DEBUG: print(f"Skipping branch {branch} for year {self.year}")
+                continue
 
-        self.out.fillBranch("mass4l", mass4l)
-        self.out.fillBranch("GENmass4l", GENmass4l)
-        self.out.fillBranch("mass4e", mass4e)
-        self.out.fillBranch("mass2e2mu", mass2e2mu)
-        self.out.fillBranch("mass4mu", mass4mu)
-        self.out.fillBranch("pT4l", pT4l)
-        self.out.fillBranch("GENpT4l", GENpT4l)
-        self.out.fillBranch("rapidity4l", rapidity4l)
-        self.out.fillBranch("GENrapidity4l", GENrapidity4l)
-        self.out.fillBranch("njets_pt30_eta4p7", njets_pt30_eta4p7)
-        self.out.fillBranch("finalState", finalState)
-        self.out.fillBranch("GENnjets_pt30_eta4p7", GENnjets_pt30_eta4p7)
-        self.out.fillBranch("eta4l", eta4l)
-        self.out.fillBranch("phi4l", phi4l)
-        self.out.fillBranch("massZ1", massZ1)
-        self.out.fillBranch("pTZ1", pTZ1)
-        self.out.fillBranch("etaZ1", etaZ1)
-        self.out.fillBranch("phiZ1", phiZ1)
-        self.out.fillBranch("massZ2", massZ2)
-        self.out.fillBranch("pTZ2", pTZ2)
-        self.out.fillBranch("etaZ2", etaZ2)
-        self.out.fillBranch("phiZ2", phiZ2)
-        self.out.fillBranch("D_CP", D_CP)
-        self.out.fillBranch("D_0m", D_0m)
-        self.out.fillBranch("D_0hp", D_0hp)
-        self.out.fillBranch("D_int", D_int)
-        self.out.fillBranch("D_L1", D_L1)
-        self.out.fillBranch("D_L1Zg", D_L1Zg)
-        self.out.fillBranch("passedTrig", passedTrig)
-        self.out.fillBranch("passedFullSelection", passedFullSelection)
-        self.out.fillBranch("passedZ4lSelection", passedZ4lSelection)
-        self.out.fillBranch("passedZ4lZ1LSelection", passedZ4lZ1LSelection)
-        self.out.fillBranch("passedZ4lZXCRSelection", passedZ4lZXCRSelection)
-        self.out.fillBranch("passedZXCRSelection", passedZXCRSelection)
-        self.out.fillBranch("passedFiducialSelection", passedFiducialSelection)
-        self.out.fillBranch("EvtNum", EvtNum)
-        self.out.fillBranch("massL1", massL1)
-        self.out.fillBranch("pTL1", pTL1)
-        self.out.fillBranch("etaL1", etaL1)
-        self.out.fillBranch("phiL1", phiL1)
-        self.out.fillBranch("massL2", massL2)
-        self.out.fillBranch("pTL2", pTL2)
-        self.out.fillBranch("etaL2", etaL2)
-        self.out.fillBranch("phiL2", phiL2)
-        self.out.fillBranch("massL3", massL3)
-        self.out.fillBranch("pTL3", pTL3)
-        self.out.fillBranch("etaL3", etaL3)
-        self.out.fillBranch("phiL3", phiL3)
-        self.out.fillBranch("massL4", massL4)
-        self.out.fillBranch("pTL4", pTL4)
-        self.out.fillBranch("etaL4", etaL4)
-        self.out.fillBranch("phiL4", phiL4)
-        self.out.fillBranch("mj1", mj1)
-        self.out.fillBranch("pTj1", pTj1)
-        self.out.fillBranch("etaj1", etaj1)
-        self.out.fillBranch("phij1", phij1)
-        self.out.fillBranch("mj2", mj2)
-        self.out.fillBranch("pTj2", pTj2)
-        self.out.fillBranch("etaj2", etaj2)
-        self.out.fillBranch("phij2", phij2)
-        self.out.fillBranch("pileupWeight", pileupWeight)
-        self.out.fillBranch("dataMCWeight_new", dataMCWeight_new)
-        self.out.fillBranch("prefiringWeight", prefiringWeight)
-        self.out.fillBranch("Weight", Weight)
-        self.out.fillBranch("GENlep_id", GENlep_id)
-        self.out.fillBranch("GENlep_Hindex", GENlep_Hindex)
-        self.out.fillBranch("GENZ_DaughtersId", GENZ_DaughtersId)
-        self.out.fillBranch("GENZ_MomId", GENZ_MomId)
-        self.out.fillBranch("GENlep_MomId", GENlep_MomId)
-        self.out.fillBranch("GENlep_MomMomId", GENlep_MomMomId)
-        self.out.fillBranch("Electron_Fsr_pt", Electron_Fsr_pt)
-        self.out.fillBranch("Electron_Fsr_eta", Electron_Fsr_eta)
-        self.out.fillBranch("Electron_Fsr_phi", Electron_Fsr_phi)
-        self.out.fillBranch("lep_Hindex", lep_Hindex)
-        self.out.fillBranch("lep_genindex", lep_genindex)
-        self.out.fillBranch("Muon_Fsr_pt", Muon_Fsr_pt)
-        self.out.fillBranch("Muon_Fsr_eta", Muon_Fsr_eta)
-        self.out.fillBranch("Muon_Fsr_phi", Muon_Fsr_phi)
-        self.out.fillBranch("phiZ2_met", phiZ2_met)
-        self.out.fillBranch("pTZ2_met", pTZ2_met)
-        self.out.fillBranch("EneZ2_met", EneZ2_met)
-        self.out.fillBranch("MT_2l2nu", MT_2l2nu)
-        self.out.fillBranch("HZZ2l2nu_ZZmT", HZZ2l2nu_ZZmT)
-        self.out.fillBranch("HZZ2l2nu_ZZpT", HZZ2l2nu_ZZpT)
-        self.out.fillBranch("HZZ2l2nu_minDPhi_METAK4", HZZ2l2nu_minDPhi_METAK4)
-        self.out.fillBranch("HZZ2l2nu_VBFIndexJet1", HZZ2l2nu_VBFIndexJet1)
-        self.out.fillBranch("HZZ2l2nu_VBFIndexJet2", HZZ2l2nu_VBFIndexJet2)
-        self.out.fillBranch("HZZ2l2nu_VBFjet1_pT", HZZ2l2nu_VBFjet1_pT)
-        self.out.fillBranch("HZZ2l2nu_VBFjet1_eta", HZZ2l2nu_VBFjet1_eta)
-        self.out.fillBranch("HZZ2l2nu_VBFjet1_phi", HZZ2l2nu_VBFjet1_phi)
-        self.out.fillBranch("HZZ2l2nu_VBFjet1_mass", HZZ2l2nu_VBFjet1_mass)
-        self.out.fillBranch("HZZ2l2nu_VBFjet2_pT", HZZ2l2nu_VBFjet2_pT)
-        self.out.fillBranch("HZZ2l2nu_VBFjet2_eta", HZZ2l2nu_VBFjet2_eta)
-        self.out.fillBranch("HZZ2l2nu_VBFjet2_phi", HZZ2l2nu_VBFjet2_phi)
-        self.out.fillBranch("HZZ2l2nu_VBFjet2_mass", HZZ2l2nu_VBFjet2_mass)
-        self.out.fillBranch("HZZ2l2nu_VBFdijet_mass", HZZ2l2nu_VBFdijet_mass)
-        self.out.fillBranch("HZZ2l2nu_VBFdijet_pT", HZZ2l2nu_VBFdijet_pT)
-        self.out.fillBranch("HZZ2l2nu_VBFdijet_E", HZZ2l2nu_VBFdijet_E)
-        self.out.fillBranch("HZZ2l2nu_VBFdEta_jj", HZZ2l2nu_VBFdEta_jj)
-        self.out.fillBranch("HZZ2l2nu_VBFdPhi_jj", HZZ2l2nu_VBFdPhi_jj)
-        self.out.fillBranch("HZZ2l2nu_VBFdR_jj", HZZ2l2nu_VBFdR_jj)
+            if self.DEBUG: print(f"Filling branch {branch} with value {value}")
+            self.out.fillBranch(branch, value)
 
         return keepIt

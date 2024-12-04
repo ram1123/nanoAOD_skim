@@ -107,7 +107,7 @@ Higgscut:
 Electron:
     pTcut: 25  #7
     Etacut: 2.1 #2.5
-    Sip3dcut: 100  #4
+    Sip3dcut: 4
     Loosedxycut: 0.045 #0.5
     Loosedzcut: 0.2 #1
     ttH:
@@ -128,7 +128,7 @@ Muon:
     pTcut: 25 #5
 
     Etacut: 2.4
-    Sip3dcut: 100 #4
+    Sip3dcut: 4
     Loosedxycut: 0.045 #0.5
     Loosedzcut: 0.2 #1
     Tightdxycut: 0.045 #0.2
