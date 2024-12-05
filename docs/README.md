@@ -5,7 +5,7 @@ The script [inspectNanoFile.py](scripts/inspectNanoFile.py) is copied from offic
 To get the documentation, run the following command:
 
 ```bash
-python3 scripts/inspectNanoFile.py  skimmed_nano.root  --docmd
+python3 scripts/inspectNanoFile.py  skimmed_nano.root  --docmd test.md --doc test.html
 ```
 
 # Detailed setup instructions
