@@ -16,8 +16,7 @@ candidate_branches = {
     "foundZZCandidate_2l2nu": {"type": "O", "default": False, "title": "ZZ Candidate found in 2l2nu channel"},
     "foundZZCandidate_2l2nu_emuCR": {"type": "O", "default": False, "title": "ZZ Candidate found in 2l2nu emu control region"},
     "passZZ2l2nu_emuCR_Selection": {"type": "O", "default": False, "title": "Pass 2l2nu emu control region selection"},
-    "passedFiducialSelection": {"type": "O", "default": False, "title": "Passed fiducial selection"},
-    "passedFullSelection": {"type": "O", "default": False, "title": "Passed full selection"},
+    "passedFiducialSelection": {"type": "O", "default": False, "title": "Passed fiducial selection for GEN-level leptons"},
     "isBoosted2l2q": {"type": "O", "default": False, "title": "Boosted topology in 2l2q channel"},
     "HZZ2l2nu_ifVBF": {"type": "O", "default": False, "title": "VBF topology in 2l2nu channel"},
     "HZZ2l2nu_isEMuCR": {"type": "O", "default": False, "title": "EMU control region in 2l2nu channel"},
@@ -54,6 +53,9 @@ z1_branches = {
     "phiZ1": {"type": "F", "default": -99.0, "title": "Azimuthal angle (phi) of Z boson 1"},
 }
 
+# Kinematics of Z2: Only for 4l and 2l2q channels
+# For 2l2nu channel, Z2 kinematics are obtained from MET
+# For 2l2q channel, Z2 represents the kinamatics of the boosted Z topology only
 z2_branches = {
     "massZ2": {"type": "F", "default": -99.0, "title": "Mass of Z boson 2"},
     "pTZ2": {"type": "F", "default": -99.0, "title": "Transverse momentum (pT) of Z boson 2"},
@@ -166,6 +168,7 @@ general_branches = {
     "EvtNum": {"type": "I", "default": -1, "title": "Event number"},
     "Weight": {"type": "F", "default": 1.0, "title": "Event weight"},
     "pileupWeight": {"type": "F", "default": 1.0, "title": "Pileup reweighting factor"},
+    "dataMCWeight_new": {"type": "F", "default": 1.0, "title": "Data/MC reweighting factor"},
 }
 
 # Length variables

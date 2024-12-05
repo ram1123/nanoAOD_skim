@@ -50,22 +50,26 @@ class HZZAnalysisCppProducer(Module):
         total_cuts = 7 + len(self.dynamicCuts_4l) + len(self.dynamicCuts_2l2q) + len(self.dynamicCuts_2l2nu) + len(self.dynamicCuts_2l2nu_emu_CR)
         print("total_cuts: ", total_cuts)
         self.CutFlowTable =  ROOT.TH1F('cutFlow','cutFlow',total_cuts, 0, total_cuts)
-        self.CutFlowTable.GetXaxis().SetBinLabel(1, "Total")
-        self.CutFlowTable.GetXaxis().SetBinLabel(2, "PassTrig")
-        self.CutFlowTable.GetXaxis().SetBinLabel(3, "PassMETFilters")
-        self.CutFlowTable.GetXaxis().SetBinLabel(4, "PassZZSelection")
-        self.CutFlowTable.GetXaxis().SetBinLabel(5, "PassZZ2l2qSelection")
-        self.CutFlowTable.GetXaxis().SetBinLabel(6, "PassZZ2l2nuSelection")
-        self.CutFlowTable.GetXaxis().SetBinLabel(7, "PassZZ2l2nu_emuCR_Selection")
+        self.CutFlowTable.GetXaxis().SetBinLabel(1, "allEvents")
+        self.CutFlowTable.GetXaxis().SetBinLabel(2, "triggerPassed")
+        self.CutFlowTable.GetXaxis().SetBinLabel(3, "metFiltersPassed")
+        self.CutFlowTable.GetXaxis().SetBinLabel(4, "ZZ4lPassed")
+        self.CutFlowTable.GetXaxis().SetBinLabel(5, "ZZ2l2qPassed")
+        self.CutFlowTable.GetXaxis().SetBinLabel(6, "ZZ2l2nuPassed")
+        self.CutFlowTable.GetXaxis().SetBinLabel(7, "ZZ2l2nu_emuCR_Passed")
 
         for idx, cut in enumerate(self.dynamicCuts_4l):
-            self.CutFlowTable.GetXaxis().SetBinLabel(8 + idx, cut)
+            index = 8 + idx
+            self.CutFlowTable.GetXaxis().SetBinLabel(index, cut)
         for idx, cut in enumerate(self.dynamicCuts_2l2q):
-            self.CutFlowTable.GetXaxis().SetBinLabel(8 + len(self.dynamicCuts_4l) + idx, cut)
+            index = 8 + idx + len(self.dynamicCuts_4l)
+            self.CutFlowTable.GetXaxis().SetBinLabel(index, cut)
         for idx, cut in enumerate(self.dynamicCuts_2l2nu):
-            self.CutFlowTable.GetXaxis().SetBinLabel(8 + len(self.dynamicCuts_4l) + len(self.dynamicCuts_2l2q) + idx, cut)
+            index = 8 + idx + len(self.dynamicCuts_4l) + len(self.dynamicCuts_2l2q)
+            self.CutFlowTable.GetXaxis().SetBinLabel(index, cut)
         for idx, cut in enumerate(self.dynamicCuts_2l2nu_emu_CR):
-            self.CutFlowTable.GetXaxis().SetBinLabel(8 + len(self.dynamicCuts_4l) + len(self.dynamicCuts_2l2q) + len(self.dynamicCuts_2l2nu) + idx, cut)
+            index = 8 + idx + len(self.dynamicCuts_4l) + len(self.dynamicCuts_2l2q) + len(self.dynamicCuts_2l2nu)
+            self.CutFlowTable.GetXaxis().SetBinLabel(index, cut)
 
     def _get_pu_weights(self):
         """Retrieve pileup weights for the given year."""
@@ -184,30 +188,22 @@ class HZZAnalysisCppProducer(Module):
 
     def _initialize_counters(self):
         """Initialize counters for various event types."""
-        # self.counters = {
-        #     "allEvents": 0,
-        #     "triggerPassed": 0,
-        #     "metFiltersPassed": 0,
-        #     "ZZ4lPassed": 0,
-        #     "ZZ2l2qPassed": 0,
-        #     "ZZ2l2nuPassed": 0,
-        # }
-        self.passAllEvts = 0
-        self.passtrigEvts = 0
-        self.passMETFilters = 0
-        self.passZZEvts = 0
-        self.EvtNum = 0
-        self.passZZ4lEvts = 0
-        self.passZZ2l2qEvts = 0
-        self.passZZ2l2nuEvts = 0
-        self.passZZ2l2nu_emuCR_Evts = 0
+        self.counters = {
+            "allEvents": 0,
+            "triggerPassed": 0,
+            "metFiltersPassed": 0,
+            "ZZ4lPassed": 0,
+            "ZZ2l2qPassed": 0,
+            "ZZ2l2nuPassed": 0,
+            "ZZ2l2nu_emuCR_Passed": 0
+        }
 
     def beginJob(self):
         pass
 
     def endJob(self):
         # # print("Processed Events: ", self.counters)
-        # print("PassTrig: "+str(self.passtrigEvts)+" Events")
+        # print("PassTrig: "+str(self.counters["triggerPassed"])+" Events")
         # print("Pass4eCut: "+str(self.worker.cut4e)+" Events")
         # print("Pass4eGhostRemoval: "+str(self.worker.cutghost4e)+" Events")
         # print("Pass4eLepPtCut: "+str(self.worker.cutLepPt4e)+" Events")
@@ -226,7 +222,7 @@ class HZZAnalysisCppProducer(Module):
         # print("Pass2e2muQCDSupress: "+str(self.worker.cutQCD2e2mu)+" Events")
         # print("PassmZ1mZ2Cut_2e2mu: "+str(self.worker.cutZZ2e2mu)+" Events")
         # print("Passm4l_105_160_Cut_2e2mu: "+str(self.worker.cutm4l2e2mu)+" Events")
-        # # print("PassZZSelection: "+str(self.passZZEvts)+" Events")
+        # # print("PassZZSelection: "+str(self.counters["ZZ4lPassed"])+" Events")
         # if self.isMC and self.year == 2022:
         #     print("PassGEN4eCut: "+str(self.genworker.nGEN4e)+" Events")
         #     print("PassGEN4eZ1Cut: "+str(self.genworker.nGEN4epassZ1)+" Events")
@@ -257,59 +253,38 @@ class HZZAnalysisCppProducer(Module):
         if self.DEBUG: print("Branches are defined")
 
     def endFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
-         print("\n========== Print Cut flow table  ====================\n")
-         self.cutFlowCounts = {
-             "Total": self.passAllEvts,
-             "PassTrig": self.passtrigEvts,
-             "PassMETFilters": self.passMETFilters,
-             "PassZZSelection": self.passZZ4lEvts,
+        print("\n========== Print Cut flow table  ====================\n")
+        for cut, value in self.counters.items():
+            print("{:27}:{:7} {}".format(cut, str(value), " Events"))
 
+        print("\n4l channel cut flow table:")
+        for idx, cut in enumerate(self.dynamicCuts_4l):
+            index = 8 + idx
+            print("{:2} {:27}:{:7} {}".format(index, cut, str(getattr(self.worker, cut)), " Events"))
+            self.CutFlowTable.SetBinContent(index, getattr(self.worker, cut, 'N/A'))
 
-             "PassZZ2l2qSelection": self.passZZ2l2qEvts,
-             "PassZZ2l2nuSelection": self.passZZ2l2nuEvts,
-             "PassZZ2l2nu_emuCR_Selection": self.passZZ2l2nu_emuCR_Evts
-         }
+        print("\n2l2q channel cut flow table:")
+        for idx, cut in enumerate(self.dynamicCuts_2l2q):
+            index = 8 + idx + len(self.dynamicCuts_4l)
+            print("{:2} {:27}:{:7} {}".format(index, cut, str(getattr(self.worker, cut)), " Events"))
+            self.CutFlowTable.SetBinContent(index, getattr(self.worker, cut, 'N/A'))
 
-         # Cut flow data for 4l, 2l2q, 2l2nu channels for json output
-         cutFlowData = {
-             "General": self.cutFlowCounts,
-             "4l_Channel": {},
-             "2l2q_Channel": {},
-             "2l2nu_Channel": {},
-             "2l2nu_Channel_emu_CR": {}
-         }
+        print("\n2l2nu channel cut flow table:")
+        for idx, cut in enumerate(self.dynamicCuts_2l2nu):
+            index = 8 + idx + len(self.dynamicCuts_4l) + len(self.dynamicCuts_2l2q)
+            print("{:2} {:27}:{:7} {}".format(index, cut, str(getattr(self.worker, cut)), " Events"))
+            self.CutFlowTable.SetBinContent(index, getattr(self.worker, cut, 'N/A'))
 
-         for key, value in self.cutFlowCounts.items():
-             print("{:27}:{:7} {}".format(key, str(value), " Events"))
+        print("\n2l2nu channel emu control region cut flow table:")
+        for idx, cut in enumerate(self.dynamicCuts_2l2nu_emu_CR):
+            index = 8 + idx + len(self.dynamicCuts_4l) + len(self.dynamicCuts_2l2q) + len(self.dynamicCuts_2l2nu)
+            print("{:2} {:27}:{:7} {}".format(index, cut, str(getattr(self.worker, cut)), " Events"))
+            self.CutFlowTable.SetBinContent(index, getattr(self.worker, cut, 'N/A'))
 
-         print("\n4l channel cut flow table:")
-         for idx, cut in enumerate(self.dynamicCuts_4l):
-             print("{:2} {:27}:{:7} {}".format(8 + idx, cut, str(getattr(self.worker, cut)), " Events"))
-             cutFlowData["4l_Channel"][cut] = getattr(self.worker, cut, 'N/A')
-             self.CutFlowTable.SetBinContent(8 + idx, getattr(self.worker, cut, 'N/A'))
+        print("\n========== END: Print Cut flow table  ====================\n")
 
-         print("\n2l2q channel cut flow table:")
-         for idx, cut in enumerate(self.dynamicCuts_2l2q):
-             print("{:2} {:27}:{:7} {}".format(8 + len(self.dynamicCuts_4l) + idx, cut, str(getattr(self.worker, cut)), " Events"))
-             cutFlowData["2l2q_Channel"][cut] = getattr(self.worker, cut, 'N/A')
-             self.CutFlowTable.SetBinContent(8 + len(self.dynamicCuts_4l) + idx, getattr(self.worker, cut, 'N/A'))
-
-         print("\n2l2nu channel cut flow table:")
-         for idx, cut in enumerate(self.dynamicCuts_2l2nu):
-             print("{:2} {:27}:{:7} {}".format(8 + len(self.dynamicCuts_4l) + len(self.dynamicCuts_2l2q) + idx, cut, str(getattr(self.worker, cut)), " Events"))
-             cutFlowData["2l2nu_Channel"][cut] = getattr(self.worker, cut, 'N/A')
-             self.CutFlowTable.SetBinContent(8 + len(self.dynamicCuts_4l) + len(self.dynamicCuts_2l2q) + idx, getattr(self.worker, cut, 'N/A'))
-
-         print("\n2l2nu channel emu control region cut flow table:")
-         for idx, cut in enumerate(self.dynamicCuts_2l2nu_emu_CR):
-             print("{:2} {:27}:{:7} {}".format(8 + len(self.dynamicCuts_4l) + len(self.dynamicCuts_2l2q) + len(self.dynamicCuts_2l2nu) + idx, cut, str(getattr(self.worker, cut)), " Events"))
-             cutFlowData["2l2nu_Channel_emu_CR"][cut] = getattr(self.worker, cut, 'N/A')
-             self.CutFlowTable.SetBinContent(8 + len(self.dynamicCuts_4l) + len(self.dynamicCuts_2l2q) + len(self.dynamicCuts_2l2nu) + idx, getattr(self.worker, cut, 'N/A'))
-
-         print("\n========== END: Print Cut flow table  ====================\n")
-
-         outputFile.cd()
-         self.CutFlowTable.Write()
+        outputFile.cd()
+        self.CutFlowTable.Write()
 
     # this function gets the pointers to Value and ArrayReaders and sets
     # them in the C++ worker class
@@ -322,17 +297,16 @@ class HZZAnalysisCppProducer(Module):
     def analyze(self, event):
         """process event, return True (go to next module) or False (fail,
         go to next event)"""
-        if self.DEBUG: print("\n\n=====================================")
-        if self.DEBUG: print("Processing event: ", event.event)
-        self.passAllEvts += 1
-        if self.DEBUG: print("Event number: ", self.passAllEvts)
-        keepIt = False
-        self.worker.Initialize()
-        if self.isMC: self.worker.SetObjectNumGen(event.nGenPart)
-        self.worker.SetObjectNum(event.nElectron,event.nMuon,event.nJet,event.nFsrPhoton)
-
-
+        self.counters["allEvents"] += 1
         self.CutFlowTable.Fill(0)
+        if self.DEBUG: print("\n\n=====================================")
+        if self.DEBUG: print("Event number: ", self.counters["allEvents"])
+
+        keepIt = False
+
+        self.worker.Initialize()
+        # if self.isMC: self.worker.SetObjectNumGen(event.nGenPart)
+        self.worker.SetObjectNum(event.nElectron,event.nMuon,event.nJet,event.nFsrPhoton)
 
         self.branch_values = {branch: details["default"] for branch, details in self.branch_definitions.items()}
         if self.DEBUG: print("Branches are initialized")
@@ -353,14 +327,14 @@ class HZZAnalysisCppProducer(Module):
         if not passedTrig:
             return keepIt
 
-        self.passtrigEvts += 1
+        self.counters["triggerPassed"] += 1
         self.CutFlowTable.Fill(1)
 
         # Pass MET filters
         if not passFilters(event, self.year):
             return keepIt
 
-        self.passMETFilters += 1
+        self.counters["metFiltersPassed"] += 1
         self.CutFlowTable.Fill(2)
         if (self.DEBUG): print("MET filters passed")
 
@@ -377,12 +351,12 @@ class HZZAnalysisCppProducer(Module):
         met = Object(event, "MET", None)
         if self.DEBUG: print("Objects are collected")
 
+        # START: GEN level selection and information
         if self.isMC and self.year == 2022:
             self.genworker.Initialize();
             self.genworker.SetObjectNumGen(event.nGenPart, event.nGenJet)
 
             if self.DEBUG: print("Processing GEN particles")
-            nGenPart = event.nGenPart
             genparts = Collection(event, "GenPart")
             genjets = Collection(event, "GenJet")
             for xj in genjets:
@@ -423,30 +397,37 @@ class HZZAnalysisCppProducer(Module):
             if len(GENlep_id_vec)>0:
                 for i in range(len(GENlep_id_vec)):
                     self.branch_values["GENlep_id"].append(GENlep_id_vec[i])
+
             GENlep_Hindex_vec = self.genworker.GENlep_Hindex
             if (self.DEBUG): print("len(GENlep_Hindex_vec): ", len(GENlep_Hindex_vec))
             if len(GENlep_Hindex_vec)>0:
                 for i in range(len(GENlep_Hindex_vec)):
                     self.branch_values["GENlep_Hindex"].append(GENlep_Hindex_vec[i])
+
             GENZ_DaughtersId_vec = self.genworker.GENZ_DaughtersId
             if len(GENZ_DaughtersId_vec)>0:
                 for i in range(len(GENZ_DaughtersId_vec)):
                     self.branch_values["GENZ_DaughtersId"].append(GENZ_DaughtersId_vec[i])
-            nVECZ = self.genworker.nVECZ
+
+            # nVECZ = self.genworker.nVECZ
+
             GENZ_MomId_vec = self.genworker.GENZ_MomId
             if len(GENZ_MomId_vec)>0:
                 for i in range(len(GENZ_MomId_vec)):
                     self.branch_values["GENZ_MomId"].append(GENZ_MomId_vec[i])
+
             GENlep_MomId_vec = self.genworker.GENlep_MomId
             if len(GENlep_MomId_vec)>0:
                 for i in range(len(GENlep_MomId_vec)):
                     self.branch_values["GENlep_MomId"].append(GENlep_MomId_vec[i])
+
             GENlep_MomMomId_vec = self.genworker.GENlep_MomMomId
             if self.DEBUG: print("CHECK SIZE: len(GENlep_MomMomId_vec): ", len(GENlep_MomMomId_vec))
             if len(GENlep_MomMomId_vec)>0:
                 for i in range(len(GENlep_MomMomId_vec)):
                     self.branch_values["GENlep_MomMomId"].append(GENlep_MomMomId_vec[i])
             if self.DEBUG: print("GEN variables are set")
+        # END: GEN level selection and information
 
         for xe in electrons:
             if str(self.year) == "2022":
@@ -525,53 +506,21 @@ class HZZAnalysisCppProducer(Module):
                 if self.DEBUG: print("isBoosted2l2q: ", self.branch_values["isBoosted2l2q"])
             if self.channels == "2l2v" or self.channels == "all":
                 self.branch_values["foundZZCandidate_2l2nu"] = self.worker.ZZSelection_2l2nu()  #commented out for now
-        if (self.channels == "all"  or self.channels == "4l"):
-            self.branch_values["foundZZCandidate_4l"] = self.worker.ZZSelection_4l()
-            self.branch_values["passedFullSelection"]= self.branch_values["foundZZCandidate_4l"]
-            if  self.branch_values["foundZZCandidate_4l"]:
-                self.passZZEvts += 1
-            if (self.branch_values["foundZZCandidate_4l"] |self.branch_values["passedFiducialSelection"] ):
-                self.EvtNum += 1
-                keepIt = True
-            Lepointer = self.worker.Lepointer
-            lep_Hindex_vec = self.worker.lep_Hindex
-            if (self.DEBUG): print("len(lep_Hindex_vec): ", len(lep_Hindex_vec))
-            if len(lep_Hindex_vec)>0:
-                for i in range(len(lep_Hindex_vec)):
-                    self.branch_values["lep_Hindex"].append(lep_Hindex_vec[i])
-            if self.worker.RecoFourMuEvent: self.branch_values["finalState"] = 1
-            if self.worker.RecoFourEEvent: self.branch_values["finalState"] = 2
-            if self.worker.RecoTwoETwoMuEvent: self.branch_values["finalState"] = 3
-            if self.worker.RecoTwoMuTwoEEvent: self.branch_values["finalState"] = 4
 
         if self.worker.GetZ1_emuCR() and (self.channels == "all"  or self.channels == "2l2v"):
             self.branch_values["foundZZCandidate_2l2nu_emuCR"] = self.worker.ZZSelection_2l2nu()
 
+        if (self.channels == "all"  or self.channels == "4l"):
+            self.branch_values["foundZZCandidate_4l"] = self.worker.ZZSelection_4l()
+
         if self.DEBUG:
             print("Found ZZ candidate (4l, 2l2q, 2l2nu): ({}, {}, {})".format(self.branch_values["foundZZCandidate_4l"], self.branch_values["foundZZCandidate_2l2q"], self.branch_values["foundZZCandidate_2l2nu"]))
 
-        self.branch_values["njets_pt30_eta4p7"] = self.worker.njets_pt30_eta4p7
-        self.branch_values["HZZ2l2q_boostedJet_PNScore"] = self.worker.boostedJet_PNScore
-        self.branch_values["HZZ2l2q_boostedJet_Index"] = self.worker.boostedJet_Index
-        self.branch_values["HZZ2l2q_resolvedJet1_Index"] = self.worker.resolvedJet1_Index
-        self.branch_values["HZZ2l2q_resolvedJet2_Index"] = self.worker.resolvedJet2_Index
-        self.branch_values["HZZ2l2nu_VBFIndexJet1"] = self.worker.HZZ2l2nu_VBFIndexJet1
-        self.branch_values["HZZ2l2nu_VBFIndexJet2"] = self.worker.HZZ2l2nu_VBFIndexJet2
-        self.branch_values["HZZ2l2nu_minDPhi_METAK4"] = self.worker.minDeltaPhi
-
-        # For 2l2nu channel
-        self.branch_values["HZZ2l2nu_ifVBF"] = self.worker.HZZ2l2nu_ifVBF
-        self.branch_values["HZZ2l2qNu_isELE"] = self.worker.HZZ2l2qNu_isELE
-        self.branch_values["HZZ2l2nu_isEMuCR"] = self.worker.HZZ2l2nu_isEMuCR
-        self.branch_values["HZZ2l2qNu_cutOppositeChargeFlag"] = self.worker.HZZ2l2qNu_cutOppositeChargeFlag
-        self.branch_values["HZZ2l2qNu_nJets"] = self.worker.HZZ2l2qNu_nJets
-        self.branch_values["HZZ2l2qNu_nTightBtagJets"] = self.worker.HZZ2l2qNu_nTightBtagJets
-        self.branch_values["HZZ2l2qNu_nMediumBtagJets"] = self.worker.HZZ2l2qNu_nMediumBtagJets
-        self.branch_values["HZZ2l2qNu_nLooseBtagJets"] = self.worker.HZZ2l2qNu_nLooseBtagJets
 
         # if (self.branch_definitions["found"]
         if (self.branch_values["foundZZCandidate_4l"] or self.branch_values["foundZZCandidate_2l2q"] or self.branch_values["foundZZCandidate_2l2nu"] or self.branch_values["foundZZCandidate_2l2nu_emuCR"]):
             if self.DEBUG: print("Found ZZ candidate (4l, 2l2q, 2l2nu): ({}, {}, {})".format(self.branch_values["foundZZCandidate_4l"], self.branch_values["foundZZCandidate_2l2q"], self.branch_values["foundZZCandidate_2l2nu"]))
+            self.branch_values["njets_pt30_eta4p7"] = self.worker.njets_pt30_eta4p7
             self.branch_values["pTL1"] = self.worker.pTL1
             self.branch_values["etaL1"] = self.worker.etaL1
             self.branch_values["phiL1"] = self.worker.phiL1
@@ -595,7 +544,7 @@ class HZZAnalysisCppProducer(Module):
 
             # Kinematics of Z2: Only for 4l and 2l2q channels
             # For 2l2nu channel, Z2 kinematics are obtained from MET
-            # For 2l2q channel, Z2 represents the kinamatics of the boosted Z topology
+            # For 2l2q channel, Z2 represents the kinamatics of the boosted Z topology only
             self.branch_values["pTZ2"] = self.worker.Z2.Pt()
             self.branch_values["etaZ2"] = self.worker.Z2.Eta()
             self.branch_values["phiZ2"] = self.worker.Z2.Phi()
@@ -603,9 +552,20 @@ class HZZAnalysisCppProducer(Module):
 
         if (self.branch_values["foundZZCandidate_2l2q"]):
             keepIt = True
-            self.branch_values["foundZZCandidate_2l2q"] = True
-            self.passZZ2l2qEvts += 1
+            self.counters["ZZ2l2qPassed"] += 1
             self.CutFlowTable.Fill(4)
+
+            self.branch_values["HZZ2l2qNu_isELE"] = self.worker.HZZ2l2qNu_isELE
+            self.branch_values["HZZ2l2qNu_cutOppositeChargeFlag"] = self.worker.HZZ2l2qNu_cutOppositeChargeFlag
+            self.branch_values["HZZ2l2qNu_nJets"] = self.worker.HZZ2l2qNu_nJets
+            self.branch_values["HZZ2l2qNu_nTightBtagJets"] = self.worker.HZZ2l2qNu_nTightBtagJets
+            self.branch_values["HZZ2l2qNu_nMediumBtagJets"] = self.worker.HZZ2l2qNu_nMediumBtagJets
+            self.branch_values["HZZ2l2qNu_nLooseBtagJets"] = self.worker.HZZ2l2qNu_nLooseBtagJets
+
+            self.branch_values["HZZ2l2q_boostedJet_PNScore"] = self.worker.boostedJet_PNScore
+            self.branch_values["HZZ2l2q_boostedJet_Index"] = self.worker.boostedJet_Index
+            self.branch_values["HZZ2l2q_resolvedJet1_Index"] = self.worker.resolvedJet1_Index
+            self.branch_values["HZZ2l2q_resolvedJet2_Index"] = self.worker.resolvedJet2_Index
 
             self.branch_values["massZ2_2j"] = self.worker.Z2_2j.M()
             self.branch_values["phiZ2_2j"] = self.worker.Z2_2j.Phi()
@@ -615,19 +575,33 @@ class HZZAnalysisCppProducer(Module):
 
         if (self.branch_values["foundZZCandidate_2l2nu"]):
             keepIt = True
-            self.passZZ2l2nuEvts += 1
+            self.counters["ZZ2l2nuPassed"] += 1
             self.CutFlowTable.Fill(5)
 
-            #     FatJet_PNZvsQCD = self.worker.FatJet_PNZvsQCD
-            #     self.out.fillBranch("FatJet_PNZvsQCD",FatJet_PNZvsQCD)
 
         if (self.branch_values["foundZZCandidate_2l2nu_emuCR"]):
             keepIt = True
-            passZZ2l2nu_emuCR_Selection = True
-            self.passZZ2l2nu_emuCR_Evts += 1
+            self.counters["ZZ2l2nu_emuCR_Passed"] += 1
             self.CutFlowTable.Fill(6)
 
         if (self.branch_values["foundZZCandidate_2l2nu"] or self.branch_values["foundZZCandidate_2l2nu_emuCR"]):
+            keepIt = True
+            self.counters["ZZ2l2nu_emuCR_Passed"] += 1
+
+            self.branch_values["HZZ2l2qNu_isELE"] = self.worker.HZZ2l2qNu_isELE
+            self.branch_values["HZZ2l2qNu_cutOppositeChargeFlag"] = self.worker.HZZ2l2qNu_cutOppositeChargeFlag
+            self.branch_values["HZZ2l2qNu_nJets"] = self.worker.HZZ2l2qNu_nJets
+            self.branch_values["HZZ2l2qNu_nTightBtagJets"] = self.worker.HZZ2l2qNu_nTightBtagJets
+            self.branch_values["HZZ2l2qNu_nMediumBtagJets"] = self.worker.HZZ2l2qNu_nMediumBtagJets
+            self.branch_values["HZZ2l2qNu_nLooseBtagJets"] = self.worker.HZZ2l2qNu_nLooseBtagJets
+
+            self.branch_values["HZZ2l2nu_ifVBF"] = self.worker.HZZ2l2nu_ifVBF
+            self.branch_values["HZZ2l2nu_isEMuCR"] = self.worker.HZZ2l2nu_isEMuCR
+
+            self.branch_values["HZZ2l2nu_VBFIndexJet1"] = self.worker.HZZ2l2nu_VBFIndexJet1
+            self.branch_values["HZZ2l2nu_VBFIndexJet2"] = self.worker.HZZ2l2nu_VBFIndexJet2
+            self.branch_values["HZZ2l2nu_minDPhi_METAK4"] = self.worker.minDeltaPhi
+
             self.branch_values["phiZ2_met"] = self.worker.Z2_met.Phi()
             self.branch_values["pTZ2_met"] = self.worker.Z2_met.Pt()
             self.branch_values["EneZ2_met"] = self.worker.Z2_met.E()
@@ -638,7 +612,6 @@ class HZZAnalysisCppProducer(Module):
 
             self.branch_values["HZZ2l2nu_ZZmT"] = self.worker.ZZ_metsystem.Mt()
             self.branch_values["HZZ2l2nu_ZZpT"] = self.worker.ZZ_metsystem.Pt()
-
             #Pz_neutrino = self.worker.Pz_neutrino
 
             # Define TLorentzVector for VBF jets and get dijet mass
@@ -667,12 +640,24 @@ class HZZAnalysisCppProducer(Module):
                 self.branch_values["HZZ2l2nu_VBFdPhi_jj"] = abs(VBF_jet1.DeltaPhi(VBF_jet2))
                 self.branch_values["HZZ2l2nu_VBFdR_jj"] = VBF_jet1.DeltaR(VBF_jet2)
 
-        if (self.branch_values["foundZZCandidate_4l"]):
+        if (self.branch_values["foundZZCandidate_4l"] or self.branch_values["passedFiducialSelection"] ):
             keepIt = True
-            self.passZZ4lEvts += 1
+            self.counters["ZZ4lPassed"] += 1
             self.CutFlowTable.Fill(3)
-            self.branch_values["foundZZCandidate_4l"] = True
             if self.DEBUG: print("Inside 4l loop: ",self.branch_values["foundZZCandidate_4l"])
+
+            # Lepointer = self.worker.Lepointer # FIXME: Do we need this? @Yuji
+            lep_Hindex_vec = self.worker.lep_Hindex
+            if (self.DEBUG): print("len(lep_Hindex_vec): ", len(lep_Hindex_vec))
+            if len(lep_Hindex_vec)>0:
+                for i in range(len(lep_Hindex_vec)):
+                    self.branch_values["lep_Hindex"].append(lep_Hindex_vec[i])
+
+            if self.worker.RecoFourMuEvent: self.branch_values["finalState"] = 1
+            if self.worker.RecoFourEEvent: self.branch_values["finalState"] = 2
+            if self.worker.RecoTwoETwoMuEvent: self.branch_values["finalState"] = 3
+            if self.worker.RecoTwoMuTwoEEvent: self.branch_values["finalState"] = 4
+
             self.branch_values["D_CP"] = self.worker.D_CP
             self.branch_values["D_0m"] = self.worker.D_0m
             self.branch_values["D_0hp"] = self.worker.D_0hp
@@ -708,7 +693,6 @@ class HZZAnalysisCppProducer(Module):
             self.branch_values["phi4l"] = self.worker.ZZsystem.Phi()
             self.branch_values["mass4l"] = self.worker.ZZsystem.M()
             self.branch_values["rapidity4l"] = self.worker.ZZsystem.Rapidity()
-            self.branch_values["njets_pt30_eta4p7"] = self.worker.njets_pt30_eta4p7
             if self.worker.flag4e:
                 self.branch_values["mass4e"] = self.branch_values["mass4l"]
             if self.worker.flag2e2mu:
@@ -716,15 +700,18 @@ class HZZAnalysisCppProducer(Module):
             if self.worker.flag4mu:
                 self.branch_values["mass4mu"] = self.branch_values["mass4l"]
 
-            if (self.worker.isFSR==False & self.branch_values["passedFullSelection"]):
+            if (self.worker.isFSR==False & self.branch_values["foundZZCandidate_4l"]):
                 self.branch_values["pT4l"] = self.worker.ZZsystemnofsr.Pt()
                 self.branch_values["eta4l"] = self.worker.ZZsystemnofsr.Eta()
                 self.branch_values["phi4l"] = self.worker.ZZsystemnofsr.Phi()
                 self.branch_values["mass4l"] = self.worker.ZZsystemnofsr.M()
                 self.branch_values["rapidity4l"] = self.worker.ZZsystemnofsr.Rapidity()
 
-                genWeight = 1 if event.genWeight > 0 else -1
-                self.branch_values["Weight"] = genWeight * pileupWeight * dataMCWeight_new * prefiringWeight
+        if self.isMC:
+            genWeight = 1 if event.genWeight > 0 else -1
+        else:
+            genWeight = 1
+        self.branch_values["Weight"] = genWeight * pileupWeight * self.branch_values["dataMCWeight_new"] * event.L1PreFiringWeight_Nom
 
 
         if self.DEBUG:

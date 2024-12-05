@@ -197,11 +197,6 @@ public:
         FsrPhoton_muonIdx.push_back(FsrPhoton_muonIdx_);
     }
 
-    void SetGenParts(float GenPart_pt_)
-    {
-        GenPart_pt.push_back(GenPart_pt_);
-    }
-
     void SetObjectNum(unsigned nElectron_, unsigned nMuon_, unsigned nJet_, unsigned nFsrPhoton_)
     {
         nElectron = nElectron_;
@@ -209,10 +204,7 @@ public:
         nJet = nJet_;
         nFsrPhoton = nFsrPhoton_;
     }
-    void SetObjectNumGen(unsigned nGenPart_)
-    {
-        nGenPart = nGenPart_;
-    }
+
     bool isMC;
     std::vector<unsigned int> goodLooseElectrons2012();
     std::vector<unsigned int> goodLooseMuons2012();
@@ -399,10 +391,11 @@ public:
         nTightMu = 0;
         nTightMuChgSum = 0;
         njets_pt30_eta4p7 = 0;
-        RecoFourMuEvent=false;
-        RecoFourEEvent=false;
-        RecoTwoETwoMuEvent=false;
-        RecoTwoMuTwoEEvent=false;
+        Lepointer = 0;
+        RecoFourMuEvent = false;
+        RecoFourEEvent = false;
+        RecoTwoETwoMuEvent = false;
+        RecoTwoMuTwoEEvent = false;
 
         // Jet related variables
         nJet = 0;
@@ -440,10 +433,6 @@ public:
         FsrPhoton_relIso03.clear();
         FsrPhoton_electronIdx.clear();
         FsrPhoton_muonIdx.clear();
-
-        // Generator  related variables
-        nGenPart = 0;
-        GenPart_pt.clear();
 
         // Reconstructed variables
         Zlist.clear();
@@ -653,7 +642,7 @@ private:
 
     std::vector<float> GenPart_pt;
 
-    unsigned nElectron, nMuon, nJet, nGenPart, nFsrPhoton;
+    unsigned nElectron, nMuon, nJet, nFsrPhoton;
 };
 
 H4LTools::H4LTools(int year_, bool isMC_, bool DEBUG_Main)
