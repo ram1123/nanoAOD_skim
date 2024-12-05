@@ -642,23 +642,23 @@ class HZZAnalysisCppProducer(Module):
             #Pz_neutrino = self.worker.Pz_neutrino
 
             # Define TLorentzVector for VBF jets and get dijet mass
-            if HZZ2l2nu_VBFIndexJet1>=0 and HZZ2l2nu_VBFIndexJet2>=0:
+            if self.branch_values["HZZ2l2nu_VBFIndexJet1"]>=0 and self.branch_values["HZZ2l2nu_VBFIndexJet2"]>=0:
                 VBF_jet1 = ROOT.TLorentzVector()
                 VBF_jet2 = ROOT.TLorentzVector()
-                VBF_jet1.SetPtEtaPhiM(jets[HZZ2l2nu_VBFIndexJet1].pt, jets[HZZ2l2nu_VBFIndexJet1].eta, jets[HZZ2l2nu_VBFIndexJet1].phi, jets[HZZ2l2nu_VBFIndexJet1].mass)
-                VBF_jet2.SetPtEtaPhiM(jets[HZZ2l2nu_VBFIndexJet2].pt, jets[HZZ2l2nu_VBFIndexJet2].eta, jets[HZZ2l2nu_VBFIndexJet2].phi, jets[HZZ2l2nu_VBFIndexJet2].mass)
+                VBF_jet1.SetPtEtaPhiM(jets[self.branch_values["HZZ2l2nu_VBFIndexJet1"]].pt, jets[self.branch_values["HZZ2l2nu_VBFIndexJet1"]].eta, jets[self.branch_values["HZZ2l2nu_VBFIndexJet1"]].phi, jets[self.branch_values["HZZ2l2nu_VBFIndexJet1"]].mass)
+                VBF_jet2.SetPtEtaPhiM(jets[self.branch_values["HZZ2l2nu_VBFIndexJet2"]].pt, jets[self.branch_values["HZZ2l2nu_VBFIndexJet2"]].eta, jets[self.branch_values["HZZ2l2nu_VBFIndexJet2"]].phi, jets[self.branch_values["HZZ2l2nu_VBFIndexJet2"]].mass)
                 VBF_dijet = VBF_jet1 + VBF_jet2
                 if self.DEBUG: print("in .py file: VBF_dijet_mass: ", VBF_dijet.M())
 
-                self.branch_values["HZZ2l2nu_VBFjet1_pT"] = jets[HZZ2l2nu_VBFIndexJet1].pt
-                self.branch_values["HZZ2l2nu_VBFjet1_eta"] = jets[HZZ2l2nu_VBFIndexJet1].eta
-                self.branch_values["HZZ2l2nu_VBFjet1_phi"] = jets[HZZ2l2nu_VBFIndexJet1].phi
-                self.branch_values["HZZ2l2nu_VBFjet1_mass"] = jets[HZZ2l2nu_VBFIndexJet1].mass
+                self.branch_values["HZZ2l2nu_VBFjet1_pT"] = jets[self.branch_values["HZZ2l2nu_VBFIndexJet1"]].pt
+                self.branch_values["HZZ2l2nu_VBFjet1_eta"] = jets[self.branch_values["HZZ2l2nu_VBFIndexJet1"]].eta
+                self.branch_values["HZZ2l2nu_VBFjet1_phi"] = jets[self.branch_values["HZZ2l2nu_VBFIndexJet1"]].phi
+                self.branch_values["HZZ2l2nu_VBFjet1_mass"] = jets[self.branch_values["HZZ2l2nu_VBFIndexJet1"]].mass
 
-                self.branch_values["HZZ2l2nu_VBFjet2_pT"] = jets[HZZ2l2nu_VBFIndexJet2].pt
-                self.branch_values["HZZ2l2nu_VBFjet2_eta"] = jets[HZZ2l2nu_VBFIndexJet2].eta
-                self.branch_values["HZZ2l2nu_VBFjet2_phi"] = jets[HZZ2l2nu_VBFIndexJet2].phi
-                self.branch_values["HZZ2l2nu_VBFjet2_mass"] = jets[HZZ2l2nu_VBFIndexJet2].mass
+                self.branch_values["HZZ2l2nu_VBFjet2_pT"] = jets[self.branch_values["HZZ2l2nu_VBFIndexJet2"]].pt
+                self.branch_values["HZZ2l2nu_VBFjet2_eta"] = jets[self.branch_values["HZZ2l2nu_VBFIndexJet2"]].eta
+                self.branch_values["HZZ2l2nu_VBFjet2_phi"] = jets[self.branch_values["HZZ2l2nu_VBFIndexJet2"]].phi
+                self.branch_values["HZZ2l2nu_VBFjet2_mass"] = jets[self.branch_values["HZZ2l2nu_VBFIndexJet2"]].mass
 
                 self.branch_values["HZZ2l2nu_VBFdijet_mass"] = VBF_dijet.M()
                 self.branch_values["HZZ2l2nu_VBFdijet_pT"] = VBF_dijet.Pt()

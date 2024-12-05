@@ -20,8 +20,6 @@ candidate_branches = {
     "passedFullSelection": {"type": "O", "default": False, "title": "Passed full selection"},
     "isBoosted2l2q": {"type": "O", "default": False, "title": "Boosted topology in 2l2q channel"},
     "HZZ2l2nu_ifVBF": {"type": "O", "default": False, "title": "VBF topology in 2l2nu channel"},
-    "HZZ2l2qNu_isELE": {"type": "O", "default": False, "title": "Electron topology in 2l2q channel"},
-    "HZZ2l2qNu_cutOppositeChargeFlag": {"type": "O", "default": False, "title": "Opposite charge cut passed for 2l2qNu"},
     "HZZ2l2nu_isEMuCR": {"type": "O", "default": False, "title": "EMU control region in 2l2nu channel"},
 }
 
@@ -90,6 +88,16 @@ channel_branches = {
     "HZZ2l2nu_ZZpT": {"type": "F", "default": -99.0, "title": "Transverse momentum (pT) of ZZ system in 2l2nu channel"},
 }
 
+TwoL2Q2NuBranches = {
+    "HZZ2l2qNu_isELE": {"type": "O", "default": False, "title": "Electron topology in 2l2q channel"},
+    "HZZ2l2qNu_cutOppositeChargeFlag": {"type": "O", "default": False, "title": "Opposite charge cut passed for 2l2qNu"},
+    "HZZ2l2qNu_nJets": {"type": "I", "default": -1, "title": "Number of jets in 2l2qNu channel"},
+    "HZZ2l2qNu_nTightBtagJets": {"type": "I", "default": -1, "title": "Number of tight b-tagged jets in 2l2qNu channel"},
+    "HZZ2l2qNu_nMediumBtagJets": {"type": "I", "default": -1, "title": "Number of medium b-tagged jets in 2l2qNu channel"},
+    "HZZ2l2qNu_nLooseBtagJets": {"type": "I", "default": -1, "title": "Number of loose b-tagged jets in 2l2qNu channel"},
+
+}
+
 # 2l2nu VBF branches
 vbf_2l2nu_branches = {
     "HZZ2l2nu_minDPhi_METAK4": {"type": "F", "default": -99.0, "title": "Minimum Delta Phi between MET and AK4 jets in 2l2nu channel"},
@@ -126,6 +134,14 @@ fsr_branches = {
     "Muon_Fsr_pt": {"type": "F", "default": -99.0, "lenVar": "nMuon_Fsr", "title": "Fsr pt of muon"},
     "Muon_Fsr_eta": {"type": "F", "default": -99.0, "lenVar": "nMuon_Fsr", "title": "Fsr eta of muon"},
     "Muon_Fsr_phi": {"type": "F", "default": -99.0, "lenVar": "nMuon_Fsr", "title": "Fsr phi of muon"},
+}
+
+# Brancehs for 2l2q channel where Z2 is reconstructed from 1 Fat jet
+boostedJetBranches_2l2q = {
+    "HZZ2l2q_boostedJet_PNScore": {"type": "F", "default": -99.0, "title": "PNScore of boosted jet in 2l2q channel"},
+    "HZZ2l2q_boostedJet_Index": {"type": "I", "default": -1, "title": "Index of boosted jet in 2l2q channel"},
+    "HZZ2l2q_resolvedJet1_Index": {"type": "I", "default": -1, "title": "Index of 1st resolved jet in 2l2q channel"},
+    "HZZ2l2q_resolvedJet2_Index": {"type": "I", "default": -1, "title": "Index of 2nd resolved jet in 2l2q channel"},
 }
 
 # Branches for 2l2q channel where Z2 is reconstructed from 2 jets
@@ -186,6 +202,10 @@ branch_definitions.update(TwoLeptonTwoResolvedJetBranches)
 branch_definitions.update(TwoLeptonAndMetBranches)
 branch_definitions.update(gen_level_branches)
 branch_definitions.update(general_branches)
+# branch_definitions.update(length_variables)
+branch_definitions.update(TwoL2Q2NuBranches)
+branch_definitions.update(boostedJetBranches_2l2q)
+
 
 if __name__ == "__main__":
     print(branch_definitions)
