@@ -539,10 +539,10 @@ class HZZAnalysisCppProducer(Module):
             if len(lep_Hindex_vec)>0:
                 for i in range(len(lep_Hindex_vec)):
                     self.branch_values["lep_Hindex"].append(lep_Hindex_vec[i])
-            if self.worker.RecoFourMuEvent: finalState = 1
-            if self.worker.RecoFourEEvent: finalState = 2
-            if self.worker.RecoTwoETwoMuEvent: finalState = 3
-            if self.worker.RecoTwoMuTwoEEvent: finalState = 4
+            if self.worker.RecoFourMuEvent: self.branch_values["finalState"] = 1
+            if self.worker.RecoFourEEvent: self.branch_values["finalState"] = 2
+            if self.worker.RecoTwoETwoMuEvent: self.branch_values["finalState"] = 3
+            if self.worker.RecoTwoMuTwoEEvent: self.branch_values["finalState"] = 4
 
         if self.worker.GetZ1_emuCR() and (self.channels == "all"  or self.channels == "2l2v"):
             self.branch_values["foundZZCandidate_2l2nu_emuCR"] = self.worker.ZZSelection_2l2nu()
@@ -550,24 +550,24 @@ class HZZAnalysisCppProducer(Module):
         if self.DEBUG:
             print("Found ZZ candidate (4l, 2l2q, 2l2nu): ({}, {}, {})".format(self.branch_values["foundZZCandidate_4l"], self.branch_values["foundZZCandidate_2l2q"], self.branch_values["foundZZCandidate_2l2nu"]))
 
-        njets_pt30_eta4p7 = self.worker.njets_pt30_eta4p7
-        HZZ2l2q_boostedJet_PNScore = self.worker.boostedJet_PNScore
-        HZZ2l2q_boostedJet_Index = self.worker.boostedJet_Index
-        HZZ2l2q_resolvedJet1_Index = self.worker.resolvedJet1_Index
-        HZZ2l2q_resolvedJet2_Index = self.worker.resolvedJet2_Index
-        HZZ2l2nu_VBFIndexJet1 = self.worker.HZZ2l2nu_VBFIndexJet1
-        HZZ2l2nu_VBFIndexJet2 = self.worker.HZZ2l2nu_VBFIndexJet2
-        HZZ2l2nu_minDPhi_METAK4 = self.worker.minDeltaPhi
+        self.branch_values["njets_pt30_eta4p7"] = self.worker.njets_pt30_eta4p7
+        self.branch_values["HZZ2l2q_boostedJet_PNScore"] = self.worker.boostedJet_PNScore
+        self.branch_values["HZZ2l2q_boostedJet_Index"] = self.worker.boostedJet_Index
+        self.branch_values["HZZ2l2q_resolvedJet1_Index"] = self.worker.resolvedJet1_Index
+        self.branch_values["HZZ2l2q_resolvedJet2_Index"] = self.worker.resolvedJet2_Index
+        self.branch_values["HZZ2l2nu_VBFIndexJet1"] = self.worker.HZZ2l2nu_VBFIndexJet1
+        self.branch_values["HZZ2l2nu_VBFIndexJet2"] = self.worker.HZZ2l2nu_VBFIndexJet2
+        self.branch_values["HZZ2l2nu_minDPhi_METAK4"] = self.worker.minDeltaPhi
 
         # For 2l2nu channel
-        HZZ2l2nu_ifVBF = self.worker.HZZ2l2nu_ifVBF
-        HZZ2l2qNu_isELE = self.worker.HZZ2l2qNu_isELE
-        HZZ2l2nu_isEMuCR = self.worker.HZZ2l2nu_isEMuCR
-        HZZ2l2qNu_cutOppositeChargeFlag = self.worker.HZZ2l2qNu_cutOppositeChargeFlag
-        HZZ2l2qNu_nJets = self.worker.HZZ2l2qNu_nJets
-        HZZ2l2qNu_nTightBtagJets = self.worker.HZZ2l2qNu_nTightBtagJets
-        HZZ2l2qNu_nMediumBtagJets = self.worker.HZZ2l2qNu_nMediumBtagJets
-        HZZ2l2qNu_nLooseBtagJets = self.worker.HZZ2l2qNu_nLooseBtagJets
+        self.branch_values["HZZ2l2nu_ifVBF"] = self.worker.HZZ2l2nu_ifVBF
+        self.branch_values["HZZ2l2qNu_isELE"] = self.worker.HZZ2l2qNu_isELE
+        self.branch_values["HZZ2l2nu_isEMuCR"] = self.worker.HZZ2l2nu_isEMuCR
+        self.branch_values["HZZ2l2qNu_cutOppositeChargeFlag"] = self.worker.HZZ2l2qNu_cutOppositeChargeFlag
+        self.branch_values["HZZ2l2qNu_nJets"] = self.worker.HZZ2l2qNu_nJets
+        self.branch_values["HZZ2l2qNu_nTightBtagJets"] = self.worker.HZZ2l2qNu_nTightBtagJets
+        self.branch_values["HZZ2l2qNu_nMediumBtagJets"] = self.worker.HZZ2l2qNu_nMediumBtagJets
+        self.branch_values["HZZ2l2qNu_nLooseBtagJets"] = self.worker.HZZ2l2qNu_nLooseBtagJets
 
         # if (self.branch_definitions["found"]
         if (self.branch_values["foundZZCandidate_4l"] or self.branch_values["foundZZCandidate_2l2q"] or self.branch_values["foundZZCandidate_2l2nu"] or self.branch_values["foundZZCandidate_2l2nu_emuCR"]):

@@ -79,7 +79,7 @@ zz_branches = {
     "eta4l": {"type": "F", "default": -99.0, "title": "Pseudo-rapidity (eta) of ZZ system"},
     "phi4l": {"type": "F", "default": -99.0, "title": "Azimuthal angle (phi) of ZZ system"},
     "njets_pt30_eta4p7": {"type": "I", "default": -1, "title": "Number of jets with pT > 30 GeV and |eta| < 4.7"},
-    "finalState": {"type": "I", "default": -1, "title": "Final state  identifier for ZZ->4l decay"},
+    "finalState": {"type": "I", "default": -1, "title": "Final state  identifier for ZZ->4l decay: 1=4mu, 2=4e, 3=2e2mu, 4=2mu2e"},
 }
 
 # Channel-specific branches
