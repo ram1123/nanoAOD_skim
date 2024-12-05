@@ -173,3 +173,4 @@ cutFlow.json
 yaml-cpp/
 nanoAOD_skim.wiki/
 *.bak
+.__afs*

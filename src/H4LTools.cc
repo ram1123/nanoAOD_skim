@@ -521,10 +521,10 @@ void H4LTools::LeptonSelection(){
         }
         TLorentzVector Ele;
         if (DEBUG)
-            std::cout << "Inside LeptonSelection:: Electron_pt[" << Electronindex[ie] << "] = " << Electron_pt[Electronindex[ie]] << std::endl;
+            std::cout << "L#524: Inside LeptonSelection:: Electron_pt[" << Electronindex[ie] << "] = " << Electron_pt[Electronindex[ie]] << std::endl;
         Ele.SetPtEtaPhiM(Electron_pt[Electronindex[ie]],Electron_eta[Electronindex[ie]],Electron_phi[Electronindex[ie]],Electron_mass[Electronindex[ie]]);
         Elelist.push_back(Ele);
-        if (year != 2022)
+        if (year == 2022)
         {
             ElelistFsr.push_back(Electrondressed_Run3[Electronindex[ie]]);
         }
@@ -542,28 +542,28 @@ void H4LTools::LeptonSelection(){
         TLorentzVector Mu(0.,0.,0.,0.);
         if (DEBUG)
         {
-            std::cout << "Inside LeptonSelection:: Muon_pt[" << Muonindex[imu] << "] = " << Muon_pt[Muonindex[imu]] << std::endl;
-            std::cout << "Inside LeptonSelection:: Muon_eta[" << Muonindex[imu] << "] = " << Muon_eta[Muonindex[imu]] << std::endl;
-            std::cout << "Inside LeptonSelection:: Muon_phi[" << Muonindex[imu] << "] = " << Muon_phi[Muonindex[imu]] << std::endl;
-            std::cout << "Inside LeptonSelection:: Muon_mass[" << Muonindex[imu] << "] = " << Muon_mass[Muonindex[imu]] << std::endl;
+            std::cout << "L#545: Inside LeptonSelection:: Muon_pt[" << Muonindex[imu] << "] = " << Muon_pt[Muonindex[imu]] << std::endl;
+            std::cout << "L#546: Inside LeptonSelection:: Muon_eta[" << Muonindex[imu] << "] = " << Muon_eta[Muonindex[imu]] << std::endl;
+            std::cout << "L#547: Inside LeptonSelection:: Muon_phi[" << Muonindex[imu] << "] = " << Muon_phi[Muonindex[imu]] << std::endl;
+            std::cout << "L#548: Inside LeptonSelection:: Muon_mass[" << Muonindex[imu] << "] = " << Muon_mass[Muonindex[imu]] << std::endl;
         }
         Mu.SetPtEtaPhiM(Muon_pt[Muonindex[imu]],Muon_eta[Muonindex[imu]],Muon_phi[Muonindex[imu]],Muon_mass[Muonindex[imu]]);
 
-        if (DEBUG) std::cout << "Inside LeptonSelection:: Mulist size = " << Mulist.size() << std::endl;
+        if (DEBUG) std::cout << "L#552: Inside LeptonSelection:: Mulist size = " << Mulist.size() << std::endl;
 
         Mulist.push_back(Mu);
 
         if (DEBUG)
         {
-            std::cout << "Inside LeptonSelection:: Mulist size = " << Mulist.size() << std::endl;
-            std::cout << "Inside LeptonSelection:: Muondressed_Run3 size = " << Muondressed_Run3.size() << std::endl;
-            std::cout << "Inside LeptonSelection:: Muonindex[" << imu << "] = " << Muonindex[imu] << std::endl;
-            std::cout << "Muondressed_Run3[" << Muonindex[imu] << "].Pt() = " << Muondressed_Run3[Muonindex[imu]].Pt() << std::endl;
-            std::cout << "Muondressed_Run3[" << Muonindex[imu] << "].Pt() = " << Muondressed_Run3[Muonindex[imu]].Pt() << std::endl;
-            std::cout << "Muon_pfRelIso03_all[" << Muonindex[imu] << "] = " << Muon_pfRelIso03_all[Muonindex[imu]] << std::endl;
-            std::cout << "Muon_pfRelIso03_all[" << Muonindex[imu] << "] = " << Muon_pfRelIso03_all[Muonindex[imu]] << std::endl;
+            std::cout << "L#558: Inside LeptonSelection:: Mulist size = " << Mulist.size() << std::endl;
+            std::cout << "L#559: Inside LeptonSelection:: Muondressed_Run3 size = " << Muondressed_Run3.size() << std::endl;
+            std::cout << "L#560: Inside LeptonSelection:: Muonindex[" << imu << "] = " << Muonindex[imu] << std::endl;
+            std::cout << "L#561: Muondressed_Run3[" << Muonindex[imu] << "].Pt() = " << Muondressed_Run3[Muonindex[imu]].Pt() << std::endl;
+            std::cout << "L#561: Muondressed_Run3[" << Muonindex[imu] << "].Pt() = " << Muondressed_Run3[Muonindex[imu]].Pt() << std::endl;
+            std::cout << "L#563: Muon_pfRelIso03_all[" << Muonindex[imu] << "] = " << Muon_pfRelIso03_all[Muonindex[imu]] << std::endl;
+            std::cout << "L#564: Muon_pfRelIso03_all[" << Muonindex[imu] << "] = " << Muon_pfRelIso03_all[Muonindex[imu]] << std::endl;
         }
-        if (year != 2022)
+        if (year == 2022)
         {
             MulistFsr.push_back(Muondressed_Run3[Muonindex[imu]]);
         }
@@ -577,8 +577,11 @@ void H4LTools::LeptonSelection(){
         std::cout << "Muonindex.size() = " << Muonindex.size() << std::endl;
     }
 
-    ElelistFsr = BatchFsrRecovery(Elelist);
-    MulistFsr = BatchFsrRecovery(Mulist);
+    if (year != 2022)
+    {
+        ElelistFsr = BatchFsrRecovery(Elelist);
+        MulistFsr = BatchFsrRecovery(Mulist);
+    }
 
     if (DEBUG)
     {

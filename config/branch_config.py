@@ -36,6 +36,18 @@ lepton_branches = {
     f"phiL{i}": {"type": "F", "default": -99.0, "title": f"Azimuthal angle (phi) of lepton {i}"} for i in range(1, 5)
 }
 
+# jets branches
+jet_branches = {
+    "pTj1": {"type": "F", "default": -99.0, "title": "Transverse momentum (pT) of leading jet"},
+    "etaj1": {"type": "F", "default": -99.0, "title": "Pseudo-rapidity (eta) of leading jet"},
+    "phij1": {"type": "F", "default": -99.0, "title": "Azimuthal angle (phi) of leading jet"},
+    "massj1": {"type": "F", "default": -99.0, "title": "Mass of leading jet"},
+    "pTj2": {"type": "F", "default": -99.0, "title": "Transverse momentum (pT) of subleading jet"},
+    "etaj2": {"type": "F", "default": -99.0, "title": "Pseudo-rapidity (eta) of subleading jet"},
+    "phij2": {"type": "F", "default": -99.0, "title": "Azimuthal angle (phi) of subleading jet"},
+    "massj2": {"type": "F", "default": -99.0, "title": "Mass of subleading jet"}
+}
+
 # Z1 and Z2-related branches
 z1_branches = {
     "massZ1": {"type": "F", "default": -99.0, "title": "Mass of Z boson 1"},
@@ -60,7 +72,13 @@ zz_branches = {
     "mass2e2mu": {"type": "F", "default": -99.0, "title": "Mass of 2 electrons and 2 muons"},
     "pT4l": {"type": "F", "default": -99.0, "title": "Transverse momentum (pT) of ZZ system"},
     "GENpT4l": {"type": "F", "default": -99.0, "title": "Generated transverse momentum (pT) of ZZ system"},
+    "GENrapidity4l": {"type": "F", "default": -99.0, "title": "Generated rapidity of ZZ system"},
+    "GENnjets_pt30_eta4p7": {"type": "I", "default": -1, "title": "Number of jets with pT > 30 GeV and |eta| < 4.7"},
+    "nGENLeptons": {"type": "I", "default": -1, "title": "Number of GEN leptons"},
     "rapidity4l": {"type": "F", "default": -99.0, "title": "Rapidity of ZZ system"},
+    "eta4l": {"type": "F", "default": -99.0, "title": "Pseudo-rapidity (eta) of ZZ system"},
+    "phi4l": {"type": "F", "default": -99.0, "title": "Azimuthal angle (phi) of ZZ system"},
+    "njets_pt30_eta4p7": {"type": "I", "default": -1, "title": "Number of jets with pT > 30 GeV and |eta| < 4.7"},
     "finalState": {"type": "I", "default": -1, "title": "Final state  identifier for ZZ->4l decay"},
 }
 
@@ -156,6 +174,7 @@ branch_definitions = {}
 branch_definitions.update(trigger_branches)
 branch_definitions.update(candidate_branches)
 branch_definitions.update(lepton_branches)
+branch_definitions.update(jet_branches)
 branch_definitions.update(z1_branches)
 branch_definitions.update(z2_branches)
 branch_definitions.update(zz_branches)

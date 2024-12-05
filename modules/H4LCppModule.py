@@ -195,6 +195,8 @@ class HZZAnalysisCppProducer(Module):
         self.passAllEvts = 0
         self.passtrigEvts = 0
         self.passMETFilters = 0
+        self.passZZEvts = 0
+        self.EvtNum = 0
         self.passZZ4lEvts = 0
         self.passZZ2l2qEvts = 0
         self.passZZ2l2nuEvts = 0
@@ -242,7 +244,7 @@ class HZZAnalysisCppProducer(Module):
         self.out = wrappedOutputTree
 
         for branch_name, details in self.branch_definitions.items():
-            if ("GEN" in branch_name or "lep_Hindex" in branch_name or "lep_genindex" in branch_name) and self.year != 2022:
+            if ("GEN" in branch_name or "lep_genindex" in branch_name) and self.year != 2022:
                 # FIXME: need to fix this for other years
                 continue
             # if "GEN" in branch_name and self.year == 2022: continue
@@ -251,6 +253,8 @@ class HZZAnalysisCppProducer(Module):
                 self.out.branch(branch_name, details["type"], lenVar=f'{details["lenVar"]}', title=details.get("title", ""))
             else:
                 self.out.branch(branch_name, details["type"], title=details.get("title", ""))
+
+        if self.DEBUG: print("Branches are defined")
 
     def endFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
          print("\n========== Print Cut flow table  ====================\n")
@@ -318,12 +322,23 @@ class HZZAnalysisCppProducer(Module):
     def analyze(self, event):
         """process event, return True (go to next module) or False (fail,
         go to next event)"""
+        if self.DEBUG: print("\n\n=====================================")
+        if self.DEBUG: print("Processing event: ", event.event)
+        self.passAllEvts += 1
+        if self.DEBUG: print("Event number: ", self.passAllEvts)
         keepIt = False
         self.worker.Initialize()
-        self.passAllEvts += 1
+        self.worker.SetObjectNumGen(event.nGenPart)
+        self.worker.SetObjectNum(event.nElectron,event.nMuon,event.nJet,event.nFsrPhoton)
+
+
         self.CutFlowTable.Fill(0)
 
         self.branch_values = {branch: details["default"] for branch, details in self.branch_definitions.items()}
+        if self.DEBUG: print("Branches are initialized")
+        if self.DEBUG: print(f"branch values: {self.branch_values}")
+        if self.DEBUG: print(f'lep_genindex: {self.branch_values["lep_genindex"]}')
+        if self.DEBUG: print(f'GENlep_MomMomId: {self.branch_values["GENlep_MomMomId"]}')
 
         TriggerMap = {}
         passedTrig = False
@@ -347,6 +362,7 @@ class HZZAnalysisCppProducer(Module):
 
         self.passMETFilters += 1
         self.CutFlowTable.Fill(2)
+        if (self.DEBUG): print("MET filters passed")
 
         # Pileup weight
         pileupWeight = self.PUweight_list[event.Pileup_nPU] if self.year == 2022 and self.isMC else 1.0
@@ -359,8 +375,13 @@ class HZZAnalysisCppProducer(Module):
         jets = Collection(event, "Jet")
         FatJets = Collection(event, "FatJet")
         met = Object(event, "MET", None)
+        if self.DEBUG: print("Objects are collected")
 
         if self.isMC and self.year == 2022:
+            self.genworker.Initialize();
+            self.genworker.SetObjectNumGen(event.nGenPart, event.nGenJet)
+
+            if self.DEBUG: print("Processing GEN particles")
             nGenPart = event.nGenPart
             genparts = Collection(event, "GenPart")
             genjets = Collection(event, "GenJet")
@@ -381,25 +402,29 @@ class HZZAnalysisCppProducer(Module):
                 for i in range(len(lep_genindex_vec)):
                     self.branch_values["lep_genindex"].append(lep_genindex_vec[i])
 
+            if self.DEBUG: print("Setting GEN variables")
+            self.genworker.SetGenVariables()
             self.branch_values["GENlep_id"] = []
             self.branch_values["GENlep_Hindex"] = []
             self.branch_values["GENZ_DaughtersId"] = []
             self.branch_values["GENZ_MomId"] = []
             self.branch_values["GENlep_MomId"] = []
             self.branch_values["GENlep_MomMomId"] = []
-            self.genworker.SetGenVariables()
             self.branch_values["GENmass4l"] = self.genworker.GENmass4l
             self.branch_values["GENpT4l"] = self.genworker.GENpT4l
             self.branch_values["GENrapidity4l"] = self.genworker.GENrapidity4l
             self.branch_values["GENnjets_pt30_eta4p7"] = self.genworker.GENnjets_pt30_eta4p7
             self.branch_values["nGENLeptons"] = self.genworker.nGENLeptons
             self.branch_values["passedFiducialSelection"] = self.genworker.passedFiducialSelection
+            if self.DEBUG:print("len(self.branch_values[GENlep_MomMomId]): ", len(self.branch_values["GENlep_MomMomId"]))
 
+            if self.DEBUG: print("len(GENlep_id_vec): ", len(self.genworker.GENlep_id))
             GENlep_id_vec = self.genworker.GENlep_id
             if len(GENlep_id_vec)>0:
                 for i in range(len(GENlep_id_vec)):
                     self.branch_values["GENlep_id"].append(GENlep_id_vec[i])
             GENlep_Hindex_vec = self.genworker.GENlep_Hindex
+            if (self.DEBUG): print("len(GENlep_Hindex_vec): ", len(GENlep_Hindex_vec))
             if len(GENlep_Hindex_vec)>0:
                 for i in range(len(GENlep_Hindex_vec)):
                     self.branch_values["GENlep_Hindex"].append(GENlep_Hindex_vec[i])
@@ -417,10 +442,11 @@ class HZZAnalysisCppProducer(Module):
                 for i in range(len(GENlep_MomId_vec)):
                     self.branch_values["GENlep_MomId"].append(GENlep_MomId_vec[i])
             GENlep_MomMomId_vec = self.genworker.GENlep_MomMomId
+            if self.DEBUG: print("CHECK SIZE: len(GENlep_MomMomId_vec): ", len(GENlep_MomMomId_vec))
             if len(GENlep_MomMomId_vec)>0:
                 for i in range(len(GENlep_MomMomId_vec)):
                     self.branch_values["GENlep_MomMomId"].append(GENlep_MomMomId_vec[i])
-
+            if self.DEBUG: print("GEN variables are set")
 
         for xe in electrons:
             if str(self.year) == "2022":
@@ -459,7 +485,8 @@ class HZZAnalysisCppProducer(Module):
             self.worker.SetFatJets(xj.pt, xj.eta, xj.phi, xj.msoftdrop, xj.jetId, xj.btagDeepB, ZvsQCD)
 
         self.worker.SetMET(met.pt,met.phi,met.sumEt)
-        self.worker.BatchFsrRecovery_Run3()
+        # if self.year == 2022:
+        self.worker.BatchFsrRecovery_Run3() # It should run for all years, as some of variables are used in the worker. So, if we comment it for other years it will give error
 
         self.worker.LeptonSelection()
         if self.DEBUG:
@@ -478,6 +505,7 @@ class HZZAnalysisCppProducer(Module):
         self.branch_values["Muon_Fsr_pt"] = []
         self.branch_values["Muon_Fsr_eta"] = []
         self.branch_values["Muon_Fsr_phi"] = []
+        self.branch_values["lep_Hindex"] = []
 
         if len(Electron_Fsr_pt_vec)>0:
             for i in range(len(Electron_Fsr_pt_vec)):
@@ -503,11 +531,11 @@ class HZZAnalysisCppProducer(Module):
             if  self.branch_values["foundZZCandidate_4l"]:
                 self.passZZEvts += 1
             if (self.branch_values["foundZZCandidate_4l"] |self.branch_values["passedFiducialSelection"] ):
-                EvtNum += 1
+                self.EvtNum += 1
                 keepIt = True
             Lepointer = self.worker.Lepointer
-            self.branch_values["lep_Hindex"] = []
             lep_Hindex_vec = self.worker.lep_Hindex
+            if (self.DEBUG): print("len(lep_Hindex_vec): ", len(lep_Hindex_vec))
             if len(lep_Hindex_vec)>0:
                 for i in range(len(lep_Hindex_vec)):
                     self.branch_values["lep_Hindex"].append(lep_Hindex_vec[i])
@@ -515,9 +543,6 @@ class HZZAnalysisCppProducer(Module):
             if self.worker.RecoFourEEvent: finalState = 2
             if self.worker.RecoTwoETwoMuEvent: finalState = 3
             if self.worker.RecoTwoMuTwoEEvent: finalState = 4
-            if self.worker.flag4e: mass4e = mass4l
-            if self.worker.flag2e2mu: mass2e2mu = mass4l
-            if self.worker.flag4mu: mass4mu = mass4l
 
         if self.worker.GetZ1_emuCR() and (self.channels == "all"  or self.channels == "2l2v"):
             self.branch_values["foundZZCandidate_2l2nu_emuCR"] = self.worker.ZZSelection_2l2nu()
@@ -647,7 +672,7 @@ class HZZAnalysisCppProducer(Module):
             self.passZZ4lEvts += 1
             self.CutFlowTable.Fill(3)
             self.branch_values["foundZZCandidate_4l"] = True
-            print("Inside 4l loop: ",self.branch_values["foundZZCandidate_4l"])
+            if self.DEBUG: print("Inside 4l loop: ",self.branch_values["foundZZCandidate_4l"])
             self.branch_values["D_CP"] = self.worker.D_CP
             self.branch_values["D_0m"] = self.worker.D_0m
             self.branch_values["D_0hp"] = self.worker.D_0hp
@@ -666,11 +691,11 @@ class HZZAnalysisCppProducer(Module):
             self.branch_values["pTj1"] = self.worker.pTj1
             self.branch_values["etaj1"] = self.worker.etaj1
             self.branch_values["phij1"] = self.worker.phij1
-            self.branch_values["mj1"] = self.worker.mj1
+            self.branch_values["massj1"] = self.worker.mj1
             self.branch_values["pTj2"] = self.worker.pTj2
             self.branch_values["etaj2"] = self.worker.etaj2
             self.branch_values["phij2"] = self.worker.phij2
-            self.branch_values["mj2"] = self.worker.mj2
+            self.branch_values["massj2"] = self.worker.mj2
 
             if self.branch_values["pTL4"] > self.branch_values["pTL3"]:
                 self.branch_values["pTL3"], self.branch_values["pTL4"] = self.branch_values["pTL4"], self.branch_values["pTL3"]
@@ -685,11 +710,11 @@ class HZZAnalysisCppProducer(Module):
             self.branch_values["rapidity4l"] = self.worker.ZZsystem.Rapidity()
             self.branch_values["njets_pt30_eta4p7"] = self.worker.njets_pt30_eta4p7
             if self.worker.flag4e:
-                self.branch_values["mass4e"] = mass4l
+                self.branch_values["mass4e"] = self.branch_values["mass4l"]
             if self.worker.flag2e2mu:
-                self.branch_values["mass2e2mu"] = mass4l
+                self.branch_values["mass2e2mu"] = self.branch_values["mass4l"]
             if self.worker.flag4mu:
-                self.branch_values["mass4mu"] = mass4l
+                self.branch_values["mass4mu"] = self.branch_values["mass4l"]
 
             if (self.worker.isFSR==False & self.branch_values["passedFullSelection"]):
                 self.branch_values["pT4l"] = self.worker.ZZsystemnofsr.Pt()
@@ -712,11 +737,14 @@ class HZZAnalysisCppProducer(Module):
         for branch, value in self.branch_values.items():
             # Skip filling the branch if it contains "GEN" and the year is not 2022
             # FIXME: Fix it for other years
-            if ("GEN" in branch or "lep_Hindex" in branch or "lep_genindex" in branch) and self.year != 2022:
+            if ("GEN" in branch or "lep_genindex" in branch) and self.year != 2022:
                 if self.DEBUG: print(f"Skipping branch {branch} for year {self.year}")
                 continue
 
-            if self.DEBUG: print(f"Filling branch {branch} with value {value}")
+            # if self.DEBUG:
+                # print(f"Filling branch {branch} with value {value}")
+            if self.DEBUG and "GENlep_MomMomId" in branch:
+                print("len(self.branch_values[GENlep_MomMomId]): ", len(self.branch_values["GENlep_MomMomId"]))
             self.out.fillBranch(branch, value)
 
         return keepIt
