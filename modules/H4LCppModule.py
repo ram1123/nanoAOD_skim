@@ -328,7 +328,7 @@ class HZZAnalysisCppProducer(Module):
         if self.DEBUG: print("Event number: ", self.passAllEvts)
         keepIt = False
         self.worker.Initialize()
-        self.worker.SetObjectNumGen(event.nGenPart)
+        if self.isMC: self.worker.SetObjectNumGen(event.nGenPart)
         self.worker.SetObjectNum(event.nElectron,event.nMuon,event.nJet,event.nFsrPhoton)
 
 
