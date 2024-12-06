@@ -57,10 +57,10 @@ z1_branches = {
 # For 2l2nu channel, Z2 kinematics are obtained from MET
 # For 2l2q channel, Z2 represents the kinamatics of the boosted Z topology only
 z2_branches = {
-    "massZ2": {"type": "F", "default": -99.0, "title": "Mass of Z boson 2"},
-    "pTZ2": {"type": "F", "default": -99.0, "title": "Transverse momentum (pT) of Z boson 2"},
-    "etaZ2": {"type": "F", "default": -99.0, "title": "Pseudo-rapidity (eta) of Z boson 2"},
-    "phiZ2": {"type": "F", "default": -99.0, "title": "Azimuthal angle (phi) of Z boson 2"},
+    "massZ2": {"type": "F", "default": -99.0, "title": "Mass of Z boson 2: For Channel 4l Z2 represents 2 leptons, For channel 2l2q Z2 represents 2 AK4 jets; For channel 2l2nu Z2 is not reconstructed, instead we just use MET"},
+    "pTZ2": {"type": "F", "default": -99.0, "title": "Transverse momentum (pT) of Z boson 2: For Channel 4l Z2 represents 2 leptons, For channel 2l2q Z2 represents 2 AK4 jets; For channel 2l2nu Z2 is not reconstructed, instead we just use MET"},
+    "etaZ2": {"type": "F", "default": -99.0, "title": "Pseudo-rapidity (eta) of Z boson 2: For Channel 4l Z2 represents 2 leptons, For channel 2l2q Z2 represents 2 AK4 jets; For channel 2l2nu Z2 is not reconstructed, instead we just use MET"},
+    "phiZ2": {"type": "F", "default": -99.0, "title": "Azimuthal angle (phi) of Z boson 2: For Channel 4l Z2 represents 2 leptons, For channel 2l2q Z2 represents 2 AK4 jets; For channel 2l2nu Z2 is not reconstructed, instead we just use MET"},
 }
 
 # ZZ-related branches
