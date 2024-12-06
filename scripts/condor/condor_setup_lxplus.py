@@ -7,7 +7,7 @@ import os
 import sys
 import datetime
 
-sys.path.append("Utils/.")
+sys.path.append("scripts/utils/.")
 
 from color_style import style
 
@@ -83,7 +83,7 @@ queue infile, outfile, eospath, outfilename, logtxt from {condor_file_name}.txt
 """)
     outjdl_file.close()
 
-    with open('input_data_Files/'+InputFileFromWhereReadDASNames) as in_file:
+    with open(InputFileFromWhereReadDASNames) as in_file:
         count = 0
         count_jobs = 0
         output_string_list = []
@@ -201,8 +201,8 @@ cat post_proc.py
 echo "..."
 echo "========================================="
 output_file=${{4}}_hadd.root
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CMSSW_BASE/src/PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim/JHUGenMELA/MELA/data/el9_amd64_gcc12
-{command} --entriesToRun {entries} --inputFile ${{1}} --outputFile ${{output_file}} --cutFlowFile ${{4}}.json --DownloadFileToLocalThenRun True {syst_flag}
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CMSSW_BASE/src/PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim/external/JHUGenMELA/MELA/data/el9_amd64_gcc12
+{command} --entriesToRun {entries} --inputFile ${{1}} --outputFile ${{output_file}}  --DownloadFileToLocalThenRun True {syst_flag} --channel "{args.channels}"
 echo "====> List root files : "
 ls -ltrh *.root
 ls -ltrh *.json
@@ -264,6 +264,7 @@ if __name__ == "__main__":
     parser.add_argument("--transfer_input_files", default="keep_and_drop.txt", help="Files to be transferred as input.")
     parser.add_argument("--WithSyst", default=False, action='store_true', help="Run without systematics.")
     parser.add_argument("--debug", default=False, action='store_true', help="Debug mode.")
+    parser.add_argument("--channels",  choices=["all", "4l", "2l2q", "2l2v"],  default="all", help="Channels to run: all, 4l, 2l2q, or 2l2v")
 
     args = parser.parse_args()
     main(args)
