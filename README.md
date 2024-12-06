@@ -26,7 +26,8 @@ In the file [condor_setup_lxplus.py](scripts/condor/condor_setup_lxplus.py), spe
    ```bash
    cd $CMSSW_BASE/src/PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim
    # Use the arguments that you need.
-   python3 scripts/condor/condor_setup_lxplus.py --input_file sample_list_v9_2018.dat
+   python3 scripts/condor/condor_setup_lxplus.py --input_file input_data_files/sample_list_v9_2018.dat --submission_name test --condor_queue tomorrow --WithSyst --condor_file_name 'test_job' --channel "2l2v" --debug
+
    # Set proxy before submitting the condor jobs.
    voms-proxy-init -voms cms --valid 200:00
    condor_submit <Files-created-from-above-command>.jdl
