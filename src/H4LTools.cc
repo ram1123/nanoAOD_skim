@@ -1472,7 +1472,7 @@ bool H4LTools::ZZSelection_2l2q()
         if (jetidx.size() >= 2)
         {
             foundZZCandidate = true;
-            if (Z2.M() < 40.0 || Z2.M() > 180)
+            if (Z2.M() < 40.0 || Z2.M() > 250)
             {
                 cut2l2j++;
             }
@@ -1637,6 +1637,128 @@ bool H4LTools::ZZSelection_2l2nu()
         TLorentzVector VBF_jj = VBF_jet1 + VBF_jet2;
         if (DEBUG)
             std::cout << "Outside: VBF_jj_mjj: " << VBF_jj.M() << "\tHZZ2l2nu_VBFIndexJet1: " << HZZ2l2nu_VBFIndexJet1 << "\tHZZ2l2nu_VBFIndexJet2: " << HZZ2l2nu_VBFIndexJet2 << std::endl;
+    }
+
+    return foundZZCandidate;
+}
+
+bool H4LTools::GetWW_lnuqq()
+{
+    if (DEBUG)
+        std::cout << "Inside function GetWW_lnuqq()" << std::endl;
+    bool foundZ1Candidate = false;
+    bool foundZZCandidate = false;
+
+        if (!(nTightMu == 1 || nTightEle == 1))
+    {
+        return foundZ1Candidate;
+    }
+    if (DEBUG)
+        std::cout << "Number of leptons: (Mu, Ele, Total): " << nTightMu << ", " << nTightEle << ", " << nTightMu + nTightEle << std::endl;
+    // Set HZZ2l2qNu_isELE to true if there are 2 tight electrons, false if there are 2 tight muons
+    HZZ2l2qNu_isELE = true ? (nTightEle == 1) : false;
+    HWWlNu2q_cut1l++;
+
+    if (DEBUG)
+        std::cout << "nTightEleChgSum: " << nTightEleChgSum << "\tnTightMuChgSum: " << nTightMuChgSum << std::endl;
+
+    jetidx = SelectedJets(tighteleforjetidx, tightmuforjetidx);
+    FatJetidx = SelectedFatJets(tighteleforjetidx, tightmuforjetidx);
+
+    if (FatJetidx.size() > 0 || jetidx.size() >= 2)
+    {
+        if (FatJetidx.size() > 0)
+        {
+            for (unsigned int i = 0; i < FatJetidx.size(); i++)
+            {
+                if (FatJet_PNZvsQCD[FatJetidx[i]] < 0.9)
+                    continue;
+                if (FatJet_pt[FatJetidx[i]] < 200.0)
+                    continue;
+                // if (FatJet_msoftdrop[FatJetidx[i]] < 40.0) continue;
+                // if (FatJet_msoftdrop[FatJetidx[i]] > 180.0) continue;
+
+                foundZZCandidate = true;
+                isBoosted2l2q = true;
+                cut2l1J++;
+                cut2l1Jor2j++;
+
+                boostedJet_PNScore = FatJet_PNZvsQCD[FatJetidx[i]];
+                boostedJet_Index = FatJetidx[i];
+
+                Z2.SetPtEtaPhiM(FatJet_pt[FatJetidx[i]], FatJet_eta[FatJetidx[i]], FatJet_phi[FatJetidx[i]], FatJet_SDmass[FatJetidx[i]]);
+            }
+        }
+
+        // if (jetidx.size() >= 2 && isBoosted2l2q == false) // FIXME: Only for testing purposes; comment this line and uncomment the next line for real analysis
+        if (jetidx.size() >= 2)
+        {
+            foundZZCandidate = true;
+            if (Z2.M() < 40.0 || Z2.M() > 250)
+            {
+                cut2l2j++;
+            }
+            cut2l1Jor2j++;
+
+            TLorentzVector Z2_1;
+            TLorentzVector Z2_2;
+            Z2_1.SetPtEtaPhiM(Jet_pt[0], Jet_eta[0], Jet_phi[0], Jet_mass[0]);
+            Z2_2.SetPtEtaPhiM(Jet_pt[1], Jet_eta[1], Jet_phi[1], Jet_mass[1]);
+            Z2_2j = Z2_1 + Z2_2;
+
+            // Select the two jets with mass closest to Z-boson mass
+            float mass_diff = 999.0;
+            for (unsigned int i = 0; i < jetidx.size(); i++)
+            {
+                for (unsigned int j = i + 1; j < jetidx.size(); j++) // FIXME: Check if there should be +1 or not
+                {
+                    TLorentzVector Z2_1;
+                    TLorentzVector Z2_2;
+                    Z2_1.SetPtEtaPhiM(Jet_pt[jetidx[i]], Jet_eta[jetidx[i]], Jet_phi[jetidx[i]], Jet_mass[jetidx[i]]);
+                    Z2_2.SetPtEtaPhiM(Jet_pt[jetidx[j]], Jet_eta[jetidx[j]], Jet_phi[jetidx[j]], Jet_mass[jetidx[j]]);
+                    TLorentzVector Z2_2j_temp = Z2_1 + Z2_2;
+
+                    if (fabs(Z2_2j_temp.M() - Zmass) < mass_diff)
+                    {
+                        mass_diff = fabs(Z2_2j_temp.M() - Zmass);
+                        Z2 = Z2_2j_temp;
+                        resolvedJet1_Index = jetidx[i];
+                        resolvedJet2_Index = jetidx[j];
+                    }
+                }
+            }
+
+            if (DEBUG)
+                std::cout << "L#1732: Z2: Mass based, pT based: " << Z2.Pt() << ",  " << Z2_2j.Pt() << std::endl;
+        }
+
+        if (DEBUG)
+        {
+            std::cout << "L#1737: Size of ElelistFsr: " << ElelistFsr.size() << std::endl;
+            std::cout << "L#1738: Size of MulistFsr: " << MulistFsr.size() << std::endl;
+            std::cout << "L#1739: Size of TightEleindex: " << TightEleindex.size() << std::endl;
+            std::cout << "L#1740: Size of TightMuindex: " << TightMuindex.size() << std::endl;
+        }
+        // Z1 will be the sum of TLorentzVector of lepton and MET
+        TLorentzVector Lep1;
+        if (HZZ2l2qNu_isELE)
+        {
+            Lep1.SetPtEtaPhiM(ElelistFsr[TightEleindex[0]].Pt(), ElelistFsr[TightEleindex[0]].Eta(), ElelistFsr[TightEleindex[0]].Phi(), ElelistFsr[TightEleindex[0]].M());
+        }
+        else
+        {
+            Lep1.SetPtEtaPhiM(MulistFsr[TightMuindex[0]].Pt(), MulistFsr[TightMuindex[0]].Eta(), MulistFsr[TightMuindex[0]].Phi(), MulistFsr[TightMuindex[0]].M());
+        }
+        TLorentzVector MET;
+        MET.SetPtEtaPhiM(MET_pt, 0, MET_phi, 0);
+        Z1 = Lep1 + MET;
+
+        ZZsystem = Z1 + Z2;
+        ZZsystemnofsr = Z1nofsr + Z2; // FIXME: Update this with jet information.
+
+        ZZ_2jsystem = Z1 + Z2_2j;
+        ZZ_2jsystemnofsr = Z1nofsr + Z2_2j;
+
     }
 
     return foundZZCandidate;

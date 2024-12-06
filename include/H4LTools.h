@@ -563,6 +563,7 @@ public:
     bool ZZSelection_4l();
     bool GetZ1_2l2qOR2l2nu();
     bool GetZ1_emuCR();
+    bool GetWW_lnuqq();
     bool ZZSelection_2l2q();
     bool ZZSelection_2l2nu();
     bool ZZSelection_2l2nu_EMu_CR();
@@ -620,6 +621,7 @@ public:
     int HZZ_emuCR_cutbtag;
     int HZZ_emuCR_cutdPhiJetMET;
     int HZZ_emuCR_cutMETgT100;
+    int HWWlNu2q_cut1l;
 
 private:
     std::vector<float> Electron_pt, Electron_phi, Electron_eta, Electron_mass, Electron_dxy, Electron_dz, Electron_sip3d;
@@ -722,6 +724,7 @@ H4LTools::H4LTools(int year_, bool isMC_, bool DEBUG_Main)
     HZZ_emuCR_cutbtag = 0;
     HZZ_emuCR_cutdPhiJetMET = 0;
     HZZ_emuCR_cutMETgT100 = 0;
+    HWWlNu2q_cut1l = 0;
 }
 
 // ~H4LTools()

@@ -195,7 +195,8 @@ class HZZAnalysisCppProducer(Module):
             "ZZ4lPassed": 0,
             "ZZ2l2qPassed": 0,
             "ZZ2l2nuPassed": 0,
-            "ZZ2l2nu_emuCR_Passed": 0
+            "ZZ2l2nu_emuCR_Passed": 0,
+            "WWlv2qPassed": 0
         }
 
     def beginJob(self):
@@ -362,7 +363,7 @@ class HZZAnalysisCppProducer(Module):
             for xj in genjets:
                 self.genworker.SetGenJets(xj.pt,xj.eta,xj.phi,xj.mass)
             for xg in genparts:
-                self.worker.SetGenParts(xg.pt)
+                # self.worker.SetGenParts(xg.pt)
                 self.genworker.SetGenParts(xg.pt,xg.eta,xg.phi,xg.mass,xg.pdgId,xg.status,xg.statusFlags,xg.genPartIdxMother)
             for xm in muons:
                 self.worker.SetMuonsGen(xm.genPartIdx)
@@ -502,7 +503,6 @@ class HZZAnalysisCppProducer(Module):
         if self.worker.GetZ1_2l2qOR2l2nu() and (self.channels == "all"  or self.channels == "2l2v" or self.channels == "2l2q"):  #commented out for now
             if self.channels == "2l2q" or self.channels == "all":
                 self.branch_values["foundZZCandidate_2l2q"] = self.worker.ZZSelection_2l2q()
-                self.branch_values["isBoosted2l2q"] = self.worker.isBoosted2l2q
                 if self.DEBUG: print("isBoosted2l2q: ", self.branch_values["isBoosted2l2q"])
             if self.channels == "2l2v" or self.channels == "all":
                 self.branch_values["foundZZCandidate_2l2nu"] = self.worker.ZZSelection_2l2nu()  #commented out for now
@@ -512,6 +512,9 @@ class HZZAnalysisCppProducer(Module):
 
         if (self.channels == "all"  or self.channels == "4l"):
             self.branch_values["foundZZCandidate_4l"] = self.worker.ZZSelection_4l()
+
+        if (self.channels == "lv2q" or self.channels == "all"):
+            self.branch_values["foundWWCandidate_lv2q"] = self.worker.GetWW_lnuqq()
 
         if self.DEBUG:
             print("Found ZZ candidate (4l, 2l2q, 2l2nu): ({}, {}, {})".format(self.branch_values["foundZZCandidate_4l"], self.branch_values["foundZZCandidate_2l2q"], self.branch_values["foundZZCandidate_2l2nu"]))
@@ -555,6 +558,7 @@ class HZZAnalysisCppProducer(Module):
             self.counters["ZZ2l2qPassed"] += 1
             self.CutFlowTable.Fill(4)
 
+            self.branch_values["isBoosted2l2q"] = self.worker.isBoosted2l2q
             self.branch_values["HZZ2l2qNu_isELE"] = self.worker.HZZ2l2qNu_isELE
             self.branch_values["HZZ2l2qNu_cutOppositeChargeFlag"] = self.worker.HZZ2l2qNu_cutOppositeChargeFlag
             self.branch_values["HZZ2l2qNu_nJets"] = self.worker.HZZ2l2qNu_nJets
@@ -583,6 +587,48 @@ class HZZAnalysisCppProducer(Module):
             keepIt = True
             self.counters["ZZ2l2nu_emuCR_Passed"] += 1
             self.CutFlowTable.Fill(6)
+
+        if (self.branch_values["foundWWCandidate_lv2q"]):
+            keepIt = True
+            self.counters["WWlv2qPassed"] += 1
+            self.CutFlowTable.Fill(7)
+
+            self.branch_values["isBoosted2l2q"] = self.worker.isBoosted2l2q
+            self.branch_values["WWlv2q_njets_pt30_eta4p7"] = self.worker.njets_pt30_eta4p7
+            self.branch_values["WWlv2q_pTL1"] = self.worker.pTL1
+            self.branch_values["WWlv2q_etaL1"] = self.worker.etaL1
+            self.branch_values["WWlv2q_phiL1"] = self.worker.phiL1
+            self.branch_values["WWlv2q_massL1"] = self.worker.massL1
+
+            self.branch_values["WWlv2q_nJets"] = self.worker.HZZ2l2qNu_nJets
+            self.branch_values["WWlv2q_nTightBtagJets"] = self.worker.HZZ2l2qNu_nTightBtagJets
+            self.branch_values["WWlv2q_nMediumBtagJets"] = self.worker.HZZ2l2qNu_nMediumBtagJets
+            self.branch_values["WWlv2q_nLooseBtagJets"] = self.worker.HZZ2l2qNu_nLooseBtagJets
+
+            self.branch_values["WWlv2q_isELE"] = self.worker.HZZ2l2qNu_isELE
+
+            self.branch_values["WWlv2q_boostedJet_PNScore"] = self.worker.boostedJet_PNScore
+            self.branch_values["WWlv2q_boostedJet_Index"] = self.worker.boostedJet_Index
+            self.branch_values["WWlv2q_resolvedJet1_Index"] = self.worker.resolvedJet1_Index
+            self.branch_values["WWlv2q_resolvedJet2_Index"] = self.worker.resolvedJet2_Index
+
+            self.branch_values["WWlv2q_pTZ1"] = self.worker.Z1.Pt()
+            self.branch_values["WWlv2q_etaZ1"] = self.worker.Z1.Eta()
+            self.branch_values["WWlv2q_phiZ1"] = self.worker.Z1.Phi()
+            self.branch_values["HWWlv2q_mT"] = self.worker.Z1.Mt()
+
+            self.branch_values["WWlv2q_pTZ2"] = self.worker.Z2.Pt()
+            self.branch_values["WWlv2q_etaZ2"] = self.worker.Z2.Eta()
+            self.branch_values["WWlv2q_phiZ2"] = self.worker.Z2.Phi()
+            self.branch_values["WWlv2q_massZ2"] = self.worker.Z2.M()
+
+            self.branch_values["WWlv2q_massZ2_2j"] = self.worker.Z2_2j.M()
+            self.branch_values["WWlv2q_phiZ2_2j"] = self.worker.Z2_2j.Phi()
+            self.branch_values["WWlv2q_etaZ2_2j"] = self.worker.Z2_2j.Eta()
+            self.branch_values["WWlv2q_pTZ2_2j"] = self.worker.Z2_2j.Pt()
+            self.branch_values["WWlv2q_EneZ2_2j"] = self.worker.Z2_2j.E()
+
+
 
         if (self.branch_values["foundZZCandidate_2l2nu"] or self.branch_values["foundZZCandidate_2l2nu_emuCR"]):
             keepIt = True
@@ -711,7 +757,11 @@ class HZZAnalysisCppProducer(Module):
             genWeight = 1 if event.genWeight > 0 else -1
         else:
             genWeight = 1
-        self.branch_values["Weight"] = genWeight * pileupWeight * self.branch_values["dataMCWeight_new"] * event.L1PreFiringWeight_Nom
+
+        if self.year == 2022: L1PreFiringWeight_Nom = 1.0
+        else: L1PreFiringWeight_Nom = event.L1PreFiringWeight_Nom
+
+        self.branch_values["Weight"] = genWeight * pileupWeight * self.branch_values["dataMCWeight_new"] * L1PreFiringWeight_Nom
 
 
         if self.DEBUG:

@@ -15,6 +15,7 @@ candidate_branches = {
     "foundZZCandidate_2l2q": {"type": "O", "default": False, "title": "ZZ Candidate found in 2l2q channel"},
     "foundZZCandidate_2l2nu": {"type": "O", "default": False, "title": "ZZ Candidate found in 2l2nu channel"},
     "foundZZCandidate_2l2nu_emuCR": {"type": "O", "default": False, "title": "ZZ Candidate found in 2l2nu emu control region"},
+    "foundWWCandidate_lv2q": {"type": "O", "default": False, "title": "WW Candidate found in lv2q channel"},
     "passZZ2l2nu_emuCR_Selection": {"type": "O", "default": False, "title": "Pass 2l2nu emu control region selection"},
     "passedFiducialSelection": {"type": "O", "default": False, "title": "Passed fiducial selection for GEN-level leptons"},
     "isBoosted2l2q": {"type": "O", "default": False, "title": "Boosted topology in 2l2q channel"},
@@ -119,6 +120,37 @@ vbf_2l2nu_branches = {
     "HZZ2l2nu_VBFdR_jj": {"type": "F", "default": -99.0, "title": "Delta R between the two VBF jets in 2l2nu channel"},
 }
 
+# WW-related branches
+WWBranches = {
+    "WWlv2q_njets_pt30_eta4p7": {"type": "I", "default": -1, "title": "Number of jets with pT > 30 GeV and |eta| < 4.7 in WWlv2q channel"},
+    "WWlv2q_pTL1": {"type": "F", "default": -99.0, "title": "Transverse momentum (pT) of leading lepton in WWlv2q channel"},
+    "WWlv2q_etaL1": {"type": "F", "default": -99.0, "title": "Pseudo-rapidity (eta) of leading lepton in WWlv2q channel"},
+    "WWlv2q_phiL1": {"type": "F", "default": -99.0, "title": "Azimuthal angle (phi) of leading lepton in WWlv2q channel"},
+    "WWlv2q_massL1": {"type": "F", "default": -99.0, "title": "Mass of leading lepton in WWlv2q channel"},
+    "WWlv2q_nJets": {"type": "I", "default": -1, "title": "Number of jets in WWlv2q channel"},
+    "WWlv2q_nTightBtagJets": {"type": "I", "default": -1, "title": "Number of tight b-tagged jets in WWlv2q channel"},
+    "WWlv2q_nMediumBtagJets": {"type": "I", "default": -1, "title": "Number of medium b-tagged jets in WWlv2q channel"},
+    "WWlv2q_nLooseBtagJets": {"type": "I", "default": -1, "title": "Number of loose b-tagged jets in WWlv2q channel"},
+    "WWlv2q_isELE": {"type": "O", "default": False, "title": "Electron topology in WWlv2q channel"},
+    "WWlv2q_boostedJet_PNScore": {"type": "F", "default": -99.0, "title": "PNScore of boosted jet in WWlv2q channel"},
+    "WWlv2q_boostedJet_Index": {"type": "I", "default": -1, "title": "Index of boosted jet in WWlv2q channel"},
+    "WWlv2q_resolvedJet1_Index": {"type": "I", "default": -1, "title": "Index of 1st resolved jet in WWlv2q channel"},
+    "WWlv2q_resolvedJet2_Index": {"type": "I", "default": -1, "title": "Index of 2nd resolved jet in WWlv2q channel"},
+    "WWlv2q_pTZ1": {"type": "F", "default": -99.0, "title": "Transverse momentum (pT) of Z boson 1 in WWlv2q channel"},
+    "WWlv2q_etaZ1": {"type": "F", "default": -99.0, "title": "Pseudo-rapidity (eta) of Z boson 1 in WWlv2q channel"},
+    "WWlv2q_phiZ1": {"type": "F", "default": -99.0, "title": "Azimuthal angle (phi) of Z boson 1 in WWlv2q channel"},
+    "HWWlv2q_mT": {"type": "F", "default": -99.0, "title": "Transverse mass (mT) of WW system in WWlv2q channel"},
+    "WWlv2q_pTZ2": {"type": "F", "default": -99.0, "title": "Transverse momentum (pT) of Z boson 2 in WWlv2q channel"},
+    "WWlv2q_etaZ2": {"type": "F", "default": -99.0, "title": "Pseudo-rapidity (eta) of Z boson 2 in WWlv2q channel"},
+    "WWlv2q_phiZ2": {"type": "F", "default": -99.0, "title": "Azimuthal angle (phi) of Z boson 2 in WWlv2q channel"},
+    "WWlv2q_massZ2": {"type": "F", "default": -99.0, "title": "Mass of Z boson 2 in WWlv2q channel"},
+    "WWlv2q_massZ2_2j": {"type": "F", "default": -99.0, "title": "Mass of Z boson 2 obtained from 2 AK4 jets in WWlv2q channel"},
+    "WWlv2q_phiZ2_2j": {"type": "F", "default": -99.0, "title": "Azimuthal angle (phi) of Z boson 2 obtained from 2 AK4 jets in WWlv2q channel"},
+    "WWlv2q_etaZ2_2j": {"type": "F", "default": -99.0, "title": "Pseudo-rapidity (eta) of Z boson 2 obtained from 2 AK4 jets in WWlv2q channel"},
+    "WWlv2q_pTZ2_2j": {"type": "F", "default": -99.0, "title": "Transverse momentum (pT) of Z boson 2 obtained from 2 AK4 jets in WWlv2q channel"},
+    "WWlv2q_EneZ2_2j": {"type": "F", "default": -99.0, "title": "Energy of Z boson 2 obtained from 2 AK4 jets in WWlv2q channel"},
+}
+
 # MELA branches: "D_CP", "D_0m", "D_0hp", "D_int", "D_L1", "D_L1Zg"
 mela_branches = {
     "D_CP": {"type": "F", "default": -99.0, "title": "MELA discriminant: D_CP"},
@@ -199,6 +231,7 @@ branch_definitions.update(z2_branches)
 branch_definitions.update(zz_branches)
 branch_definitions.update(channel_branches)
 branch_definitions.update(vbf_2l2nu_branches)
+branch_definitions.update(WWBranches)
 branch_definitions.update(mela_branches)
 branch_definitions.update(fsr_branches)
 branch_definitions.update(TwoLeptonTwoResolvedJetBranches)
