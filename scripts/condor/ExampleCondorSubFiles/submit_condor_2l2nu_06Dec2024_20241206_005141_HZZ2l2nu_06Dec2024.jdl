@@ -1,0 +1,11 @@
++JobFlavour = "tomorrow"
+Executable = submit_condor_2l2nu_06Dec2024_20241206_005141_HZZ2l2nu_06Dec2024.sh
+Universe = vanilla
+Notification = ERROR
+Should_Transfer_Files = NO
+x509userproxy = $ENV(X509_USER_PROXY)
+Output = ./condor_logs/HZZ2l2nu_06Dec2024/241206_005153/$(logtxt)_$(Process).stdout
+Error = ./condor_logs/HZZ2l2nu_06Dec2024/241206_005153/$(logtxt)_$(Process).err
+Log = ./condor_logs/HZZ2l2nu_06Dec2024/241206_005153/$(logtxt)_$(Process).log
+Arguments = "$(infile) $(outfile) $(eospath) $(outfilename)"
+queue infile, outfile, eospath, outfilename, logtxt from submit_condor_2l2nu_06Dec2024_20241206_005141_HZZ2l2nu_06Dec2024_resubmit_1.txt

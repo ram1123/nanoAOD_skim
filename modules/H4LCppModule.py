@@ -42,7 +42,7 @@ class HZZAnalysisCppProducer(Module):
                              "cut2l1J", "cut2l2j", "cut2l1Jor2j"]
         self.dynamicCuts_2l2nu = ["HZZ2l2qNu_cut2l", "HZZ2l2qNu_cutOppositeCharge", "HZZ2l2qNu_cutpTl1l2",
                              "HZZ2l2qNu_cutETAl1l2", "HZZ2l2qNu_cutmZ1Window", "HZZ2l2qNu_cutZ1Pt",
-                             "HZZ2l2nu_cutbtag", "HZZ2l2nu_cutdPhiJetMET", "HZZ2l2nu_cutMETgT100"]
+                             "HZZ2l2nu_cutdPhiJetMET", "HZZ2l2nu_cutbtag",  "HZZ2l2nu_cutMETgT100"]
         self.dynamicCuts_2l2nu_emu_CR = ["HZZemuCR_cut2l", "HZZemuCR_cutpTl1l2",
                              "HZZemuCR_cutETAl1l2", "HZZemuCR_cutmZ1Window",
                              "HZZemuCR_cutZ1Pt", "HZZ2l2nu_cutdPhiJetMET", "HZZ2l2nu_cutMETgT100"]
