@@ -201,6 +201,22 @@ std::vector<unsigned int> H4LTools::SelectedJets(std::vector<unsigned int> ele, 
             goodJets.push_back(i);
     }
     njets_pt30_eta4p7 = goodJets.size();
+
+    // count the number of tight, medium and loose b-tagged jets
+    // Reference: https://btv-wiki.docs.cern.ch/ScaleFactors/UL2018/#ak4-b-tagging
+    for (unsigned int i = 0; i < goodJets.size(); i++) // FIXME: These variables seems to be wrong.
+    {
+        if (DEBUG)
+            std::cout << "Jet_btagDeepFlavB[" << goodJets[i] << "]: " << Jet_btagDeepFlavB[goodJets[i]] << std::endl;
+
+        if (Jet_btagDeepFlavB[goodJets[i]] > btag_deepJet_Tight)
+            HZZ2l2qNu_nTightBtagJets++;
+        if (Jet_btagDeepFlavB[goodJets[i]] > btag_deepJet_Medium)
+            HZZ2l2qNu_nMediumBtagJets++;
+        if (Jet_btagDeepFlavB[goodJets[i]] > btag_deepJet_Loose)
+            HZZ2l2qNu_nLooseBtagJets++;
+    }
+
     return goodJets;
 }
 
@@ -698,8 +714,13 @@ void H4LTools::LeptonSelection(){
         std::cout << "nTightMu = " << nTightMu << std::endl;
 }
 
-bool H4LTools::findZCandidate(){
-
+/**
+ * This function identifies and selects Z boson candidates from the list of tight leptons.
+ * It checks for pairs of leptons that form a Z boson candidate based on their invariant mass
+ * and opposite charge selection criteria. The function updates the Z boson candidate list
+ * and returns true if at least one Z boson candidate is found, otherwise returns false.
+ */
+bool H4LTools::findZCandidates(){
     TLorentzVector z1,z2;
 
     if (nTightEle>=4) {
@@ -730,85 +751,93 @@ bool H4LTools::findZCandidate(){
         }
     }
 
-    if(TightEleindex.size()>1){
-        for(unsigned int ke=0; ke<(TightEleindex.size()-1);ke++){
-            for(unsigned int je=ke+1;je<TightEleindex.size();je++){
-                // FIXME: Removed the charge requirement for the Z candidate. It should be propagated correctly for the ZZ->4l analysis
-                // if ((Elechg[TightEleindex[ke]]+Elechg[TightEleindex[je]])==0)
-                {
-                    TLorentzVector Zcan;
-                    Zcan = ElelistFsr[TightEleindex[ke]] + ElelistFsr[TightEleindex[je]];
-                    if((Zcan.M()>MZcutdown)&&(Zcan.M()<MZcutup)){
-                        Zlist.push_back(Zcan);
-                        Zlep1index.push_back(TightEleindex[ke]);
-                        Zlep2index.push_back(TightEleindex[je]);
-                        Zlep1lepindex.push_back(TightElelep_index[ke]);
-                        Zlep2lepindex.push_back(TightElelep_index[je]);
-                        Zflavor.push_back(11);
-                        Zlep1pt.push_back(ElelistFsr[TightEleindex[ke]].Pt());
-                        Zlep2pt.push_back(ElelistFsr[TightEleindex[je]].Pt());
-                        Zlep1eta.push_back(ElelistFsr[TightEleindex[ke]].Eta());
-                        Zlep2eta.push_back(ElelistFsr[TightEleindex[je]].Eta());
-                        Zlep1phi.push_back(ElelistFsr[TightEleindex[ke]].Phi());
-                        Zlep2phi.push_back(ElelistFsr[TightEleindex[je]].Phi());
-                        Zlep1mass.push_back(ElelistFsr[TightEleindex[ke]].M());
-                        Zlep2mass.push_back(ElelistFsr[TightEleindex[je]].M());
-                        Zlep1ptNoFsr.push_back(Elelist[TightEleindex[ke]].Pt());
-                        Zlep2ptNoFsr.push_back(Elelist[TightEleindex[je]].Pt());
-                        Zlep1etaNoFsr.push_back(Elelist[TightEleindex[ke]].Eta());
-                        Zlep2etaNoFsr.push_back(Elelist[TightEleindex[je]].Eta());
-                        Zlep1phiNoFsr.push_back(Elelist[TightEleindex[ke]].Phi());
-                        Zlep2phiNoFsr.push_back(Elelist[TightEleindex[je]].Phi());
-                        Zlep1massNoFsr.push_back(Elelist[TightEleindex[ke]].M());
-                        Zlep2massNoFsr.push_back(Elelist[TightEleindex[je]].M());
-                        Zlep1chg.push_back(Elechg[TightEleindex[ke]]);
-                        Zlep2chg.push_back(Elechg[TightEleindex[je]]);
-                    }
-                }
+    if(TightEleindex.size()>1)
+    {
+        for(unsigned int ke=0; ke<(TightEleindex.size()-1);ke++)
+        {
+            for(unsigned int je=ke+1;je<TightEleindex.size();je++)
+            {
+                // opposite charge requirement
+                if ((Elechg[TightEleindex[ke]]+Elechg[TightEleindex[je]]) != 0)
+                    continue;
+                TLorentzVector Zcan;
+                Zcan = ElelistFsr[TightEleindex[ke]] + ElelistFsr[TightEleindex[je]];
+
+                // invariant mass requirement: MZcutdown < MZ < MZcutup
+                if (!(Zcan.M() > MZcutdown && Zcan.M() < MZcutup))
+                    continue;
+
+                Zlist.push_back(Zcan);
+                Zlep1index.push_back(TightEleindex[ke]);
+                Zlep2index.push_back(TightEleindex[je]);
+                Zlep1lepindex.push_back(TightElelep_index[ke]);
+                Zlep2lepindex.push_back(TightElelep_index[je]);
+                Zflavor.push_back(11);
+                Zlep1pt.push_back(ElelistFsr[TightEleindex[ke]].Pt());
+                Zlep2pt.push_back(ElelistFsr[TightEleindex[je]].Pt());
+                Zlep1eta.push_back(ElelistFsr[TightEleindex[ke]].Eta());
+                Zlep2eta.push_back(ElelistFsr[TightEleindex[je]].Eta());
+                Zlep1phi.push_back(ElelistFsr[TightEleindex[ke]].Phi());
+                Zlep2phi.push_back(ElelistFsr[TightEleindex[je]].Phi());
+                Zlep1mass.push_back(ElelistFsr[TightEleindex[ke]].M());
+                Zlep2mass.push_back(ElelistFsr[TightEleindex[je]].M());
+                Zlep1ptNoFsr.push_back(Elelist[TightEleindex[ke]].Pt());
+                Zlep2ptNoFsr.push_back(Elelist[TightEleindex[je]].Pt());
+                Zlep1etaNoFsr.push_back(Elelist[TightEleindex[ke]].Eta());
+                Zlep2etaNoFsr.push_back(Elelist[TightEleindex[je]].Eta());
+                Zlep1phiNoFsr.push_back(Elelist[TightEleindex[ke]].Phi());
+                Zlep2phiNoFsr.push_back(Elelist[TightEleindex[je]].Phi());
+                Zlep1massNoFsr.push_back(Elelist[TightEleindex[ke]].M());
+                Zlep2massNoFsr.push_back(Elelist[TightEleindex[je]].M());
+                Zlep1chg.push_back(Elechg[TightEleindex[ke]]);
+                Zlep2chg.push_back(Elechg[TightEleindex[je]]);
             }
         }
     }
 
-    if(TightMuindex.size()>1){
-        for(unsigned int kmu=0; kmu<(TightMuindex.size()-1);kmu++){
-            for(unsigned int jmu=kmu+1;jmu<TightMuindex.size();jmu++){
-                // if ((Muchg[TightMuindex[kmu]]+Muchg[TightMuindex[jmu]])==0)
-                {
-                    TLorentzVector Zcan;
-                    Zcan = MulistFsr[TightMuindex[kmu]] + MulistFsr[TightMuindex[jmu]];
-                    if (DEBUG)
-                        std::cout << "Zcan.M() = " << Zcan.M() << "\tMZcutdown = " << MZcutdown << "\tMZcutup = " << MZcutup << std::endl;
+    if(TightMuindex.size()>1)
+    {
+        for(unsigned int kmu=0; kmu<(TightMuindex.size()-1);kmu++)
+        {
+            for(unsigned int jmu=kmu+1;jmu<TightMuindex.size();jmu++)
+            {
+                // opposite charge requirement
+                if ((Muchg[TightMuindex[kmu]]+Muchg[TightMuindex[jmu]]) != 0)
+                    continue;
+                TLorentzVector Zcan;
+                Zcan = MulistFsr[TightMuindex[kmu]] + MulistFsr[TightMuindex[jmu]];
 
-                    if((Zcan.M()>MZcutdown)&&(Zcan.M()<MZcutup)){
-                        Zlist.push_back(Zcan);
-                        Zlep1index.push_back(TightMuindex[kmu]);
-                        Zlep2index.push_back(TightMuindex[jmu]);
-                        Zlep1lepindex.push_back(TightMulep_index[kmu]);
-                        Zlep2lepindex.push_back(TightMulep_index[jmu]);
-                        Zflavor.push_back(13);
-                        Zlep1pt.push_back(MulistFsr[TightMuindex[kmu]].Pt());
-                        Zlep2pt.push_back(MulistFsr[TightMuindex[jmu]].Pt());
-                        Zlep1eta.push_back(MulistFsr[TightMuindex[kmu]].Eta());
-                        Zlep2eta.push_back(MulistFsr[TightMuindex[jmu]].Eta());
-                        Zlep1phi.push_back(MulistFsr[TightMuindex[kmu]].Phi());
-                        Zlep2phi.push_back(MulistFsr[TightMuindex[jmu]].Phi());
-                        Zlep1mass.push_back(MulistFsr[TightMuindex[kmu]].M());
-                        Zlep2mass.push_back(MulistFsr[TightMuindex[jmu]].M());
-                        Zlep1ptNoFsr.push_back(Mulist[TightMuindex[kmu]].Pt());
-                        Zlep2ptNoFsr.push_back(Mulist[TightMuindex[jmu]].Pt());
-                        Zlep1etaNoFsr.push_back(Mulist[TightMuindex[kmu]].Eta());
-                        Zlep2etaNoFsr.push_back(Mulist[TightMuindex[jmu]].Eta());
-                        Zlep1phiNoFsr.push_back(Mulist[TightMuindex[kmu]].Phi());
-                        Zlep2phiNoFsr.push_back(Mulist[TightMuindex[jmu]].Phi());
-                        Zlep1massNoFsr.push_back(Mulist[TightMuindex[kmu]].M());
-                        Zlep2massNoFsr.push_back(Mulist[TightMuindex[jmu]].M());
-                        Zlep1chg.push_back(Muchg[TightMuindex[kmu]]);
-                        Zlep2chg.push_back(Muchg[TightMuindex[jmu]]);
-                    }
-                }
+                // invariant mass requirement : MZcutdown < MZ < MZcutup
+                if (!(Zcan.M() > MZcutdown && Zcan.M() < MZcutup))
+                    continue;
+                Zlist.push_back(Zcan);
+                Zlep1index.push_back(TightMuindex[kmu]);
+                Zlep2index.push_back(TightMuindex[jmu]);
+                Zlep1lepindex.push_back(TightMulep_index[kmu]);
+                Zlep2lepindex.push_back(TightMulep_index[jmu]);
+                Zflavor.push_back(13);
+                Zlep1pt.push_back(MulistFsr[TightMuindex[kmu]].Pt());
+                Zlep2pt.push_back(MulistFsr[TightMuindex[jmu]].Pt());
+                Zlep1eta.push_back(MulistFsr[TightMuindex[kmu]].Eta());
+                Zlep2eta.push_back(MulistFsr[TightMuindex[jmu]].Eta());
+                Zlep1phi.push_back(MulistFsr[TightMuindex[kmu]].Phi());
+                Zlep2phi.push_back(MulistFsr[TightMuindex[jmu]].Phi());
+                Zlep1mass.push_back(MulistFsr[TightMuindex[kmu]].M());
+                Zlep2mass.push_back(MulistFsr[TightMuindex[jmu]].M());
+                Zlep1ptNoFsr.push_back(Mulist[TightMuindex[kmu]].Pt());
+                Zlep2ptNoFsr.push_back(Mulist[TightMuindex[jmu]].Pt());
+                Zlep1etaNoFsr.push_back(Mulist[TightMuindex[kmu]].Eta());
+                Zlep2etaNoFsr.push_back(Mulist[TightMuindex[jmu]].Eta());
+                Zlep1phiNoFsr.push_back(Mulist[TightMuindex[kmu]].Phi());
+                Zlep2phiNoFsr.push_back(Mulist[TightMuindex[jmu]].Phi());
+                Zlep1massNoFsr.push_back(Mulist[TightMuindex[kmu]].M());
+                Zlep2massNoFsr.push_back(Mulist[TightMuindex[jmu]].M());
+                Zlep1chg.push_back(Muchg[TightMuindex[kmu]]);
+                Zlep2chg.push_back(Muchg[TightMuindex[jmu]]);
             }
         }
     }
+
     for (unsigned int znofsr = 0; znofsr<Zlist.size(); znofsr++){
         TLorentzVector Zlep1nofsr,Zlep2nofsr,Zcannofsr;
         Zlep1nofsr.SetPtEtaPhiM(Zlep1ptNoFsr[znofsr],Zlep1etaNoFsr[znofsr],Zlep1phiNoFsr[znofsr],Zlep1massNoFsr[znofsr]);
@@ -830,13 +859,7 @@ bool H4LTools::findZCandidate(){
             std::cout << "Zlep2pt: " << Zlep2pt[0] << std::endl;
     }
 
-    if (Zsize > 0)
-    {
-        return true;
-    }
-    else{
-        return false;
-    }
+    return Zsize > 0;
 }
 
 
@@ -844,7 +867,7 @@ bool H4LTools::ZZSelection_4l(){
 
     bool foundZZCandidate = false;
     //std::cout << " Inside the 4l loop in .cc file" << std::endl;
-    if(!findZCandidate()){
+    if(!findZCandidates()){
         return foundZZCandidate;
     }
     if((nTightMu+nTightEle)<4){
@@ -1214,12 +1237,13 @@ bool H4LTools::ZZSelection_4l(){
     return foundZZCandidate;
 }
 
-bool H4LTools::GetZ1_2l2qOR2l2nu()
+bool H4LTools::GetExactlyTwoTightLeptons()
 {
     if (DEBUG)
-        std::cout << "Inside function GetZ1_2l2qOR2l2nu()" << std::endl;
+        std::cout << "Inside function GetExactlyTwoTightLeptons()" << std::endl;
     bool foundZ1Candidate = false;
-    if (!findZCandidate())
+
+    if (!findZCandidates())
     {
         return foundZ1Candidate;
     }
@@ -1237,20 +1261,15 @@ bool H4LTools::GetZ1_2l2qOR2l2nu()
         std::cout << "nTightEleChgSum: " << nTightEleChgSum << "\tnTightMuChgSum: " << nTightMuChgSum << std::endl;
 
     // Check if the absolute values of nTightEleChgSum and nTightMuChgSum are not zero
-    if (std::abs(nTightEleChgSum) != 0 && std::abs(nTightMuChgSum) != 0)
+    if (!(nTightEleChgSum == 0 && nTightMuChgSum == 0))
     {
-        HZZ2l2qNu_cutOppositeCharge++;
-        HZZ2l2qNu_cutOppositeChargeFlag = true;
+        return foundZ1Candidate;
     }
+    HZZ2l2qNu_cutOppositeCharge++;
+    HZZ2l2qNu_cutOppositeChargeFlag = true;
 
     if (DEBUG)
-        std::cout << "Zlist size (Before): " << Zlist.size() << std::endl;
-    // if (!(Zlist.size() == 1)) // There should be exactly 1 Z candidate
-    // {
-    //     return foundZ1Candidate;
-    // }
-    if (DEBUG)
-        std::cout << "Zlist size (After): " << Zlist.size() << std::endl;
+        std::cout << "Zlist size: " << Zlist.size() << std::endl;
 
     if ((Zlep1pt[0] < HZZ2l2nu_Leading_Lep_pT || Zlep2pt[0] < HZZ2l2nu_SubLeading_Lep_pT))
     {
@@ -1276,6 +1295,7 @@ bool H4LTools::GetZ1_2l2qOR2l2nu()
     Z1index = Z1CanIndex[0];
     Z1 = Zlist[Z1index];
     Z1nofsr = Zlistnofsr[Z1index];
+
     // The invariant mass of dilepton system within 15 GeV of the known Z boson mass, ensuring that the pair likely originates from a Z-boson decay
     if (fabs(Z1.M() - Zmass) > HZZ2l2nu_M_ll_Window)
     {
@@ -1289,7 +1309,7 @@ bool H4LTools::GetZ1_2l2qOR2l2nu()
         return foundZ1Candidate;
     }
     HZZ2l2qNu_cutZ1Pt++;
-    foundZ1Candidate = true;
+
     if (DEBUG)
         std::cout << "Found Z1 candidate: " << foundZ1Candidate << std::endl;
 
@@ -1305,36 +1325,16 @@ bool H4LTools::GetZ1_2l2qOR2l2nu()
     phiL2 = Lep2.Phi();
     massL2 = Lep2.M();
 
-    if(Lep1.DeltaR(Lep2)<0.3){
-    foundZ1Candidate = false;
-    }
+    if(Lep1.DeltaR(Lep2)<0.3)
+        return foundZ1Candidate;
 
-    jetidx = SelectedJets(tighteleforjetidx, tightmuforjetidx);
-    if (DEBUG)
-        std::cout << "Number of jets: " << jetidx.size() << std::endl;
-    HZZ2l2qNu_nJets = jetidx.size();
-
-    // count the number of tight, medium and loose b-tagged jets
-    for (unsigned int i = 0; i < jetidx.size(); i++) // FIXME: These variables seems to be wrong.
-    {
-        // Reference: https://btv-wiki.docs.cern.ch/ScaleFactors/UL2018/#ak4-b-tagging
-        if (DEBUG)
-        {
-            std::cout << "Jet_btagDeepFlavB[" << jetidx[i] << "]: " << Jet_btagDeepFlavB[jetidx[i]] << std::endl;
-        }
-        if (Jet_btagDeepFlavB[jetidx[i]] > btag_deepJet_Tight)
-            HZZ2l2qNu_nTightBtagJets++;
-        if (Jet_btagDeepFlavB[jetidx[i]] > btag_deepJet_Medium)
-            HZZ2l2qNu_nMediumBtagJets++;
-        if (Jet_btagDeepFlavB[jetidx[i]] > btag_deepJet_Loose)
-            HZZ2l2qNu_nLooseBtagJets++;
-    }
-//    HZZ2l2qNu_cutmZ1Window++;
+    // If the event passes all the cuts, set the flag `foundZ1Candidate` to true
+    foundZ1Candidate = true;
 
     return foundZ1Candidate;
 }
 
-////// emu control region (Z1 candidate selection) /////////
+// emu control region (Z1 candidate selection) //
 bool H4LTools::GetZ1_emuCR()
 {
     if (DEBUG)
@@ -1538,11 +1538,11 @@ bool H4LTools::ZZSelection_2l2nu()
         std::cout << "Number of jets: " << jetidx.size() << std::endl;
 
     // No b-tagged jets
-    //if (HZZ2l2qNu_nMediumBtagJets > 0)
-    //{
-        //return foundZZCandidate;
-    //}
-    //HZZ2l2nu_cutbtag++;
+    if (!(HZZ2l2qNu_nTightBtagJets > 0))
+    {
+        HZZ2l2nu_cutbtag++;
+    }
+
     if (DEBUG)
         std::cout << "Number of b-tagged jets [inside 2l2nu]: (Tight, Med, Loose): " << HZZ2l2qNu_nTightBtagJets << ", " << HZZ2l2qNu_nMediumBtagJets << ", " << HZZ2l2qNu_nLooseBtagJets << std::endl;
 
@@ -1560,15 +1560,21 @@ bool H4LTools::ZZSelection_2l2nu()
     {
         return foundZZCandidate;
     }
-    foundZZCandidate = true;
-    HZZ2l2nu_cutdPhiJetMET++;
+
+    // As we are not adding cut on the b-tag but we want the cut-flow table with the b-tag cut,
+    // we are adding this cut here
+    if (!(HZZ2l2qNu_nTightBtagJets > 0))
+        HZZ2l2nu_cutdPhiJetMET++;
+
     if (DEBUG)
     {
         std::cout << "Passed dPhiJetMET cut" << std::endl;
         std::cout << "MET_pt: " << MET_pt << std::endl;
     }
 
-    if (MET_pt > 100)
+    // As we are not adding cut on the b-tag but we want the cut-flow table with the b-tag cut,
+    // we are adding this cut here
+    if (HZZ2l2qNu_nTightBtagJets == 0 && MET_pt > 100)
     {
         HZZ2l2nu_cutMETgT100++;
     }
@@ -1578,22 +1584,26 @@ bool H4LTools::ZZSelection_2l2nu()
     ZZ_metsystem = Z1 + Z2_met;
     ZZ_metsystemnofsr = Z1nofsr + Z2_met;
 
-    float Pz_nu;
-    float Pz_neutrino;
-    Pz_nu = ((Z1.M()*Z1.M())/4)- (MET_pt*MET_pt);
-    //if (Pz_nu < 0) {
-        std::complex<double> complex_pz(0, std::sqrt(-1 * Pz_nu));
-        Pz_neutrino = std::abs(complex_pz);
-    //}
-    if (DEBUG) {
-    std::cout << "Pz of neutrino in COM frame: " << Pz_neutrino << std::endl;
-    }
+    // float Pz_nu;
+    // float Pz_neutrino;
+    // Pz_nu = ((Z1.M()*Z1.M())/4)- (MET_pt*MET_pt);
+    // //if (Pz_nu < 0) {
+    // std::complex<double> complex_pz(0, std::sqrt(-1 * Pz_nu));
+    // Pz_neutrino = std::abs(complex_pz);
+    // //}
+    // if (DEBUG) {
+    // std::cout << "Pz of neutrino in COM frame: " << Pz_neutrino << std::endl;
+    // }
 
     float METZZ_met;
     METZZ_met = ZZ_metsystem.E();
 
     float MT_2l2nu;
     MT_2l2nu = ZZ_metsystem.Mt();
+
+    // if the event passes all the cuts, set the flag `foundZZCandidate` to true
+    foundZZCandidate = true;
+
     // Fetch number of jets
     HZZ2l2qNu_nJets = jetidx.size();
     if (DEBUG)
@@ -1613,6 +1623,7 @@ bool H4LTools::ZZSelection_2l2nu()
             VBF_jet2.SetPtEtaPhiM(Jet_pt[jetidx[j]], Jet_eta[jetidx[j]], Jet_phi[jetidx[j]], Jet_mass[jetidx[j]]);
             TLorentzVector VBF_jj = VBF_jet1 + VBF_jet2;
 
+            // FIXME: Move these hardcoded cuts to the YAML configuration file
             if (fabs(VBF_jet1.Eta() - VBF_jet2.Eta()) > 4.0 && VBF_jj.M() > 500.0)
             {
                 if (VBF_jj.M() > VBF_jj_mjj)

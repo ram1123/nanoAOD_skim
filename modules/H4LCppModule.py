@@ -47,7 +47,7 @@ class HZZAnalysisCppProducer(Module):
                              "HZZemuCR_cutETAl1l2", "HZZemuCR_cutmZ1Window",
                              "HZZemuCR_cutZ1Pt", "HZZ2l2nu_cutdPhiJetMET", "HZZ2l2nu_cutMETgT100"]
 
-        total_cuts = 7 + len(self.dynamicCuts_4l) + len(self.dynamicCuts_2l2q) + len(self.dynamicCuts_2l2nu) + len(self.dynamicCuts_2l2nu_emu_CR)
+        total_cuts = 8 + len(self.dynamicCuts_4l) + len(self.dynamicCuts_2l2q) + len(self.dynamicCuts_2l2nu) + len(self.dynamicCuts_2l2nu_emu_CR)
         print("total_cuts: ", total_cuts)
         self.CutFlowTable =  ROOT.TH1F('cutFlow','cutFlow',total_cuts, 0, total_cuts)
         self.CutFlowTable.GetXaxis().SetBinLabel(1, "allEvents")
@@ -57,19 +57,33 @@ class HZZAnalysisCppProducer(Module):
         self.CutFlowTable.GetXaxis().SetBinLabel(5, "ZZ2l2qPassed")
         self.CutFlowTable.GetXaxis().SetBinLabel(6, "ZZ2l2nuPassed")
         self.CutFlowTable.GetXaxis().SetBinLabel(7, "ZZ2l2nu_emuCR_Passed")
+        self.CutFlowTable.GetXaxis().SetBinLabel(8, "WWlv2qPassed")
 
         for idx, cut in enumerate(self.dynamicCuts_4l):
-            index = 8 + idx
+            index = 9 + idx
             self.CutFlowTable.GetXaxis().SetBinLabel(index, cut)
         for idx, cut in enumerate(self.dynamicCuts_2l2q):
-            index = 8 + idx + len(self.dynamicCuts_4l)
+            index = 9 + idx + len(self.dynamicCuts_4l)
             self.CutFlowTable.GetXaxis().SetBinLabel(index, cut)
         for idx, cut in enumerate(self.dynamicCuts_2l2nu):
-            index = 8 + idx + len(self.dynamicCuts_4l) + len(self.dynamicCuts_2l2q)
+            index = 9 + idx + len(self.dynamicCuts_4l) + len(self.dynamicCuts_2l2q)
             self.CutFlowTable.GetXaxis().SetBinLabel(index, cut)
         for idx, cut in enumerate(self.dynamicCuts_2l2nu_emu_CR):
-            index = 8 + idx + len(self.dynamicCuts_4l) + len(self.dynamicCuts_2l2q) + len(self.dynamicCuts_2l2nu)
+            index = 9 + idx + len(self.dynamicCuts_4l) + len(self.dynamicCuts_2l2q) + len(self.dynamicCuts_2l2nu)
             self.CutFlowTable.GetXaxis().SetBinLabel(index, cut)
+
+        # Tailored histogram for 2l2v channel only
+        total_2l2v_cuts = 4 + len(self.dynamicCuts_2l2nu)
+        self.CutFlowTable_2l2v = ROOT.TH1F('cutFlow_2l2v','cutFlow_2l2v', total_2l2v_cuts, 0, total_2l2v_cuts)
+        self.CutFlowTable_2l2v.GetXaxis().SetBinLabel(1, "allEvents")
+        self.CutFlowTable_2l2v.GetXaxis().SetBinLabel(2, "triggerPassed")
+        self.CutFlowTable_2l2v.GetXaxis().SetBinLabel(3, "metFiltersPassed")
+        # self.CutFlowTable_2l2v.GetXaxis().SetBinLabel(4, "ZZ2l2nuPassed")
+
+        for idx, cut in enumerate(self.dynamicCuts_2l2nu):
+            index = 4 + idx
+            self.CutFlowTable_2l2v.GetXaxis().SetBinLabel(index, cut)
+        self.CutFlowTable_2l2v.GetXaxis().SetBinLabel(4 + len(self.dynamicCuts_2l2nu), "ZZ2l2nuPassed")
 
     def _get_pu_weights(self):
         """Retrieve pileup weights for the given year."""
@@ -260,25 +274,27 @@ class HZZAnalysisCppProducer(Module):
 
         print("\n4l channel cut flow table:")
         for idx, cut in enumerate(self.dynamicCuts_4l):
-            index = 8 + idx
+            index = 9 + idx
             print("{:2} {:27}:{:7} {}".format(index, cut, str(getattr(self.worker, cut)), " Events"))
             self.CutFlowTable.SetBinContent(index, getattr(self.worker, cut, 'N/A'))
 
         print("\n2l2q channel cut flow table:")
         for idx, cut in enumerate(self.dynamicCuts_2l2q):
-            index = 8 + idx + len(self.dynamicCuts_4l)
+            index = 9 + idx + len(self.dynamicCuts_4l)
             print("{:2} {:27}:{:7} {}".format(index, cut, str(getattr(self.worker, cut)), " Events"))
             self.CutFlowTable.SetBinContent(index, getattr(self.worker, cut, 'N/A'))
 
         print("\n2l2nu channel cut flow table:")
         for idx, cut in enumerate(self.dynamicCuts_2l2nu):
-            index = 8 + idx + len(self.dynamicCuts_4l) + len(self.dynamicCuts_2l2q)
+            index = 9 + idx + len(self.dynamicCuts_4l) + len(self.dynamicCuts_2l2q)
+            index_2l2v = 4 + idx
             print("{:2} {:27}:{:7} {}".format(index, cut, str(getattr(self.worker, cut)), " Events"))
             self.CutFlowTable.SetBinContent(index, getattr(self.worker, cut, 'N/A'))
+            self.CutFlowTable_2l2v.SetBinContent(index_2l2v, getattr(self.worker, cut, 'N/A'))
 
         print("\n2l2nu channel emu control region cut flow table:")
         for idx, cut in enumerate(self.dynamicCuts_2l2nu_emu_CR):
-            index = 8 + idx + len(self.dynamicCuts_4l) + len(self.dynamicCuts_2l2q) + len(self.dynamicCuts_2l2nu)
+            index = 9 + idx + len(self.dynamicCuts_4l) + len(self.dynamicCuts_2l2q) + len(self.dynamicCuts_2l2nu)
             print("{:2} {:27}:{:7} {}".format(index, cut, str(getattr(self.worker, cut)), " Events"))
             self.CutFlowTable.SetBinContent(index, getattr(self.worker, cut, 'N/A'))
 
@@ -286,6 +302,7 @@ class HZZAnalysisCppProducer(Module):
 
         outputFile.cd()
         self.CutFlowTable.Write()
+        self.CutFlowTable_2l2v.Write()
 
     # this function gets the pointers to Value and ArrayReaders and sets
     # them in the C++ worker class
@@ -300,6 +317,7 @@ class HZZAnalysisCppProducer(Module):
         go to next event)"""
         self.counters["allEvents"] += 1
         self.CutFlowTable.Fill(0)
+        self.CutFlowTable_2l2v.Fill(0)
         if self.DEBUG: print("\n\n=====================================")
         if self.DEBUG: print("Event number: ", self.counters["allEvents"])
 
@@ -330,6 +348,7 @@ class HZZAnalysisCppProducer(Module):
 
         self.counters["triggerPassed"] += 1
         self.CutFlowTable.Fill(1)
+        self.CutFlowTable_2l2v.Fill(1)
 
         # Pass MET filters
         if not passFilters(event, self.year):
@@ -337,6 +356,7 @@ class HZZAnalysisCppProducer(Module):
 
         self.counters["metFiltersPassed"] += 1
         self.CutFlowTable.Fill(2)
+        self.CutFlowTable_2l2v.Fill(2)
         if (self.DEBUG): print("MET filters passed")
 
         # Pileup weight
@@ -500,7 +520,7 @@ class HZZAnalysisCppProducer(Module):
                 self.branch_values["Muon_Fsr_eta"].append(Muon_Fsr_eta_vec[i])
                 self.branch_values["Muon_Fsr_phi"].append(Muon_Fsr_phi_vec[i])
 
-        if self.worker.GetZ1_2l2qOR2l2nu() and (self.channels == "all"  or self.channels == "2l2v" or self.channels == "2l2q"):  #commented out for now
+        if self.worker.GetExactlyTwoTightLeptons() and (self.channels == "all"  or self.channels == "2l2v" or self.channels == "2l2q"):  #commented out for now
             if self.channels == "2l2q" or self.channels == "all":
                 self.branch_values["foundZZCandidate_2l2q"] = self.worker.ZZSelection_2l2q()
                 if self.DEBUG: print("isBoosted2l2q: ", self.branch_values["isBoosted2l2q"])
@@ -579,9 +599,12 @@ class HZZAnalysisCppProducer(Module):
 
         if (self.branch_values["foundZZCandidate_2l2nu"]):
             keepIt = True
-            self.counters["ZZ2l2nuPassed"] += 1
-            self.CutFlowTable.Fill(5)
-
+            # As we are not adding cut on the b-tag and MET but we want the cut-flow table
+            # with the b-tag cut and MET, we are adding this cut here
+            if self.worker.HZZ2l2qNu_nTightBtagJets == 0 and met.pt > 100:
+                self.counters["ZZ2l2nuPassed"] += 1
+                self.CutFlowTable_2l2v.Fill(3 + len(self.dynamicCuts_2l2nu))
+                self.CutFlowTable.Fill(5)
 
         if (self.branch_values["foundZZCandidate_2l2nu_emuCR"]):
             keepIt = True

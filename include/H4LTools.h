@@ -559,9 +559,9 @@ public:
     TSpline *spline_g2;
     TSpline *spline_L1;
     TSpline *spline_L1Zgs;
-    bool findZCandidate();
+    bool findZCandidates();
     bool ZZSelection_4l();
-    bool GetZ1_2l2qOR2l2nu();
+    bool GetExactlyTwoTightLeptons();
     bool GetZ1_emuCR();
     bool GetWW_lnuqq();
     bool ZZSelection_2l2q();
