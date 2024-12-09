@@ -1,3 +1,13 @@
+# Get Documentation for the output nanoAOD files
+
+The script [inspectNanoFile.py](scripts/inspectNanoFile.py) is copied from official nanoAOD-Tools repository. This script generates the documentation for the output nanoAOD files.
+
+To get the documentation, run the following command:
+
+```bash
+python3 scripts/inspectNanoFile.py  skimmed_nano.root  --docmd test.md --doc test.html
+```
+
 # Detailed setup instructions
 
 1. Step: 1: Get CMSSW release
@@ -19,7 +29,7 @@
 
    ```bash
    cd $CMSSW_BASE/src
-   git clone -b HZZ_Analysis git@github.com:ram1123/nanoAOD_skim.git PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim
+   git clone -b HZZ_Analysis_Merge git@github.com:ram1123/nanoAOD_skim.git PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim
    cd $CMSSW_BASE/src/PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim
    git clone git@github.com:jbeder/yaml-cpp.git external/yaml-cpp
    cd external/yaml-cpp/

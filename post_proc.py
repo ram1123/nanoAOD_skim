@@ -23,12 +23,11 @@ def parse_arguments():
     parser.add_argument("-i", "--inputFile", default="", type=str, help="Input file name")
     parser.add_argument('-o', '--outputFile', default="skimmed_nano.root", type=str, help="Output file name")
     parser.add_argument('-outDir', '--outputDir', default=".", type=str, help="Output directory")
-    parser.add_argument('-c', '--cutFlowFile', default="cutFlow.json", type=str, help="Cut flow file name")
     parser.add_argument("-n", "--entriesToRun", default=100, type=int, help="Set  to 0 if need to run over all entries else put number of entries to run")
     parser.add_argument("-d", "--DownloadFileToLocalThenRun", default=True, type=bool, help="Download file to local then run")
     parser.add_argument("--WithSyst", default=False, action="store_true", help="Do not run systematics")
-    parser.add_argument("--DEBUG", default=False, action="store_true", help="Print debug information")
-    parser.add_argument("--channels",  choices=["all", "4l", "2l2q", "2l2v"],  default="all",
+    parser.add_argument("--debug", dest="DEBUG", default=False, action="store_true", help="Print debug information")
+    parser.add_argument("--channels",  choices=["all", "4l", "2l2q", "2l2v", "lv2q"],  default="all",
                         help="Channels to run: all, 4l, 2l2q, or 2l2v")
     return parser.parse_args()
 
@@ -112,7 +111,6 @@ def main():
 
     H4LCppModule = lambda: HZZAnalysisCppProducer(year=year, cfgFile=cfgFile,
                                                   isMC=isMC, isFSR=isFSR,
-                                                  cutFlowJSONFile=args.cutFlowFile,
                                                   channels=args.channels,
                                                   DEBUG=args.DEBUG
                                                   )
@@ -123,8 +121,16 @@ def main():
     print("isFSR: {}".format(isFSR))
 
     if isMC:
-        GenVarModule = lambda : GenVarsProducer() # FIXME: Gen variable producer module is not working
-        modulesToRun.extend([H4LCppModule(), GenVarModule()])
+        if args.DEBUG: print("INFO: Running over MC")
+        if year == 2022: # FIXME: Generalize this
+            print("INFO: Running over 2022 MC")
+            modulesToRun.extend([H4LCppModule()])
+        else:
+            print("INFO: Running over 2016-2018 MC")
+            GenVarModule = lambda : GenVarsProducer() # FIXME: Gen variable producer module is not working
+            # modulesToRun.extend([H4LCppModule(), GenVarModule()])
+            modulesToRun.extend([H4LCppModule()])
+
         if (args.WithSyst):
             jetmetCorrector = createJMECorrector(isMC=isMC, dataYear=year, jesUncert="All", jetType = "AK4PFchs")
             fatJetCorrector = createJMECorrector(isMC=isMC, dataYear=year, jesUncert="All", jetType = "AK8PFPuppi")

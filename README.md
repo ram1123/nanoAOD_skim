@@ -6,7 +6,7 @@ nanoAOD skiming code for H->ZZ->4l/2l2Q/2l2nu studies.
 To setup the code, download the setup script and run it. As it will download four GitHub repository using ssh link, so it will ask for the password. The details of the `setup.sh` script is given in this [README.md](docs/README.md) file.
 
 ```bash
-wget https://raw.githubusercontent.com/ram1123/nanoAOD_skim/refs/heads/HZZ_Analysis/setup.sh
+wget https://raw.githubusercontent.com/ram1123/nanoAOD_skim/refs/heads/HZZ_Analysis_Merge/setup.sh
 source setup.sh
 ```
 
@@ -26,7 +26,8 @@ In the file [condor_setup_lxplus.py](scripts/condor/condor_setup_lxplus.py), spe
    ```bash
    cd $CMSSW_BASE/src/PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim
    # Use the arguments that you need.
-   python3 scripts/condor/condor_setup_lxplus.py --input_file sample_list_v9_2018.dat
+   python3 scripts/condor/condor_setup_lxplus.py --input_file input_data_files/sample_list_v9_2018.dat --submission_name test --condor_queue tomorrow --WithSyst --condor_file_name 'test_job' --channel "2l2v" --debug
+
    # Set proxy before submitting the condor jobs.
    voms-proxy-init -voms cms --valid 200:00
    condor_submit <Files-created-from-above-command>.jdl

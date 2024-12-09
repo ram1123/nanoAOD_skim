@@ -4,7 +4,7 @@ keep_drop_rules_GEN = [
     "# Generator Level Information",
     "#",
     "#keep gen*",
-    "#keep Gen*",
+    "keep Gen*",
     "#keep nGenPart",
     "#keep GenPart*",
     "#keep nGenDressedLepton",
@@ -28,6 +28,8 @@ keep_drop_rules_GEN = [
     "keep genV1DaughterPt",
     "keep Pz_neutrino*",
     "keep delta_pz_neutrino",
+    "keep GENnjets_pt30_eta4p7",
+    "keep nGENLeptons"
 ]
 
 keep_drop_rules_Data_MC = [
@@ -103,6 +105,9 @@ keep_drop_rules_Data_MC = [
     "#",
     "# Custom Selections and Indices",
     "#",
+    'keep njets_pt30_eta4p7',
+    'keep finalState',
+    'keep found*',
     "keep VBF*",
     "keep is*",
     "keep *Index",
@@ -127,5 +132,8 @@ keep_drop_rules_Data_MC = [
     "keep Triggers_HZZ*",
     "keep *Weight",
     "keep *Weight*",
-    "keep Pz_neutrino"
+    "keep Pz_neutrino",
+    "keep *_Fsr_*",
+    "keep *_met",
+    "keep MT_2l2nu"
 ]

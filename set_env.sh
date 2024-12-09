@@ -1,7 +1,7 @@
 #!/bin/bash
 # Set LD_LIBRARY_PATH for MELA
 echo "Updating LD_LIBRARY_PATH for MELA..."
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CMSSW_BASE/src/PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim/JHUGenMELA/MELA/data/el9_amd64_gcc12
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CMSSW_BASE/src/PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim/external/JHUGenMELA/MELA/data/el9_amd64_gcc12
 
 # Initialize VOMS proxy
 echo "Initializing VOMS proxy..."

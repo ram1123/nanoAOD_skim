@@ -7,27 +7,30 @@
 #include <TLorentzVector.h>
 #include <TSpline.h>
 #include <vector>
-//#include "yaml-cpp/yaml.h"
 #include "../external/JHUGenMELA/MELA/interface/Mela.h"
+
 
 class H4LTools
 {
 public:
-    H4LTools(int year, bool DEBUG_Main);
+    H4LTools(int year_, bool isMC_, bool DEBUG_Main);
+    // ~H4LTools();
     float elePtcut, MuPtcut, eleEtacut, MuEtacut, elesip3dCut, Musip3dCut, Zmass, MZ1cut, MZcutup, MZcutdown, MZZcut, HiggscutUp, HiggscutDown;
     float btag_deepJet_Loose, btag_deepJet_Medium, btag_deepJet_Tight;
     float eleLoosedxycut, eleLoosedzcut, MuLoosedxycut, MuLoosedzcut, MuTightdxycut, MuTightdzcut, MuTightTrackerLayercut, MuTightpTErrorcut, MuHighPtBound, eleIsocut, MuIsocut;
     float fsrphotonPtcut, fsrphotonEtacut, fsrphotonIsocut, fsrphotondRlcut, fsrphotondRlOverPtcut, JetPtcut, JetEtacut;
     float eleBDTWPLELP, eleBDTWPMELP, eleBDTWPHELP, eleBDTWPLEHP, eleBDTWPMEHP, eleBDTWPHEHP;
+    bool RecoFourMuEvent, RecoFourEEvent, RecoTwoETwoMuEvent, RecoTwoMuTwoEEvent;
     float HZZ2l2q_Leading_Lep_pT, HZZ2l2q_SubLeading_Lep_pT, HZZ2l2q_Lep_eta, HZZ2l2q_MZLepcutdown, HZZ2l2q_MZLepcutup;
     float HZZ2l2nu_Leading_Lep_pT, HZZ2l2nu_SubLeading_Lep_pT, HZZ2l2nu_Lep_eta, HZZ2l2nu_Pt_ll, HZZ2l2nu_M_ll_Window, HZZ2l2nu_dPhi_jetMET, HZZ2l2nu_MZLepcutdown, HZZ2l2nu_MZLepcutup;
     bool DEBUG;
+    int year;
 
-    void InitializeElecut(float elePtcut_, float eleEtacut_, float eleLoosedxycut_, float eleLoosedzcut_, float eleIsocut_, float eleBDTWPLELP_, float eleBDTWPMELP_, float eleBDTWPHELP_, float eleBDTWPLEHP_, float eleBDTWPMEHP_, float eleBDTWPHEHP_)
+    void InitializeElecut(float elePtcut_, float eleEtacut_, float elesip3dCut_, float eleLoosedxycut_, float eleLoosedzcut_, float eleIsocut_, float eleBDTWPLELP_, float eleBDTWPMELP_, float eleBDTWPHELP_, float eleBDTWPLEHP_, float eleBDTWPMEHP_, float eleBDTWPHEHP_)
     {
         elePtcut = elePtcut_;
         eleEtacut = eleEtacut_;
-        //elesip3dCut = elesip3dCut_;
+        elesip3dCut = elesip3dCut_;
         eleLoosedxycut = eleLoosedxycut_;
         eleLoosedzcut = eleLoosedzcut_;
         eleIsocut = eleIsocut_;
@@ -60,11 +63,11 @@ public:
         HZZ2l2nu_MZLepcutup = HZZ2l2nu_MZLepcutup_;
     }
 
-    void InitializeMucut(float MuPtcut_, float MuEtacut_, float MuLoosedxycut_, float MuLoosedzcut_, float MuIsocut_, float MuTightdxycut_, float MuTightdzcut_, float MuTightTrackerLayercut_, float MuTightpTErrorcut_, float MuHighPtBound_)
+    void InitializeMucut(float MuPtcut_, float MuEtacut_, float Musip3dCut_, float MuLoosedxycut_, float MuLoosedzcut_, float MuIsocut_, float MuTightdxycut_, float MuTightdzcut_, float MuTightTrackerLayercut_, float MuTightpTErrorcut_, float MuHighPtBound_)
     {
         MuPtcut = MuPtcut_;
         MuEtacut = MuEtacut_;
-     //   Musip3dCut = Musip3dCut_;
+        Musip3dCut = Musip3dCut_;
         MuLoosedxycut = MuLoosedxycut_;
         MuLoosedzcut = MuLoosedzcut_;
         MuIsocut = MuIsocut_;
@@ -102,16 +105,16 @@ public:
     }
 
     void SetElectrons(float Electron_pt_, float Electron_eta_, float Electron_phi_, float Electron_mass_, float Electron_dxy_, float Electron_dz_,
-                      float Electron_mvaFall17V2Iso_WP90_, int Electron_pdgId_, float Electron_pfRelIso03_all_)
+                      float Electron_sip3d_, float Electron_mvaFall17V2Iso_, float Electron_mvaFall17V2Iso_WP90_, int Electron_pdgId_, float Electron_pfRelIso03_all_)
     {
         Electron_pt.push_back(Electron_pt_);
-        Electron_phi.push_back(Electron_phi_);
         Electron_eta.push_back(Electron_eta_);
+        Electron_phi.push_back(Electron_phi_);
         Electron_mass.push_back(Electron_mass_);
         Electron_dxy.push_back(Electron_dxy_);
         Electron_dz.push_back(Electron_dz_);
-        //Electron_sip3d.push_back(Electron_sip3d_);
-        //Electron_mvaFall17V2Iso.push_back(Electron_mvaFall17V2Iso_);
+        Electron_sip3d.push_back(Electron_sip3d_);
+        Electron_mvaFall17V2Iso.push_back(Electron_mvaFall17V2Iso_);
         Electron_mvaFall17V2Iso_WP90.push_back(Electron_mvaFall17V2Iso_WP90_);
         Electron_pdgId.push_back(Electron_pdgId_);
         Electron_pfRelIso03_all.push_back(Electron_pfRelIso03_all_);
@@ -150,7 +153,7 @@ public:
     }
 
     void SetMuons(float Muon_pt_, float Muon_eta_, float Muon_phi_, float Muon_mass_, bool Muon_isGlobal_, bool Muon_isTracker_,
-                  bool Muon_mediumId_, float Muon_dxy_, float Muon_dz_, float Muon_ptErr_,
+                  bool Muon_mediumId_, float Muon_dxy_, float Muon_dz_, float Muon_sip3d_, float Muon_ptErr_,
                   int Muon_nTrackerLayers_, bool Muon_isPFcand_, int Muon_pdgId_, int Muon_charge_, float Muon_pfRelIso03_all_)
     {
         Muon_pt.push_back(Muon_pt_);
@@ -162,7 +165,7 @@ public:
         Muon_mediumId.push_back(Muon_mediumId_);
         Muon_dxy.push_back(Muon_dxy_);
         Muon_dz.push_back(Muon_dz_);
-        //Muon_sip3d.push_back(Muon_sip3d_);
+        Muon_sip3d.push_back(Muon_sip3d_);
         Muon_ptErr.push_back(Muon_ptErr_);
         Muon_nTrackerLayers.push_back(Muon_nTrackerLayers_);
         Muon_isPFcand.push_back(Muon_isPFcand_);
@@ -171,24 +174,27 @@ public:
         Muon_pfRelIso03_all.push_back(Muon_pfRelIso03_all_);
     }
 
+
     void SetMuonsGen(int Muon_genPartIdx_)
     {
         Muon_genPartIdx.push_back(Muon_genPartIdx_);
     }
 
+    void SetElectronsGen(int Electron_genPartIdx_)
+    {
+        Electron_genPartIdx.push_back(Electron_genPartIdx_);
+    }
+
     void SetFsrPhotons(float FsrPhoton_dROverEt2_, float FsrPhoton_eta_,
-                       float FsrPhoton_phi_, float FsrPhoton_pt_, float FsrPhoton_relIso03_)
+                       float FsrPhoton_phi_, float FsrPhoton_pt_, float FsrPhoton_relIso03_, float FsrPhoton_electronIdx_, float FsrPhoton_muonIdx_)
     {
         FsrPhoton_dROverEt2.push_back(FsrPhoton_dROverEt2_);
         FsrPhoton_phi.push_back(FsrPhoton_phi_);
         FsrPhoton_eta.push_back(FsrPhoton_eta_);
         FsrPhoton_pt.push_back(FsrPhoton_pt_);
         FsrPhoton_relIso03.push_back(FsrPhoton_relIso03_);
-    }
-
-    void SetGenParts(float GenPart_pt_)
-    {
-        GenPart_pt.push_back(GenPart_pt_);
+        FsrPhoton_electronIdx.push_back(FsrPhoton_electronIdx_);
+        FsrPhoton_muonIdx.push_back(FsrPhoton_muonIdx_);
     }
 
     void SetObjectNum(unsigned nElectron_, unsigned nMuon_, unsigned nJet_, unsigned nFsrPhoton_)
@@ -198,20 +204,20 @@ public:
         nJet = nJet_;
         nFsrPhoton = nFsrPhoton_;
     }
-    void SetObjectNumGen(unsigned nGenPart_)
-    {
-        nGenPart = nGenPart_;
-    }
 
+    bool isMC;
     std::vector<unsigned int> goodLooseElectrons2012();
     std::vector<unsigned int> goodLooseMuons2012();
     std::vector<unsigned int> goodMuons2015_noIso_noPf(std::vector<unsigned int> Muonindex);
     std::vector<unsigned int> goodElectrons2015_noIso_noBdt(std::vector<unsigned int> Electronindex);
     std::vector<bool> passTight_BDT_Id();
+    std::vector<bool> passTight_BDT_Id_ZZ4l();
     std::vector<bool> passTight_Id();
     std::vector<unsigned int> goodFsrPhotons();
     unsigned doFsrRecovery(TLorentzVector Lep);
+    unsigned doFsrRecovery_Run3(std::vector<unsigned int> goodfsridx, unsigned lepidx, int lepflavor); // lepflavor 11 or 13
     std::vector<TLorentzVector> BatchFsrRecovery(std::vector<TLorentzVector> LepList);
+    void BatchFsrRecovery_Run3();
     std::vector<TLorentzVector> ElectronFsr();
     std::vector<TLorentzVector> MuonFsr();
     std::vector<float> ElectronFsrPt();
@@ -222,12 +228,15 @@ public:
     std::vector<float> MuonFsrPhi();
     std::vector<unsigned int> SelectedJets(std::vector<unsigned int> ele, std::vector<unsigned int> mu);
     std::vector<unsigned int> SelectedFatJets(std::vector<unsigned int> ele, std::vector<unsigned int> mu);
-
+    std::vector<TLorentzVector> Electrondressed_Run3;
+    std::vector<TLorentzVector> Muondressed_Run3;
     std::vector<TLorentzVector> Zlist;
     std::vector<TLorentzVector> Zlistnofsr;
     std::vector<int> Zflavor; // mu->13, e->11
     std::vector<int> Zlep1index;
     std::vector<int> Zlep2index;
+    std::vector<int> Zlep1lepindex;
+    std::vector<int> Zlep2lepindex;
     std::vector<float> Zlep1pt; // leading lepton from each Z boson
     std::vector<float> Zlep1eta;
     std::vector<float> Zlep1phi;
@@ -261,6 +270,9 @@ public:
     int nTightMu;
     int nTightEleChgSum;
     int nTightMuChgSum;
+    int njets_pt30_eta4p7;
+    int Lepointer;
+
     bool flag4e;
     bool flag4mu;
     bool flag2e2mu;
@@ -287,10 +299,10 @@ public:
     float Pz_neutrino;
 
     float boostedJet_PNScore;
-    int boostedJet_Index;   // Contains the inded of 2l2q case; the boosted jet index that satisfies the P/N score and pT cut>200 GeV; No mass cut
-    int resolvedJet1_Index; // Contains the index of 2l2q case; when paired using mass close to Z-boson mass
-    int resolvedJet2_Index; // Contains the index of 2l2q case; when paired using mass close to Z-boson mass
-    int HZZ2l2nu_VBFIndexJet1;    // Contains the index of 2l2nu case
+    int boostedJet_Index;      // Contains the inded of 2l2q case; the boosted jet index that satisfies the P/N score and pT cut>200 GeV; No mass cut
+    int resolvedJet1_Index;    // Contains the index of 2l2q case; when paired using mass close to Z-boson mass
+    int resolvedJet2_Index;    // Contains the index of 2l2q case; when paired using mass close to Z-boson mass
+    int HZZ2l2nu_VBFIndexJet1; // Contains the index of 2l2nu case
     int HZZ2l2nu_VBFIndexJet2;
 
     void LeptonSelection();
@@ -308,6 +320,10 @@ public:
     std::vector<float> Muiso, Eiso;
     std::vector<bool> Eid;
     std::vector<bool> muid;
+    std::vector<int> lep_genindex;
+    std::vector<int> TightElelep_index;
+    std::vector<int> TightMulep_index;
+    int lep_Hindex[4];
 
     std::vector<int> TightEleindex;
     std::vector<int> TightMuindex;
@@ -337,8 +353,10 @@ public:
         Electron_dxy.clear();
         Electron_dz.clear();
         Electron_sip3d.clear();
+        Electron_mvaFall17V2Iso.clear();
         Electron_mvaFall17V2Iso_WP90.clear();
         Electron_pdgId.clear();
+        Electron_genPartIdx.clear();
         Electron_pfRelIso03_all.clear();
         Elechg.clear();
         Eiso.clear();
@@ -372,6 +390,12 @@ public:
         TightMuindex.clear();
         nTightMu = 0;
         nTightMuChgSum = 0;
+        njets_pt30_eta4p7 = 0;
+        Lepointer = 0;
+        RecoFourMuEvent = false;
+        RecoFourEEvent = false;
+        RecoTwoETwoMuEvent = false;
+        RecoTwoMuTwoEEvent = false;
 
         // Jet related variables
         nJet = 0;
@@ -382,6 +406,8 @@ public:
         Jet_btagDeepFlavB.clear();
         Jet_jetId.clear();
         Jet_puId.clear();
+        Zlep1lepindex.clear();
+        Zlep2lepindex.clear();
         FatJet_pt.clear();
         FatJet_phi.clear();
         FatJet_eta.clear();
@@ -390,6 +416,7 @@ public:
         FatJet_PNZvsQCD.clear();
         FatJet_jetId.clear();
         jetidx.clear();
+        lep_genindex.clear();
         FatJetidx.clear();
 
         // MET related variables
@@ -404,17 +431,19 @@ public:
         FsrPhoton_eta.clear();
         FsrPhoton_pt.clear();
         FsrPhoton_relIso03.clear();
-
-        // Generator  related variables
-        nGenPart = 0;
-        GenPart_pt.clear();
+        FsrPhoton_electronIdx.clear();
+        FsrPhoton_muonIdx.clear();
 
         // Reconstructed variables
         Zlist.clear();
         Zlistnofsr.clear();
         Zflavor.clear();
+        Electrondressed_Run3.clear();
+        Muondressed_Run3.clear();
         Zlep1index.clear();
         Zlep2index.clear();
+        Zlep1lepindex.clear();
+        Zlep2lepindex.clear();
         Zlep1pt.clear();
         Zlep1eta.clear();
         Zlep1phi.clear();
@@ -530,10 +559,11 @@ public:
     TSpline *spline_g2;
     TSpline *spline_L1;
     TSpline *spline_L1Zgs;
-    bool findZCandidate();
+    bool findZCandidates();
     bool ZZSelection_4l();
-    bool GetZ1_2l2qOR2l2nu();
+    bool GetExactlyTwoTightLeptons();
     bool GetZ1_emuCR();
+    bool GetWW_lnuqq();
     bool ZZSelection_2l2q();
     bool ZZSelection_2l2nu();
     bool ZZSelection_2l2nu_EMu_CR();
@@ -591,11 +621,12 @@ public:
     int HZZ_emuCR_cutbtag;
     int HZZ_emuCR_cutdPhiJetMET;
     int HZZ_emuCR_cutMETgT100;
+    int HWWlNu2q_cut1l;
 
 private:
     std::vector<float> Electron_pt, Electron_phi, Electron_eta, Electron_mass, Electron_dxy, Electron_dz, Electron_sip3d;
-    std::vector<float> Electron_mvaFall17V2Iso_WP90, Electron_pfRelIso03_all;
-    std::vector<int> Electron_pdgId;
+    std::vector<float> Electron_mvaFall17V2Iso, Electron_mvaFall17V2Iso_WP90, Electron_pfRelIso03_all;
+    std::vector<int> Electron_pdgId, Electron_genPartIdx;
 
     std::vector<float> Jet_pt, Jet_phi, Jet_eta, Jet_mass, Jet_btagDeepFlavB;
     std::vector<int> Jet_jetId, Jet_puId;
@@ -609,17 +640,18 @@ private:
     std::vector<int> Muon_nTrackerLayers, Muon_genPartIdx, Muon_pdgId, Muon_charge;
     std::vector<bool> Muon_isTracker, Muon_isGlobal, Muon_isPFcand, Muon_mediumId;
 
-    std::vector<float> FsrPhoton_dROverEt2, FsrPhoton_phi, FsrPhoton_pt, FsrPhoton_relIso03, FsrPhoton_eta;
+    std::vector<float> FsrPhoton_dROverEt2, FsrPhoton_phi, FsrPhoton_pt, FsrPhoton_relIso03, FsrPhoton_eta, FsrPhoton_electronIdx, FsrPhoton_muonIdx;
 
     std::vector<float> GenPart_pt;
 
-    unsigned nElectron, nMuon, nJet, nGenPart, nFsrPhoton;
+    unsigned nElectron, nMuon, nJet, nFsrPhoton;
 };
 
-H4LTools::H4LTools(int year, bool DEBUG_Main)
+H4LTools::H4LTools(int year_, bool isMC_, bool DEBUG_Main)
 {
     DEBUG = DEBUG_Main;
-    std::cout << "year" << " " << year << std::endl;
+    year = year_;
+    // std::cout << "Line#659: year " << " " << year_ << std::endl;
     mela = new Mela(13.0, 125.0, TVar::SILENT);
     mela->setCandidateDecayMode(TVar::CandidateDecay_ZZ);
     TFile *gConstant_g4 = TFile::Open("external/CoupleConstantsForMELA/gConstant_HZZ2e2mu_g4.root");
@@ -692,5 +724,11 @@ H4LTools::H4LTools(int year, bool DEBUG_Main)
     HZZ_emuCR_cutbtag = 0;
     HZZ_emuCR_cutdPhiJetMET = 0;
     HZZ_emuCR_cutMETgT100 = 0;
+    HWWlNu2q_cut1l = 0;
 }
+
+// ~H4LTools()
+// {
+// }
+
 #endif
