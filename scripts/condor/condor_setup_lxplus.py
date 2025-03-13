@@ -202,6 +202,7 @@ echo "..."
 echo "========================================="
 output_file=${{4}}_hadd.root
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CMSSW_BASE/src/PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim/JHUGenMELA/MELA/data/el9_amd64_gcc12
+eval $(external/JHUGenMELA/MELA/setup.sh env)
 {command} --entriesToRun {entries} --inputFile ${{1}} --outputFile ${{output_file}} --cutFlowFile ${{4}}.json --DownloadFileToLocalThenRun True {syst_flag}
 echo "====> List root files : "
 ls -ltrh *.root
@@ -226,8 +227,8 @@ rm -rf {CMSSWRel}
     print("\n#===> Set Proxy Using:")
     print("voms-proxy-init --voms cms --valid 168:00")
     print("\n# It is assumed that the proxy is created in file: /tmp/x509up_u48539. Update this in below two lines:")
-    print("cp /tmp/x509up_u48539 ~/")
-    print("export X509_USER_PROXY=~/x509up_u48539")
+    print("cp /tmp/x509up_u153104 ~/")
+    print("export X509_USER_PROXY=~/x509up_u153104")
     print("\n#Submit jobs:")
     print("condor_submit "+condor_file_name+".jdl")
     # os.system("condor_submit "+condor_file_name+".jdl")
