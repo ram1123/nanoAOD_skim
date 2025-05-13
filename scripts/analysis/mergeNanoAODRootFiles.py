@@ -83,10 +83,10 @@ def merge_files(targetFile, filesToMerge):
                     logging.info("Removing temp hadd file {tempTargetFile}".format(tempTargetFile=tempTargetFile))
                     system_with_terminal_display('rm {tempTargetFile}'.format(tempTargetFile=tempTargetFile))
 
-            system_with_terminal_display('haddnano.py {0} {1}'.format(tempTargetFile, ' '.join(batch)))
+            system_with_terminal_display('/afs/cern.ch/user/a/avijay/HZZ2l2nu/CMSSW_14_0_2/src/PhysicsTools/NanoAODTools/scripts/haddnano.py {0} {1}'.format(tempTargetFile, ' '.join(batch)))
 
         # Final merge
-        system_with_terminal_display('haddnano.py {0} {1}'.format(targetFile, " ".join(tempTargets)))
+        system_with_terminal_display('/afs/cern.ch/user/a/avijay/HZZ2l2nu/CMSSW_14_0_2/src/PhysicsTools/NanoAODTools/scripts/haddnano.py {0} {1}'.format(targetFile, " ".join(tempTargets)))
         # Cleanup
         for tempTarget in tempTargets:
             logging.debug("Removing temp hadd file {tempTarget}".format(tempTarget=tempTarget))
@@ -94,7 +94,7 @@ def merge_files(targetFile, filesToMerge):
     else:
         logging.info("Files are < 100; merging directly.")
         logging.info("haddnano.py {0} {1}".format(targetFile, " ".join(filesToMerge)))
-        system_with_terminal_display('haddnano.py {0} {1}'.format(targetFile, " ".join(filesToMerge)))
+        system_with_terminal_display('/afs/cern.ch/user/a/avijay/HZZ2l2nu/CMSSW_14_0_2/src/PhysicsTools/NanoAODTools/scripts/haddnano.py {0} {1}'.format(targetFile, " ".join(filesToMerge)))
 
 def main():
     parser = argparse.ArgumentParser(description="Merge ROOT files using haddnano.py.")

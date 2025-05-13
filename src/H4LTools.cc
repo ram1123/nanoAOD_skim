@@ -27,6 +27,9 @@ std::vector<unsigned int> H4LTools::goodLooseMuons2012(){
         if ((Muon_pt[i]>MuPtcut)&&(fabs(Muon_eta[i])<MuEtacut)&&((Muon_isGlobal[i]||Muon_isTracker[i]||Muon_isPFcand[i])&&(Muon_mediumId[i]))){
             LooseMuonindex.push_back(i);
       //      std::cout << nMuon << std::endl;
+            //if (Muon_pt[i]>70) {
+                //std::cout << "Muon_pt[" << i << "] = " << Muon_pt[i] << std::endl;
+            //}
         }
     }
 
@@ -1087,7 +1090,7 @@ bool H4LTools::GetZ1_emuCR()
          std::cout << "##Zlep1pt,Zlep2pt (emu control region): " << ElelistFsr[TightEleindex[0]].Pt() << ", " << MulistFsr[TightMuindex[0]].Pt() << std::endl;
 
     Z1 = ElelistFsr[TightEleindex[0]] + MulistFsr[TightMuindex[0]];
-    TLorentzVector Lep1, Lep2;
+    /*TLorentzVector Lep1, Lep2;
     Lep1 = ElelistFsr[TightEleindex[0]];
     Lep2 = MulistFsr[TightMuindex[0]];
 
@@ -1098,7 +1101,29 @@ bool H4LTools::GetZ1_emuCR()
     phiL1 = ElelistFsr[TightEleindex[0]].Phi();
     phiL2 = MulistFsr[TightMuindex[0]].Phi();
     massL1 = ElelistFsr[TightEleindex[0]].M();
-    massL2 = MulistFsr[TightMuindex[0]].M();
+    massL2 = MulistFsr[TightMuindex[0]].M();*/
+
+    TLorentzVector ele = ElelistFsr[TightEleindex[0]];
+    TLorentzVector mu = MulistFsr[TightMuindex[0]];
+
+    TLorentzVector Lep1, Lep2;
+
+    if (ele.Pt() >= mu.Pt()) {
+        Lep1 = ele;
+        Lep2 = mu;
+    } else {
+        Lep1 = mu;
+        Lep2 = ele;
+    }
+
+    pTL1 = Lep1.Pt();
+    pTL2 = Lep2.Pt();
+    etaL1 = Lep1.Eta();
+    etaL2 = Lep2.Eta();
+    phiL1 = Lep1.Phi();
+    phiL2 = Lep2.Phi();
+    massL1 = Lep1.M();
+    massL2 = Lep2.M();
 
     /// pT selection
     if ((pTL1 < HZZ2l2nu_Leading_Lep_pT || pTL2 < HZZ2l2nu_SubLeading_Lep_pT))
@@ -1284,6 +1309,11 @@ bool H4LTools::ZZSelection_2l2nu()
     {
         std::cout << "Passed dPhiJetMET cut" << std::endl;
         std::cout << "MET_pt: " << MET_pt << std::endl;
+	std::cout << "inside emu MET_pt: " << MET_pt << std::endl;
+	std::cout << "inside emu lep1: " << pTL1 << std::endl;
+	std::cout << "inside emu lep2 pt: " << pTL2 << std::endl;
+	std::cout << "inside emu massZ1: " << Z1.M() << std::endl;
+	std::cout << "inside emu Z1 pt: " << Z1.Pt() << std::endl;
     }
 
     if (MET_pt > 100)

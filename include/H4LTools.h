@@ -154,6 +154,7 @@ public:
                   int Muon_nTrackerLayers_, bool Muon_isPFcand_, int Muon_pdgId_, int Muon_charge_, float Muon_pfRelIso03_all_)
     {
         Muon_pt.push_back(Muon_pt_);
+       //std::cout << "Muon_pt inside header file -Set Muon-" << Muon_pt_ << std::endl;
         Muon_phi.push_back(Muon_phi_);
         Muon_eta.push_back(Muon_eta_);
         Muon_mass.push_back(Muon_mass_);
@@ -591,6 +592,7 @@ public:
     int HZZ_emuCR_cutbtag;
     int HZZ_emuCR_cutdPhiJetMET;
     int HZZ_emuCR_cutMETgT100;
+
 
 private:
     std::vector<float> Electron_pt, Electron_phi, Electron_eta, Electron_mass, Electron_dxy, Electron_dz, Electron_sip3d;

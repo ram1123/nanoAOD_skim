@@ -364,6 +364,13 @@ class HZZAnalysisCppProducer(Module):
     def analyze(self, event):
         """process event, return True (go to next module) or False (fail,
         go to next event)"""
+        #if event.run != 317527 or event.luminosityBlock != 688 or event.event != 940033553:
+            #return False
+        #if event.nElectron != 1 or event.nMuon != 1:
+            #return False
+        #print("Event electron_pt =", event.Electron_pt)
+        #print("Event Muon_pt =", event.Muon_pt)
+        #print("Event MET_pt =", event.MET_pt)
         if self.DEBUG:
             print("======       Inside analyze function     ==========")
         # do this check at every event, as other modules might have read
@@ -392,7 +399,6 @@ class HZZAnalysisCppProducer(Module):
         nZXCRFailedLeptons=0
         self.passAllEvts += 1
         self.CutFlowTable.Fill(0)
-
         massZ2_2j = -999.
         phiZ2_2j = -999.
         etaZ2_2j = -999.
@@ -487,6 +493,7 @@ class HZZAnalysisCppProducer(Module):
                 break
         if not passedTrig:
             return keepIt
+
         self.passtrigEvts += 1
         self.CutFlowTable.Fill(1)
 
@@ -495,6 +502,7 @@ class HZZAnalysisCppProducer(Module):
             self.CutFlowTable.Fill(2)
         else:
             return keepIt
+
         electrons = Collection(event, "Electron")
         muons = Collection(event, "Muon")
         fsrPhotons = Collection(event, "FsrPhoton")
@@ -522,7 +530,7 @@ class HZZAnalysisCppProducer(Module):
                 print("Electrons: pT, eta: {}, {}".format(xe.pt, xe.eta))
 
         for xm in muons:
-            self.worker.SetMuons(xm.corrected_pt, xm.eta, xm.phi, xm.mass, xm.isGlobal, xm.isTracker, xm.mediumId,
+            self.worker.SetMuons(xm.pt, xm.eta, xm.phi, xm.mass, xm.isGlobal, xm.isTracker, xm.mediumId,
                                 xm.dxy, xm.dz, xm.ptErr, xm.nTrackerLayers, xm.isPFcand,
                                  xm.pdgId, xm.charge, xm.pfRelIso03_all)
             if self.DEBUG:
