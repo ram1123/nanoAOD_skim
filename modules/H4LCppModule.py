@@ -198,7 +198,7 @@ class HZZAnalysisCppProducer(Module):
         self.out.branch("pTL4",  "F")
         self.out.branch("etaL4",  "F")
         self.out.branch("phiL4",  "F")
-
+        self.out.branch("DeltaRl1l2",  "F")
         # Branches for 4l channel: ZZ kinematics
         self.out.branch("mass4l",  "F")
         self.out.branch("pT4l",  "F")
@@ -479,6 +479,7 @@ class HZZAnalysisCppProducer(Module):
         eta4l = -999.
         phi4l = -999.
         mass4l = -999.
+        DeltaRl1l2 = -999.
         #Pz_neutrino = -999.
 
         TriggerMap = {}
@@ -602,9 +603,10 @@ class HZZAnalysisCppProducer(Module):
             etaL2 = self.worker.etaL2
             phiL2 = self.worker.phiL2
             massL2 = self.worker.massL2
+            DeltaRl1l2 = self.worker.DeltaRl1l2
 
             if pTL2>pTL1:
-                pTL1, pTl2 = pTL2, pTL1
+                pTL1, pTL2 = pTL2, pTL1
                 etaL1, etaL2 = etaL2, etaL1
                 phiL1, phiL2 = phiL2, phiL1
                 massL1,massL2 = massL2, massL1
@@ -799,6 +801,7 @@ class HZZAnalysisCppProducer(Module):
         self.out.fillBranch("pTL2",pTL2)
         self.out.fillBranch("etaL2",etaL2)
         self.out.fillBranch("phiL2",phiL2)
+        self.out.fillBranch("DeltaRl1l2",DeltaRl1l2)
 
         self.out.fillBranch("pTZ1",pTZ1)
         self.out.fillBranch("etaZ1",etaZ1)

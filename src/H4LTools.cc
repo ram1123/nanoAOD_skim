@@ -1026,8 +1026,9 @@ bool H4LTools::GetZ1_2l2qOR2l2nu()
     phiL2 = Lep2.Phi();
     massL2 = Lep2.M();
 
-    if(Lep1.DeltaR(Lep2)<0.3){
-    foundZ1Candidate = false;
+    DeltaRl1l2 = Lep1.DeltaR(Lep2);
+    if(DeltaRl1l2<0.3){
+      return foundZ1Candidate;
     }
 
     jetidx = SelectedJets(tighteleforjetidx, tightmuforjetidx);
@@ -1125,6 +1126,11 @@ bool H4LTools::GetZ1_emuCR()
     massL1 = Lep1.M();
     massL2 = Lep2.M();
 
+    DeltaRl1l2 = Lep1.DeltaR(Lep2);
+    if(DeltaRl1l2<0.3){
+        return foundZ1_emuCRCandidate;
+    }
+    
     /// pT selection
     if ((pTL1 < HZZ2l2nu_Leading_Lep_pT || pTL2 < HZZ2l2nu_SubLeading_Lep_pT))
     {

@@ -468,6 +468,7 @@ public:
         etaL2_emu = -999.0;
         phiL2_emu = -999.0;
         massL2_emu = -999.0;
+	DeltaRl1l2 = -999.0;
 
         pTj1 = -999.0;
         etaj1 = -999.0;
@@ -573,7 +574,7 @@ public:
     int cut2e, cut2mu, cut2l, cut2l1J, cut2l2j, cut2l1Jor2j;
     int HZZ2l2nu_cut2e_met, HZZ2l2nu_cut2mu_met, HZZ2l2qNu_cut2l;
     int cut4e, cut4mu, cut2e2mu, cutZZ4e, cutZZ4mu, cutZZ2e2mu, cutm4l4e, cutm4l4mu, cutm4l2e2mu, cutghost2e2mu, cutQCD2e2mu, cutLepPt2e2mu, cutghost4e, cutQCD4e, cutLepPt4e, cutghost4mu, cutQCD4mu, cutLepPt4mu;
-    float pTL1, etaL1, phiL1, massL1, pTL2, etaL2, phiL2, massL2, pTL3, etaL3, phiL3, massL3, pTL4, etaL4, phiL4, massL4;
+    float pTL1, etaL1, phiL1, massL1, pTL2, etaL2, phiL2, massL2, pTL3, etaL3, phiL3, massL3, pTL4, etaL4, phiL4, massL4, DeltaRl1l2;
     float pTL1_emu, etaL1_emu, phiL1_emu, massL1_emu, pTL2_emu, etaL2_emu, phiL2_emu, massL2_emu;
     float pTj1, etaj1, phij1, mj1, pTj2, etaj2, phij2, mj2;
     int HZZ2l2qNu_cutOppositeCharge;
