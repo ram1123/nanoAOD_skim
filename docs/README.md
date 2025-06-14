@@ -52,6 +52,20 @@
    chmod +x *.so
    ```
 
+```
+ remember to do
+
+   eval $(external/JHUGenMELA/MELA/setup.sh env)
+   or
+   eval `external/JHUGenMELA/MELA/setup.sh env`
+
+   if you are using a bash-related shell, or you can do
+
+   external/JHUGenMELA/MELA/setup.sh env
+
+   and change the commands according to your shell in order to do something equivalent to set up the environment variables.
+```
+
 4. Step: 4: interactive running
 
    ```bash
@@ -106,6 +120,8 @@
    # or
    python3 condor_setup_lxplus.py --submission_name SkimNanoAOD_2022_ZXCR --input_file sample_list_v12_2022.dat --condor_queue tomorrow
    ```
+python3 scripts/condor/condor_setup_lxplus.py --input_file input_data_files/sample_list_v9_2018.dat --submission_name HZZ2l2nu_10Apr2025 --condor_queue tomorrow  --condor_file_name 'submit_condor_HZZ2l2nu_10Apr2025'
+
 
    This will create the condor job files and the condor log files.
 
@@ -133,7 +149,7 @@
 4. [scripts/mergeNanoAODRootFiles.py](scripts/mergeNanoAODRootFiles.py): This script can be used to merge the nanoAOD root files. It takes the input directory and the output directory as input and merges the nanoAOD root files. It can be used as follows:
 
    ```bash
-   python3 scripts/mergeNanoAODRootFiles.py -i <input_directory> -o <output_directory> -f <output_file_name>
+   python3 scripts/analysis/mergeNanoAODRootFiles.py -i <input_directory> -o <output_directory> -f <output_file_name>
 
    # Example command:
    python3 scripts/mergeOutput.py -i /eos/user/r/rasharma/nanoAOD_ntuples/SkimNanoAOD_2022_ZXCR/EGamma/Run2022G/240312_135155/ -o /eos/user/r/rasharma/nanoAOD_ntuples/SkimNanoAOD_2022_ZXCR/EGamma -f Run2022G.root

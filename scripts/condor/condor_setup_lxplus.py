@@ -83,7 +83,7 @@ queue infile, outfile, eospath, outfilename, logtxt from {condor_file_name}.txt
 """)
     outjdl_file.close()
 
-    with open('input_data_files/'+InputFileFromWhereReadDASNames) as in_file:
+    with open(InputFileFromWhereReadDASNames) as in_file:
         count = 0
         count_jobs = 0
         output_string_list = []
@@ -202,6 +202,7 @@ echo "..."
 echo "========================================="
 output_file=${{4}}_hadd.root
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CMSSW_BASE/src/PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim/JHUGenMELA/MELA/data/el9_amd64_gcc12
+eval `external/JHUGenMELA/MELA/setup.sh env`
 {command} --entriesToRun {entries} --inputFile ${{1}} --outputFile ${{output_file}} --cutFlowFile ${{4}}.json --DownloadFileToLocalThenRun True {syst_flag}
 echo "====> List root files : "
 ls -ltrh *.root
