@@ -36,7 +36,7 @@ class HZZAnalysisCppProducer(Module):
         self.dynamicCuts_2l2q = ["HZZ2l2qNu_cut2l", "HZZ2l2qNu_cutOppositeCharge", "HZZ2l2qNu_cutpTl1l2",
                              "HZZ2l2qNu_cutETAl1l2", "HZZ2l2qNu_cutmZ1Window", "HZZ2l2qNu_cutZ1Pt",
                              "cut2l1J", "cut2l2j", "cut2l1Jor2j"]
-        self.dynamicCuts_2l2nu = ["HZZ2l2qNu_cut2l", "HZZ2l2qNu_cutOppositeCharge", "HZZ2l2qNu_cutpTl1l2",
+        self.dynamicCuts_2l2nu = ["cut_mu_pt", "cut_mu_eta", "cut_mu_mediumid", "cut_mu_isglobal_istracker", "cut_mu_iso", "HZZ2l2qNu_cut2l", "cut_2mu_cutOppositeCharge", "HZZ2l2qNu_cutOppositeCharge", "HZZ2l2qNu_cutpTl1l2",
                              "HZZ2l2qNu_cutETAl1l2", "HZZ2l2qNu_cutmZ1Window", "HZZ2l2qNu_cutZ1Pt",
                              "HZZ2l2nu_cutbtag", "HZZ2l2nu_cutdPhiJetMET", "HZZ2l2nu_cutMETgT100"]
         self.dynamicCuts_2l2nu_emu_CR = ["HZZemuCR_cut2l", "HZZemuCR_cutpTl1l2",
@@ -364,7 +364,7 @@ class HZZAnalysisCppProducer(Module):
     def analyze(self, event):
         """process event, return True (go to next module) or False (fail,
         go to next event)"""
-        #if event.run != 317527 or event.luminosityBlock != 688 or event.event != 940033553:
+        #if event.run != 317320 or event.luminosityBlock != 961 or event.event != 1407858076:
             #return False
         #if event.nElectron != 1 or event.nMuon != 1:
             #return False
@@ -531,7 +531,7 @@ class HZZAnalysisCppProducer(Module):
                 print("Electrons: pT, eta: {}, {}".format(xe.pt, xe.eta))
 
         for xm in muons:
-            self.worker.SetMuons(xm.pt, xm.eta, xm.phi, xm.mass, xm.isGlobal, xm.isTracker, xm.mediumId,
+            self.worker.SetMuons(xm.corrected_pt, xm.eta, xm.phi, xm.mass, xm.isGlobal, xm.isTracker, xm.mediumId,
                                 xm.dxy, xm.dz, xm.ptErr, xm.nTrackerLayers, xm.isPFcand,
                                  xm.pdgId, xm.charge, xm.pfRelIso03_all)
             if self.DEBUG:

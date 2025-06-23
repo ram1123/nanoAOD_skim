@@ -265,6 +265,7 @@ public:
     bool flag4e;
     bool flag4mu;
     bool flag2e2mu;
+    bool muonpt;
 
     bool isBoosted2l2q;
     bool flag2e;
@@ -504,6 +505,7 @@ public:
         flag2l = false;
         HZZ2l2qNu_isELE = false;
         HZZ2l2qNu_cutOppositeChargeFlag = false;
+	muonpt = false;
 
         HZZ2l2nu_flag2e_met = false;
         HZZ2l2nu_flag2l_met = false;
@@ -571,7 +573,8 @@ public:
     int cutMETlt150;
     int HZZ2l2nu_cutMETgT100;
     int HZZ2l2nu_cut2l_met_m40_180, HZZ2l2nu_cut2e_met_m40_180, HZZ2l2nu_cut2mu_met_m40_180;
-    int cut2e, cut2mu, cut2l, cut2l1J, cut2l2j, cut2l1Jor2j;
+    int cut2e, cut2mu, cut2l, cut2l1J, cut2l2j, cut2l1Jor2j, cut_mu_pt, cut_mu_eta, cut_mu_mediumid, cut_mu_isglobal_istracker, cut_mu_iso;
+    int cut_2mu_cutOppositeCharge;
     int HZZ2l2nu_cut2e_met, HZZ2l2nu_cut2mu_met, HZZ2l2qNu_cut2l;
     int cut4e, cut4mu, cut2e2mu, cutZZ4e, cutZZ4mu, cutZZ2e2mu, cutm4l4e, cutm4l4mu, cutm4l2e2mu, cutghost2e2mu, cutQCD2e2mu, cutLepPt2e2mu, cutghost4e, cutQCD4e, cutLepPt4e, cutghost4mu, cutQCD4mu, cutLepPt4mu;
     float pTL1, etaL1, phiL1, massL1, pTL2, etaL2, phiL2, massL2, pTL3, etaL3, phiL3, massL3, pTL4, etaL4, phiL4, massL4, DeltaRl1l2;
@@ -679,6 +682,12 @@ H4LTools::H4LTools(int year, bool DEBUG_Main)
     cut2e_m40_180 = 0;
     cut2mu_m40_180 = 0;
     cut2l_m40_180 = 0;
+    cut_mu_pt = 0;
+    cut_mu_eta = 0;
+    cut_mu_mediumid = 0;
+    cut_mu_isglobal_istracker = 0;
+    cut_mu_iso = 0;
+    cut_2mu_cutOppositeCharge = 0;
 
     HZZ2l2nu_cut2e_met = 0;
     HZZ2l2nu_cut2mu_met = 0;
@@ -695,5 +704,6 @@ H4LTools::H4LTools(int year, bool DEBUG_Main)
     HZZ_emuCR_cutbtag = 0;
     HZZ_emuCR_cutdPhiJetMET = 0;
     HZZ_emuCR_cutMETgT100 = 0;
+    
 }
 #endif

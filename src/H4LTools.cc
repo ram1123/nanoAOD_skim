@@ -19,22 +19,43 @@ std::vector<unsigned int> H4LTools::goodLooseElectrons2012(){
     return LooseElectronindex;
 }
 
+
 std::vector<unsigned int> H4LTools::goodLooseMuons2012(){
     std::vector<unsigned int> LooseMuonindex;
+    //bool muonpt = false;
     for (unsigned int i=0; i<Muon_eta.size(); i++){
         if (DEBUG)
             std::cout << "Inside goodLooseMuons2012:: Muon_pt[" << i << "] = " << Muon_pt[i] << std::endl;
         if ((Muon_pt[i]>MuPtcut)&&(fabs(Muon_eta[i])<MuEtacut)&&((Muon_isGlobal[i]||Muon_isTracker[i]||Muon_isPFcand[i])&&(Muon_mediumId[i]))){
             LooseMuonindex.push_back(i);
       //      std::cout << nMuon << std::endl;
-            //if (Muon_pt[i]>70) {
-                //std::cout << "Muon_pt[" << i << "] = " << Muon_pt[i] << std::endl;
-            //}
-        }
+          }
+            if ((Muon_eta.size()>1)&&(Muon_pt[i]>MuPtcut)) {
+               cut_mu_pt++;
+	       //muonpt = true;
+            }
+	    if ((Muon_eta.size()>1)&&(fabs(Muon_eta[i])<MuEtacut)) {
+                cut_mu_eta++;
+            }
+	    if ((Muon_eta.size()>1)&&(Muon_mediumId[i])){
+		cut_mu_mediumid++;
+            }
+	    if ((Muon_eta.size()>1)&&((Muon_isGlobal[i]||Muon_isTracker[i]))){
+                cut_mu_isglobal_istracker++;
+            }
+        
     }
 
     return LooseMuonindex;
+
+    //if (muonpt) {
+        //cut_mu_pt;
+//}
+
 }
+
+
+
 std::vector<unsigned int> H4LTools::goodMuons2015_noIso_noPf(std::vector<unsigned int> Muonindex){
     std::vector<unsigned int> bestMuonindex;
     for (unsigned int i=0; i<Muonindex.size(); i++){
@@ -424,6 +445,9 @@ void H4LTools::LeptonSelection(){
             TightMuindex.push_back(amu);
             nTightMuChgSum += Muchg[amu];
         }
+        if (RelIsoNoFsr<0.35){
+		cut_mu_iso++;
+	}
     }
 
 
@@ -942,7 +966,8 @@ bool H4LTools::GetZ1_2l2qOR2l2nu()
     {
         return foundZ1Candidate;
     }
-    if (!(nTightMu == 2 || nTightEle == 2))
+    //if (!(nTightMu == 2 || nTightEle == 2))
+    if (!(nTightMu == 2))
     {
         return foundZ1Candidate;
     }
@@ -961,6 +986,9 @@ bool H4LTools::GetZ1_2l2qOR2l2nu()
     {
         HZZ2l2qNu_cutOppositeCharge++;
         HZZ2l2qNu_cutOppositeChargeFlag = true;
+    }
+    if (std::abs(nTightMuChgSum) == 0){
+    cut_2mu_cutOppositeCharge++;
     }
 
     if (DEBUG)

@@ -7,6 +7,17 @@ import tempfile
 
 from PhysicsTools.NanoAODTools.postprocessing.framework.postprocessor import PostProcessor
 from PhysicsTools.NanoAODTools.postprocessing.modules.common.muonScaleResProducer import *
+#from PhysicsTools.NanoAODTools.postprocessing.modules.common.muonScaleResProducer import *
+from PhysicsTools.NanoAODTools.postprocessing.modules.common.muonScaleResProducer import (
+    muonScaleRes2016pre,
+    muonScaleRes2016,
+    muonScaleRes2017,
+    muonScaleRes2018,
+    muonScaleRes2022,
+    muonScaleRes2022EE,
+    muonScaleRes2023,
+    muonScaleRes2023BPix
+)
 from PhysicsTools.NanoAODTools.postprocessing.modules.jme.jetmetHelperRun2 import createJMECorrector
 from PhysicsTools.NanoAODTools.postprocessing.modules.btv.btagSFProducer import btagSFProducer
 from PhysicsTools.NanoAODTools.postprocessing.modules.common.puWeightProducer import *
@@ -103,7 +114,13 @@ def main():
         jsonFileName="data/golden_json/Cert_294927-306462_13TeV_UL2017_Collisions17_GoldenJSON.txt"
         sfFileName = "DeepCSV_102XSF_V2.csv"
         modulesToRun.extend([muonScaleRes2017()])
-    if "UL16" in first_file or "UL2016" in first_file:
+    if "20UL16NanoAODAPVv9" in first_file:
+        year = 2016
+        cfgFile = "config/Input_2016.yml"
+        jsonFileName = "data/golden_json/Cert_271036-284044_13TeV_Legacy2016_Collisions16_JSON.txt"
+        sfFileName = "DeepCSV_102XSF_V2.csv"
+        modulesToRun.extend([muonScaleRes2016pre()])
+    if "20UL16NanoAODv9" in first_file:
         year = 2016
         cfgFile = "config/Input_2016.yml"
         jsonFileName = "data/golden_json/Cert_271036-284044_13TeV_Legacy2016_Collisions16_JSON.txt"
