@@ -966,8 +966,8 @@ bool H4LTools::GetZ1_2l2qOR2l2nu()
     {
         return foundZ1Candidate;
     }
-    //if (!(nTightMu == 2 || nTightEle == 2))
-    if (!(nTightMu == 2))
+    if (!(nTightMu == 2 || nTightEle == 2))
+    //if (!(nTightMu == 2))
     {
         return foundZ1Candidate;
     }
@@ -1349,7 +1349,9 @@ bool H4LTools::ZZSelection_2l2nu()
 	std::cout << "inside emu massZ1: " << Z1.M() << std::endl;
 	std::cout << "inside emu Z1 pt: " << Z1.Pt() << std::endl;
     }
-
+    if (DEBUG)
+        std::cout << "***** Corrected MET pt inside 2l2nu selection: " << MET_pt << std::endl;
+        std::cout << "***** Corrected MET phi inside 2l2nu selection: " << MET_phi << std::endl;
     if (MET_pt > 100)
     {
         HZZ2l2nu_cutMETgT100++;

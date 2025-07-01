@@ -1,5 +1,6 @@
 from PhysicsTools.NanoAODTools.postprocessing.framework.eventloop import Module
 from PhysicsTools.NanoAODTools.postprocessing.framework.datamodel import Collection,Object
+from PhysicsTools.NanoAODTools.postprocessing.modules.common.met_phi_correction import METPhiCorrector, Campaign
 import ROOT
 import yaml
 import json
@@ -14,6 +15,7 @@ ROOT.PyConfig.IgnoreCommandLineOptions = True
 
 class HZZAnalysisCppProducer(Module):
 
+    #def __init__(self, year, cfgFile, isMC, isFSR, cutFlowJSONFile, channels, DEBUG=False, corrector=None):
     def __init__(self, year, cfgFile, isMC, isFSR, cutFlowJSONFile, channels, DEBUG=False):
         self.loadLibraries()
         self.year = year
@@ -26,6 +28,7 @@ class HZZAnalysisCppProducer(Module):
         self.worker = ROOT.H4LTools(self.year, self.DEBUG)
         self._initialize_worker(self.cfg)
         self.worker.isFSR = isFSR
+        #self.corrector = corrector
         self._initialize_counters()
 
         # Alternatively, for dynamic worker attributes
@@ -511,6 +514,18 @@ class HZZAnalysisCppProducer(Module):
         jets = Collection(event, "Jet")
         FatJets = Collection(event, "FatJet")
         met = Object(event, "MET", None)
+        if self.year == 2018:
+            corrector = METPhiCorrector(
+            campaign=Campaign.UL_2018,
+            is_data=False,
+            is_puppi=False,
+            )
+            corr_pt, corr_phi = corrector(
+            met.pt,
+            met.phi,
+            npv=event.PV_npvs,
+            run=event.run
+            )
 
         # for photon in Photons:
         #     # Keep photons if pT > 55, |eta| < 2.5 and skip the transition region of barrel and endcap
@@ -546,7 +561,16 @@ class HZZAnalysisCppProducer(Module):
         for xj in FatJets:
             self.worker.SetFatJets(xj.pt, xj.eta, xj.phi, xj.msoftdrop, xj.jetId, xj.btagDeepB, xj.particleNet_ZvsQCD)
 
-        self.worker.SetMET(met.pt,met.phi,met.sumEt)
+        #corr_pt, corr_phi = self.corrector(
+            #met.pt, met.phi, npv=15, run=event.run
+        #)     
+
+        self.worker.SetMET(corr_pt, corr_phi, met.sumEt)
+        if self.DEBUG:
+            print("***** MET: corr_pt, corr_phi, sumEt: {}, {}, {}".format(corr_pt, corr_phi, met.sumEt))
+            print("***** MET not corrected: pt, phi, sumEt: {}, {}, {}".format(met.pt, met.phi, met.sumEt))
+            print("***** Event branch MET_pt =", event.MET_pt)
+        #self.worker.SetMET(met.corr_pt,met.phi,met.sumEt)
 
         self.worker.LeptonSelection()
         foundZZCandidate_4l = False    # for 4l
