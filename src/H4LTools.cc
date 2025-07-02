@@ -1177,8 +1177,7 @@ bool H4LTools::GetZ1_emuCR()
     HZZemuCR_cutETAl1l2++;
     if (DEBUG)
         std::cout << "*****$$$$*****Zlep1eta,Zlep2eta (emu control region): " << etaL1 << ", " << etaL2 << std::endl;
-    // std::cout << "##HELLO##Z_emu mass: " << Z1_emuCR.M() <<  std::endl;
-    // std::cout << "##HELLO#Z_emu Pt: " << Z1_emuCR.Pt() <<  std::endl;
+  
 
     if (fabs(Z1.M() - Zmass) > 160)
     {
@@ -1349,9 +1348,10 @@ bool H4LTools::ZZSelection_2l2nu()
 	std::cout << "inside emu massZ1: " << Z1.M() << std::endl;
 	std::cout << "inside emu Z1 pt: " << Z1.Pt() << std::endl;
     }
-    if (DEBUG)
+    if (DEBUG) {
         std::cout << "***** Corrected MET pt inside 2l2nu selection: " << MET_pt << std::endl;
         std::cout << "***** Corrected MET phi inside 2l2nu selection: " << MET_phi << std::endl;
+    }
     if (MET_pt > 100)
     {
         HZZ2l2nu_cutMETgT100++;

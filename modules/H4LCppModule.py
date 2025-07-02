@@ -367,8 +367,8 @@ class HZZAnalysisCppProducer(Module):
     def analyze(self, event):
         """process event, return True (go to next module) or False (fail,
         go to next event)"""
-        #if event.run != 317320 or event.luminosityBlock != 961 or event.event != 1407858076:
-            #return False
+        if event.run != 317292 or event.luminosityBlock != 95 or event.event != 144614313:
+            return False
         #if event.nElectron != 1 or event.nMuon != 1:
             #return False
         #print("Event electron_pt =", event.Electron_pt)
@@ -520,12 +520,25 @@ class HZZAnalysisCppProducer(Module):
             is_data=False,
             is_puppi=False,
             )
-            corr_pt, corr_phi = corrector(
-            met.pt,
-            met.phi,
-            npv=event.PV_npvs,
-            run=event.run
+        if self.year == 2017:
+            corrector = METPhiCorrector(
+            campaign=Campaign.UL_2017,
+            is_data=False,
+            is_puppi=False,
             )
+        if self.year == 2016:
+            corrector = METPhiCorrector(
+            campaign=Campaign.UL_2016,
+            is_data=False,
+            is_puppi=False,
+            )
+
+        corr_pt, corr_phi = corrector(
+        met.pt,
+        met.phi,
+        npv=event.PV_npvs,
+        run=event.run
+        )
 
         # for photon in Photons:
         #     # Keep photons if pT > 55, |eta| < 2.5 and skip the transition region of barrel and endcap
