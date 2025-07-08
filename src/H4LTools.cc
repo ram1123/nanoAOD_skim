@@ -416,7 +416,7 @@ void H4LTools::LeptonSelection(){
           }
 
         }
-        if((Eid[ae]==true)&&(RelEleIsoNoFsr<0.35)){
+        if((Eid[ae]==true)&&(RelEleIsoNoFsr<0.15)){
             nTightEle++;
             TightEleindex.push_back(ae);
             nTightEleChgSum += Elechg[ae];
@@ -440,7 +440,7 @@ void H4LTools::LeptonSelection(){
               }
           }
         }
-        if((muid[amu]==true)&&(RelIsoNoFsr<0.35)){
+        if((muid[amu]==true)&&(RelIsoNoFsr<0.2)){
             nTightMu++;
             TightMuindex.push_back(amu);
             nTightMuChgSum += Muchg[amu];

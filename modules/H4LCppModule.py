@@ -238,6 +238,9 @@ class HZZAnalysisCppProducer(Module):
         self.out.branch("etaZ2",  "F")
         self.out.branch("phiZ2",  "F")
 
+        self.out.branch("pT_MET",  "F")
+        self.out.branch("phi_MET",  "F")
+
         # Branches for 2l2q channel
         self.out.branch("massZ2_2j",  "F")
         self.out.branch("phiZ2_2j",  "F")
@@ -367,8 +370,8 @@ class HZZAnalysisCppProducer(Module):
     def analyze(self, event):
         """process event, return True (go to next module) or False (fail,
         go to next event)"""
-        if event.run != 317292 or event.luminosityBlock != 95 or event.event != 144614313:
-            return False
+        #if event.run != 317297 or event.luminosityBlock != 401 or event.event != 631542580:
+            #return False
         #if event.nElectron != 1 or event.nMuon != 1:
             #return False
         #print("Event electron_pt =", event.Electron_pt)
@@ -700,6 +703,7 @@ class HZZAnalysisCppProducer(Module):
 
             HZZ2l2nu_ZZmT = self.worker.ZZ_metsystem.Mt()
             HZZ2l2nu_ZZpT = self.worker.ZZ_metsystem.Pt()
+            
 
             #Pz_neutrino = self.worker.Pz_neutrino
 
@@ -848,6 +852,8 @@ class HZZAnalysisCppProducer(Module):
         self.out.fillBranch("etaZ2",etaZ2)
         self.out.fillBranch("phiZ2",phiZ2)
         self.out.fillBranch("massZ2",massZ2)
+        self.out.fillBranch("pT_MET",corr_pt)
+        self.out.fillBranch("phi_MET",corr_phi)
 
         self.out.fillBranch("mass4l",mass4l)
         self.out.fillBranch("pT4l",pT4l)
