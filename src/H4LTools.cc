@@ -4,6 +4,13 @@
 #include <vector>
 
 
+H4LTools::H4LTools(bool isMC_) : isMC(isMC_) {
+    if (isMC)
+        std::cout << "H4LTools: Running in MC mode" << std::endl;
+    else
+        std::cout << "H4LTools: Running in Data mode" << std::endl;
+}
+
 std::vector<unsigned int> H4LTools::goodLooseElectrons2012(){
     std::vector<unsigned int> LooseElectronindex;
     for (unsigned int i=0; i<Electron_pt.size(); i++){
@@ -133,9 +140,15 @@ std::vector<unsigned int> H4LTools::goodFsrPhotons(){
     return goodFsrPhoton;
 }
 
+
 std::vector<unsigned int> H4LTools::SelectedJets(std::vector<unsigned int> ele, std::vector<unsigned int> mu)
 {
     std::vector<unsigned int> goodJets;
+    std::vector<unsigned int> puJets;
+    std::vector<unsigned int> genuineJets;
+ 
+    //genuineJets.clear();
+    //puJets.clear();
     for (unsigned int i = 0; i < Jet_pt.size(); i++)
     {
         if ((Jet_pt[i] <= JetPtcut)) continue;
@@ -143,7 +156,7 @@ std::vector<unsigned int> H4LTools::SelectedJets(std::vector<unsigned int> ele, 
         if (Jet_jetId[i] <= 0) continue;
         if ((Jet_pt[i] < 50) && (Jet_puId[i] != 7)) continue;
         if (DEBUG)
-            std::cout << "DEBUG: Jet_pt.size() = " << Jet_pt.size() << ";" << " JetID = " << Jet_jetId[i] << ";" << "Jet_pt = " << Jet_pt[i] << ";" << " puID = " << Jet_puId[i] << std::endl;
+            std::cout << "DEBUG: Jet_pt.size() = " << Jet_pt.size() << ";" << " JetID = " << Jet_jetId[i] << ";" << "Jet_pt = " << Jet_pt[i] << ";" << " puID = " << Jet_puId[i] << " Jet index = " << i << std::endl;
         int overlaptag = 0;
         TLorentzVector jettest;
         jettest.SetPtEtaPhiM(Jet_pt[i], Jet_eta[i], Jet_phi[i], Jet_mass[i]);
@@ -163,9 +176,40 @@ std::vector<unsigned int> H4LTools::SelectedJets(std::vector<unsigned int> ele, 
         }
         if (overlaptag == 0)
             goodJets.push_back(i);
+
+        // genuine jet and PU jet selection
+        bool isGenuine = false;
+        if (isMC) {  
+        for (unsigned int j = 0; j < GenJet_pt.size(); j++){
+            TLorentzVector genjettest;
+            genjettest.SetPtEtaPhiM(GenJet_pt[j], GenJet_eta[j], GenJet_phi[j], GenJet_mass[j]);
+            if (genjettest.DeltaR(jettest) < 0.4)
+            {
+                isGenuine = true;
+            }
+        }
+    }
+        if (DEBUG)
+            std::cout << "DEBUG: Genuine Jet index = " << i << "; isGenuine = " << isGenuine <<  std::endl;
+        // Fill the genuine and PU jet vectors
+        if (isGenuine)
+        {
+            genuineJets.push_back(i);
+        }
+        else
+        {
+            puJets.push_back(i);
+            
+        }
+        
+
+
     }
     return goodJets;
+    return genuineJets;
+    return puJets;
 }
+
 
 // Pre-selection for Fat-jets
 std::vector<unsigned int> H4LTools::SelectedFatJets(std::vector<unsigned int> ele, std::vector<unsigned int> mu)

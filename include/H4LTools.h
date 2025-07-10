@@ -22,6 +22,7 @@ public:
     float HZZ2l2q_Leading_Lep_pT, HZZ2l2q_SubLeading_Lep_pT, HZZ2l2q_Lep_eta, HZZ2l2q_MZLepcutdown, HZZ2l2q_MZLepcutup;
     float HZZ2l2nu_Leading_Lep_pT, HZZ2l2nu_SubLeading_Lep_pT, HZZ2l2nu_Lep_eta, HZZ2l2nu_Pt_ll, HZZ2l2nu_M_ll_Window, HZZ2l2nu_dPhi_jetMET, HZZ2l2nu_MZLepcutdown, HZZ2l2nu_MZLepcutup;
     bool DEBUG;
+    H4LTools(bool isMC_);
 
     void InitializeElecut(float elePtcut_, float eleEtacut_, float eleLoosedxycut_, float eleLoosedzcut_, float eleIsocut_, float eleBDTWPLELP_, float eleBDTWPMELP_, float eleBDTWPHELP_, float eleBDTWPLEHP_, float eleBDTWPMEHP_, float eleBDTWPHEHP_)
     {
@@ -141,6 +142,14 @@ public:
         FatJet_PNZvsQCD.push_back(Jet_PNZvsQCD_); // 1 or 0?
     }
 
+    void SetGenJets(float GenJet_pt_, float GenJet_eta_, float GenJet_phi_, float GenJet_mass_)
+    {
+        GenJet_pt.push_back(GenJet_pt_);
+        GenJet_eta.push_back(GenJet_eta_);
+        GenJet_phi.push_back(GenJet_phi_);
+        GenJet_mass.push_back(GenJet_mass_);
+    }   
+
     void SetMET(float MET_pt_, float MET_phi_, float MET_sumEt_)
     {
         MET_pt = MET_pt_;
@@ -223,6 +232,8 @@ public:
     std::vector<float> MuonFsrPhi();
     std::vector<unsigned int> SelectedJets(std::vector<unsigned int> ele, std::vector<unsigned int> mu);
     std::vector<unsigned int> SelectedFatJets(std::vector<unsigned int> ele, std::vector<unsigned int> mu);
+    //std::vector<unsigned int> SelectedJets(std::vector<unsigned int> ele, std::vector<unsigned int> mu, std::vector<unsigned int>& genuineJets, std::vector<unsigned int>& puJets);
+
 
     std::vector<TLorentzVector> Zlist;
     std::vector<TLorentzVector> Zlistnofsr;
@@ -391,8 +402,13 @@ public:
         FatJet_btagDeepB.clear();
         FatJet_PNZvsQCD.clear();
         FatJet_jetId.clear();
+        GenJet_pt.clear();
+        GenJet_eta.clear();
+        GenJet_phi.clear();
+        GenJet_mass.clear();
         jetidx.clear();
         FatJetidx.clear();
+        
 
         // MET related variables
         MET_pt = -999.0;
@@ -469,7 +485,7 @@ public:
         etaL2_emu = -999.0;
         phiL2_emu = -999.0;
         massL2_emu = -999.0;
-	DeltaRl1l2 = -999.0;
+	    DeltaRl1l2 = -999.0;
 
         pTj1 = -999.0;
         etaj1 = -999.0;
@@ -505,7 +521,7 @@ public:
         flag2l = false;
         HZZ2l2qNu_isELE = false;
         HZZ2l2qNu_cutOppositeChargeFlag = false;
-	muonpt = false;
+	    muonpt = false;
 
         HZZ2l2nu_flag2e_met = false;
         HZZ2l2nu_flag2l_met = false;
@@ -602,6 +618,7 @@ private:
     std::vector<float> Electron_pt, Electron_phi, Electron_eta, Electron_mass, Electron_dxy, Electron_dz, Electron_sip3d;
     std::vector<float> Electron_mvaFall17V2Iso_WP90, Electron_pfRelIso03_all;
     std::vector<int> Electron_pdgId;
+    bool isMC;
 
     std::vector<float> Jet_pt, Jet_phi, Jet_eta, Jet_mass, Jet_btagDeepFlavB;
     std::vector<int> Jet_jetId, Jet_puId;
@@ -610,6 +627,7 @@ private:
 
     std::vector<float> FatJet_pt, FatJet_phi, FatJet_eta, FatJet_SDmass, FatJet_btagDeepB, FatJet_PNZvsQCD;
     std::vector<int> FatJet_jetId;
+    std::vector<float> GenJet_pt, GenJet_eta, GenJet_phi, GenJet_mass;
 
     std::vector<float> Muon_pt, Muon_phi, Muon_eta, Muon_mass, Muon_dxy, Muon_dz, Muon_sip3d, Muon_ptErr, Muon_pfRelIso03_all;
     std::vector<int> Muon_nTrackerLayers, Muon_genPartIdx, Muon_pdgId, Muon_charge;
