@@ -157,11 +157,12 @@ def main():
         modulesToRun.extend([H4LCppModule(), GenVarModule()])
         if (args.WithSyst):
             jetmetCorrector = createJMECorrector(isMC=isMC, dataYear=year, jesUncert="All", jetType = "AK4PFchs")
-            fatJetCorrector = createJMECorrector(isMC=isMC, dataYear=year, jesUncert="All", jetType = "AK8PFPuppi")
+            #fatJetCorrector = createJMECorrector(isMC=isMC, dataYear=year, jesUncert="All", jetType = "AK8PFPuppi")
             # btagSF = lambda: btagSFProducer("UL"+str(year), algo="deepjet",selectedWPs=['L','M','T','shape_corr'], sfFileName=sfFileName)
             # btagSF = lambda: btagSFProducer(era = "UL"+str(year), algo = "deepcsv")
-            puidSF = lambda: JetSFMaker("%s" % year)
-            modulesToRun.extend([jetmetCorrector(), fatJetCorrector(), puidSF()])
+            #puidSF = lambda: JetSFMaker("%s" % year)
+            #modulesToRun.extend([jetmetCorrector(), fatJetCorrector(), puidSF()])
+            modulesToRun.extend([jetmetCorrector()])
             # modulesToRun.extend([jetmetCorrector(), fatJetCorrector(), btagSF(), puidSF()])
 
         # FIXME: No PU weight for 2022
@@ -183,8 +184,9 @@ def main():
         modulesToRun.extend([H4LCppModule()])
         if (args.WithSyst):
             jetmetCorrector = createJMECorrector(isMC=isMC, dataYear=year, jesUncert="All", jetType = "AK4PFchs")
-            fatJetCorrector = createJMECorrector(isMC=isMC, dataYear=year, jesUncert="All", jetType = "AK8PFPuppi")
-            modulesToRun.extend([jetmetCorrector(), fatJetCorrector()])
+            #fatJetCorrector = createJMECorrector(isMC=isMC, dataYear=year, jesUncert="All", jetType = "AK8PFPuppi")
+            #modulesToRun.extend([jetmetCorrector(), fatJetCorrector()])
+            modulesToRun.extend([jetmetCorrector()])
 
         temp_keep_drop_file = create_temp_keep_drop_file(keep_drop_rules_Data_MC)
         print("DEBUG: Keep and drop file: {}".format(temp_keep_drop_file))

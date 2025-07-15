@@ -129,6 +129,6 @@ keep_drop_rules_Data_MC = [
     "keep *Weight*",
     "keep DeltaRl1l2",
     "keep Pz_neutrino",
-    "keep pT*",
-    "keep phi*"
+    "keep pT_MET",
+    "keep phi_MET"
 ]

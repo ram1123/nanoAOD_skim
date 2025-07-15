@@ -4,12 +4,12 @@
 #include <vector>
 
 
-H4LTools::H4LTools(bool isMC_) : isMC(isMC_) {
-    if (isMC)
-        std::cout << "H4LTools: Running in MC mode" << std::endl;
-    else
-        std::cout << "H4LTools: Running in Data mode" << std::endl;
-}
+//H4LTools::H4LTools(bool isMC_) : isMC(isMC_) {
+    //if (isMC)
+        //std::cout << "H4LTools: Running in MC mode" << std::endl;
+    //else
+        //std::cout << "H4LTools: Running in Data mode" << std::endl;
+//}
 
 std::vector<unsigned int> H4LTools::goodLooseElectrons2012(){
     std::vector<unsigned int> LooseElectronindex;
@@ -144,8 +144,8 @@ std::vector<unsigned int> H4LTools::goodFsrPhotons(){
 std::vector<unsigned int> H4LTools::SelectedJets(std::vector<unsigned int> ele, std::vector<unsigned int> mu)
 {
     std::vector<unsigned int> goodJets;
-    std::vector<unsigned int> puJets;
-    std::vector<unsigned int> genuineJets;
+    //std::vector<unsigned int> puJets;
+    //std::vector<unsigned int> genuineJets;
  
     //genuineJets.clear();
     //puJets.clear();
@@ -177,6 +177,7 @@ std::vector<unsigned int> H4LTools::SelectedJets(std::vector<unsigned int> ele, 
         if (overlaptag == 0)
             goodJets.push_back(i);
 
+        /*
         // genuine jet and PU jet selection
         bool isGenuine = false;
         if (isMC) {  
@@ -203,11 +204,11 @@ std::vector<unsigned int> H4LTools::SelectedJets(std::vector<unsigned int> ele, 
         }
         
 
-
+*/
     }
     return goodJets;
-    return genuineJets;
-    return puJets;
+    //return genuineJets;
+    //return puJets;
 }
 
 

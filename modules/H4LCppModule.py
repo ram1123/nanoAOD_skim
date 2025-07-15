@@ -516,7 +516,6 @@ class HZZAnalysisCppProducer(Module):
         # Photons = Collection(event, "Photon")
         jets = Collection(event, "Jet")
         FatJets = Collection(event, "FatJet")
-        GenJets = Collection(event, "GenJet")
         met = Object(event, "MET", None)
         if self.year == 2018:
             corrector = METPhiCorrector(
@@ -551,10 +550,13 @@ class HZZAnalysisCppProducer(Module):
 
         if isMC:
             genparts = Collection(event, "GenPart")
+            GenJets = Collection(event, "GenJet")
             for xg in genparts:
                 self.worker.SetGenParts(xg.pt)
             for xm in muons:
                 self.worker.SetMuonsGen(xm.genPartIdx)
+            for xg in GenJets:
+                self.worker.SetGenJets(xg.pt, xg.eta, xg.phi, xg.mass)
 
         for xe in electrons:
             self.worker.SetElectrons(xe.pt, xe.eta, xe.phi, xe.mass, xe.dxy,
@@ -578,8 +580,6 @@ class HZZAnalysisCppProducer(Module):
         for xj in FatJets:
             self.worker.SetFatJets(xj.pt, xj.eta, xj.phi, xj.msoftdrop, xj.jetId, xj.btagDeepB, xj.particleNet_ZvsQCD)
 
-        for xg in GenJets:
-            self.worker.SetGenJets(xg.pt, xg.eta, xg.phi, xg.mass)
 
         #corr_pt, corr_phi = self.corrector(
             #met.pt, met.phi, npv=15, run=event.run
