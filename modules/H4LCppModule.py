@@ -1,5 +1,6 @@
 from PhysicsTools.NanoAODTools.postprocessing.framework.eventloop import Module
 from PhysicsTools.NanoAODTools.postprocessing.framework.datamodel import Collection,Object
+from PhysicsTools.NanoAODTools.postprocessing.modules.common.met_phi_correction import METPhiCorrector, Campaign
 import ROOT
 import yaml
 import json
@@ -14,6 +15,7 @@ ROOT.PyConfig.IgnoreCommandLineOptions = True
 
 class HZZAnalysisCppProducer(Module):
 
+    #def __init__(self, year, cfgFile, isMC, isFSR, cutFlowJSONFile, channels, DEBUG=False, corrector=None):
     def __init__(self, year, cfgFile, isMC, isFSR, cutFlowJSONFile, channels, DEBUG=False):
         self.loadLibraries()
         self.year = year
@@ -26,6 +28,7 @@ class HZZAnalysisCppProducer(Module):
         self.worker = ROOT.H4LTools(self.year, self.DEBUG)
         self._initialize_worker(self.cfg)
         self.worker.isFSR = isFSR
+        #self.corrector = corrector
         self._initialize_counters()
 
         # Alternatively, for dynamic worker attributes
@@ -36,7 +39,7 @@ class HZZAnalysisCppProducer(Module):
         self.dynamicCuts_2l2q = ["HZZ2l2qNu_cut2l", "HZZ2l2qNu_cutOppositeCharge", "HZZ2l2qNu_cutpTl1l2",
                              "HZZ2l2qNu_cutETAl1l2", "HZZ2l2qNu_cutmZ1Window", "HZZ2l2qNu_cutZ1Pt",
                              "cut2l1J", "cut2l2j", "cut2l1Jor2j"]
-        self.dynamicCuts_2l2nu = ["HZZ2l2qNu_cut2l", "HZZ2l2qNu_cutOppositeCharge", "HZZ2l2qNu_cutpTl1l2",
+        self.dynamicCuts_2l2nu = ["cut_mu_pt", "cut_mu_eta", "cut_mu_mediumid", "cut_mu_isglobal_istracker", "cut_mu_iso", "HZZ2l2qNu_cut2l", "cut_2mu_cutOppositeCharge", "HZZ2l2qNu_cutOppositeCharge", "HZZ2l2qNu_cutpTl1l2",
                              "HZZ2l2qNu_cutETAl1l2", "HZZ2l2qNu_cutmZ1Window", "HZZ2l2qNu_cutZ1Pt",
                              "HZZ2l2nu_cutbtag", "HZZ2l2nu_cutdPhiJetMET", "HZZ2l2nu_cutMETgT100"]
         self.dynamicCuts_2l2nu_emu_CR = ["HZZemuCR_cut2l", "HZZemuCR_cutpTl1l2",
@@ -198,7 +201,7 @@ class HZZAnalysisCppProducer(Module):
         self.out.branch("pTL4",  "F")
         self.out.branch("etaL4",  "F")
         self.out.branch("phiL4",  "F")
-
+        self.out.branch("DeltaRl1l2",  "F")
         # Branches for 4l channel: ZZ kinematics
         self.out.branch("mass4l",  "F")
         self.out.branch("pT4l",  "F")
@@ -234,6 +237,9 @@ class HZZAnalysisCppProducer(Module):
         self.out.branch("pTZ2",  "F")
         self.out.branch("etaZ2",  "F")
         self.out.branch("phiZ2",  "F")
+
+        self.out.branch("pT_MET",  "F")
+        self.out.branch("phi_MET",  "F")
 
         # Branches for 2l2q channel
         self.out.branch("massZ2_2j",  "F")
@@ -364,6 +370,13 @@ class HZZAnalysisCppProducer(Module):
     def analyze(self, event):
         """process event, return True (go to next module) or False (fail,
         go to next event)"""
+        #if event.run != 317297 or event.luminosityBlock != 401 or event.event != 631542580:
+            #return False
+        #if event.nElectron != 1 or event.nMuon != 1:
+            #return False
+        #print("Event electron_pt =", event.Electron_pt)
+        #print("Event Muon_pt =", event.Muon_pt)
+        #print("Event MET_pt =", event.MET_pt)
         if self.DEBUG:
             print("======       Inside analyze function     ==========")
         # do this check at every event, as other modules might have read
@@ -392,7 +405,6 @@ class HZZAnalysisCppProducer(Module):
         nZXCRFailedLeptons=0
         self.passAllEvts += 1
         self.CutFlowTable.Fill(0)
-
         massZ2_2j = -999.
         phiZ2_2j = -999.
         etaZ2_2j = -999.
@@ -473,6 +485,7 @@ class HZZAnalysisCppProducer(Module):
         eta4l = -999.
         phi4l = -999.
         mass4l = -999.
+        DeltaRl1l2 = -999.
         #Pz_neutrino = -999.
 
         TriggerMap = {}
@@ -487,6 +500,7 @@ class HZZAnalysisCppProducer(Module):
                 break
         if not passedTrig:
             return keepIt
+
         self.passtrigEvts += 1
         self.CutFlowTable.Fill(1)
 
@@ -495,6 +509,7 @@ class HZZAnalysisCppProducer(Module):
             self.CutFlowTable.Fill(2)
         else:
             return keepIt
+
         electrons = Collection(event, "Electron")
         muons = Collection(event, "Muon")
         fsrPhotons = Collection(event, "FsrPhoton")
@@ -502,6 +517,31 @@ class HZZAnalysisCppProducer(Module):
         jets = Collection(event, "Jet")
         FatJets = Collection(event, "FatJet")
         met = Object(event, "MET", None)
+        if self.year == 2018:
+            corrector = METPhiCorrector(
+            campaign=Campaign.UL_2018,
+            is_data=False,
+            is_puppi=False,
+            )
+        if self.year == 2017:
+            corrector = METPhiCorrector(
+            campaign=Campaign.UL_2017,
+            is_data=False,
+            is_puppi=False,
+            )
+        if self.year == 2016:
+            corrector = METPhiCorrector(
+            campaign=Campaign.UL_2016,
+            is_data=False,
+            is_puppi=False,
+            )
+
+        corr_pt, corr_phi = corrector(
+        met.pt,
+        met.phi,
+        npv=event.PV_npvs,
+        run=event.run
+        )
 
         # for photon in Photons:
         #     # Keep photons if pT > 55, |eta| < 2.5 and skip the transition region of barrel and endcap
@@ -510,10 +550,13 @@ class HZZAnalysisCppProducer(Module):
 
         if isMC:
             genparts = Collection(event, "GenPart")
+            GenJets = Collection(event, "GenJet")
             for xg in genparts:
                 self.worker.SetGenParts(xg.pt)
             for xm in muons:
                 self.worker.SetMuonsGen(xm.genPartIdx)
+            for xg in GenJets:
+                self.worker.SetGenJets(xg.pt, xg.eta, xg.phi, xg.mass)
 
         for xe in electrons:
             self.worker.SetElectrons(xe.pt, xe.eta, xe.phi, xe.mass, xe.dxy,
@@ -537,7 +580,17 @@ class HZZAnalysisCppProducer(Module):
         for xj in FatJets:
             self.worker.SetFatJets(xj.pt, xj.eta, xj.phi, xj.msoftdrop, xj.jetId, xj.btagDeepB, xj.particleNet_ZvsQCD)
 
-        self.worker.SetMET(met.pt,met.phi,met.sumEt)
+
+        #corr_pt, corr_phi = self.corrector(
+            #met.pt, met.phi, npv=15, run=event.run
+        #)     
+
+        self.worker.SetMET(corr_pt, corr_phi, met.sumEt)
+        if self.DEBUG:
+            print("***** MET: corr_pt, corr_phi, sumEt: {}, {}, {}".format(corr_pt, corr_phi, met.sumEt))
+            print("***** MET not corrected: pt, phi, sumEt: {}, {}, {}".format(met.pt, met.phi, met.sumEt))
+            print("***** Event branch MET_pt =", event.MET_pt)
+        #self.worker.SetMET(met.corr_pt,met.phi,met.sumEt)
 
         self.worker.LeptonSelection()
         foundZZCandidate_4l = False    # for 4l
@@ -594,9 +647,10 @@ class HZZAnalysisCppProducer(Module):
             etaL2 = self.worker.etaL2
             phiL2 = self.worker.phiL2
             massL2 = self.worker.massL2
+            DeltaRl1l2 = self.worker.DeltaRl1l2
 
             if pTL2>pTL1:
-                pTL1, pTl2 = pTL2, pTL1
+                pTL1, pTL2 = pTL2, pTL1
                 etaL1, etaL2 = etaL2, etaL1
                 phiL1, phiL2 = phiL2, phiL1
                 massL1,massL2 = massL2, massL1
@@ -653,6 +707,7 @@ class HZZAnalysisCppProducer(Module):
 
             HZZ2l2nu_ZZmT = self.worker.ZZ_metsystem.Mt()
             HZZ2l2nu_ZZpT = self.worker.ZZ_metsystem.Pt()
+            
 
             #Pz_neutrino = self.worker.Pz_neutrino
 
@@ -791,6 +846,7 @@ class HZZAnalysisCppProducer(Module):
         self.out.fillBranch("pTL2",pTL2)
         self.out.fillBranch("etaL2",etaL2)
         self.out.fillBranch("phiL2",phiL2)
+        self.out.fillBranch("DeltaRl1l2",DeltaRl1l2)
 
         self.out.fillBranch("pTZ1",pTZ1)
         self.out.fillBranch("etaZ1",etaZ1)
@@ -800,6 +856,8 @@ class HZZAnalysisCppProducer(Module):
         self.out.fillBranch("etaZ2",etaZ2)
         self.out.fillBranch("phiZ2",phiZ2)
         self.out.fillBranch("massZ2",massZ2)
+        self.out.fillBranch("pT_MET",corr_pt)
+        self.out.fillBranch("phi_MET",corr_phi)
 
         self.out.fillBranch("mass4l",mass4l)
         self.out.fillBranch("pT4l",pT4l)

@@ -22,6 +22,7 @@ public:
     float HZZ2l2q_Leading_Lep_pT, HZZ2l2q_SubLeading_Lep_pT, HZZ2l2q_Lep_eta, HZZ2l2q_MZLepcutdown, HZZ2l2q_MZLepcutup;
     float HZZ2l2nu_Leading_Lep_pT, HZZ2l2nu_SubLeading_Lep_pT, HZZ2l2nu_Lep_eta, HZZ2l2nu_Pt_ll, HZZ2l2nu_M_ll_Window, HZZ2l2nu_dPhi_jetMET, HZZ2l2nu_MZLepcutdown, HZZ2l2nu_MZLepcutup;
     bool DEBUG;
+    H4LTools(bool isMC_);
 
     void InitializeElecut(float elePtcut_, float eleEtacut_, float eleLoosedxycut_, float eleLoosedzcut_, float eleIsocut_, float eleBDTWPLELP_, float eleBDTWPMELP_, float eleBDTWPHELP_, float eleBDTWPLEHP_, float eleBDTWPMEHP_, float eleBDTWPHEHP_)
     {
@@ -141,6 +142,14 @@ public:
         FatJet_PNZvsQCD.push_back(Jet_PNZvsQCD_); // 1 or 0?
     }
 
+    void SetGenJets(float GenJet_pt_, float GenJet_eta_, float GenJet_phi_, float GenJet_mass_)
+    {
+        GenJet_pt.push_back(GenJet_pt_);
+        GenJet_eta.push_back(GenJet_eta_);
+        GenJet_phi.push_back(GenJet_phi_);
+        GenJet_mass.push_back(GenJet_mass_);
+    }   
+
     void SetMET(float MET_pt_, float MET_phi_, float MET_sumEt_)
     {
         MET_pt = MET_pt_;
@@ -154,6 +163,7 @@ public:
                   int Muon_nTrackerLayers_, bool Muon_isPFcand_, int Muon_pdgId_, int Muon_charge_, float Muon_pfRelIso03_all_)
     {
         Muon_pt.push_back(Muon_pt_);
+       //std::cout << "Muon_pt inside header file -Set Muon-" << Muon_pt_ << std::endl;
         Muon_phi.push_back(Muon_phi_);
         Muon_eta.push_back(Muon_eta_);
         Muon_mass.push_back(Muon_mass_);
@@ -222,6 +232,8 @@ public:
     std::vector<float> MuonFsrPhi();
     std::vector<unsigned int> SelectedJets(std::vector<unsigned int> ele, std::vector<unsigned int> mu);
     std::vector<unsigned int> SelectedFatJets(std::vector<unsigned int> ele, std::vector<unsigned int> mu);
+    //std::vector<unsigned int> SelectedJets(std::vector<unsigned int> ele, std::vector<unsigned int> mu, std::vector<unsigned int>& genuineJets, std::vector<unsigned int>& puJets);
+
 
     std::vector<TLorentzVector> Zlist;
     std::vector<TLorentzVector> Zlistnofsr;
@@ -264,6 +276,7 @@ public:
     bool flag4e;
     bool flag4mu;
     bool flag2e2mu;
+    bool muonpt;
 
     bool isBoosted2l2q;
     bool flag2e;
@@ -389,8 +402,13 @@ public:
         FatJet_btagDeepB.clear();
         FatJet_PNZvsQCD.clear();
         FatJet_jetId.clear();
+        GenJet_pt.clear();
+        GenJet_eta.clear();
+        GenJet_phi.clear();
+        GenJet_mass.clear();
         jetidx.clear();
         FatJetidx.clear();
+        
 
         // MET related variables
         MET_pt = -999.0;
@@ -467,6 +485,7 @@ public:
         etaL2_emu = -999.0;
         phiL2_emu = -999.0;
         massL2_emu = -999.0;
+	    DeltaRl1l2 = -999.0;
 
         pTj1 = -999.0;
         etaj1 = -999.0;
@@ -502,6 +521,7 @@ public:
         flag2l = false;
         HZZ2l2qNu_isELE = false;
         HZZ2l2qNu_cutOppositeChargeFlag = false;
+	    muonpt = false;
 
         HZZ2l2nu_flag2e_met = false;
         HZZ2l2nu_flag2l_met = false;
@@ -569,10 +589,11 @@ public:
     int cutMETlt150;
     int HZZ2l2nu_cutMETgT100;
     int HZZ2l2nu_cut2l_met_m40_180, HZZ2l2nu_cut2e_met_m40_180, HZZ2l2nu_cut2mu_met_m40_180;
-    int cut2e, cut2mu, cut2l, cut2l1J, cut2l2j, cut2l1Jor2j;
+    int cut2e, cut2mu, cut2l, cut2l1J, cut2l2j, cut2l1Jor2j, cut_mu_pt, cut_mu_eta, cut_mu_mediumid, cut_mu_isglobal_istracker, cut_mu_iso;
+    int cut_2mu_cutOppositeCharge;
     int HZZ2l2nu_cut2e_met, HZZ2l2nu_cut2mu_met, HZZ2l2qNu_cut2l;
     int cut4e, cut4mu, cut2e2mu, cutZZ4e, cutZZ4mu, cutZZ2e2mu, cutm4l4e, cutm4l4mu, cutm4l2e2mu, cutghost2e2mu, cutQCD2e2mu, cutLepPt2e2mu, cutghost4e, cutQCD4e, cutLepPt4e, cutghost4mu, cutQCD4mu, cutLepPt4mu;
-    float pTL1, etaL1, phiL1, massL1, pTL2, etaL2, phiL2, massL2, pTL3, etaL3, phiL3, massL3, pTL4, etaL4, phiL4, massL4;
+    float pTL1, etaL1, phiL1, massL1, pTL2, etaL2, phiL2, massL2, pTL3, etaL3, phiL3, massL3, pTL4, etaL4, phiL4, massL4, DeltaRl1l2;
     float pTL1_emu, etaL1_emu, phiL1_emu, massL1_emu, pTL2_emu, etaL2_emu, phiL2_emu, massL2_emu;
     float pTj1, etaj1, phij1, mj1, pTj2, etaj2, phij2, mj2;
     int HZZ2l2qNu_cutOppositeCharge;
@@ -592,10 +613,12 @@ public:
     int HZZ_emuCR_cutdPhiJetMET;
     int HZZ_emuCR_cutMETgT100;
 
+
 private:
     std::vector<float> Electron_pt, Electron_phi, Electron_eta, Electron_mass, Electron_dxy, Electron_dz, Electron_sip3d;
     std::vector<float> Electron_mvaFall17V2Iso_WP90, Electron_pfRelIso03_all;
     std::vector<int> Electron_pdgId;
+    bool isMC;
 
     std::vector<float> Jet_pt, Jet_phi, Jet_eta, Jet_mass, Jet_btagDeepFlavB;
     std::vector<int> Jet_jetId, Jet_puId;
@@ -604,6 +627,7 @@ private:
 
     std::vector<float> FatJet_pt, FatJet_phi, FatJet_eta, FatJet_SDmass, FatJet_btagDeepB, FatJet_PNZvsQCD;
     std::vector<int> FatJet_jetId;
+    std::vector<float> GenJet_pt, GenJet_eta, GenJet_phi, GenJet_mass;
 
     std::vector<float> Muon_pt, Muon_phi, Muon_eta, Muon_mass, Muon_dxy, Muon_dz, Muon_sip3d, Muon_ptErr, Muon_pfRelIso03_all;
     std::vector<int> Muon_nTrackerLayers, Muon_genPartIdx, Muon_pdgId, Muon_charge;
@@ -676,6 +700,12 @@ H4LTools::H4LTools(int year, bool DEBUG_Main)
     cut2e_m40_180 = 0;
     cut2mu_m40_180 = 0;
     cut2l_m40_180 = 0;
+    cut_mu_pt = 0;
+    cut_mu_eta = 0;
+    cut_mu_mediumid = 0;
+    cut_mu_isglobal_istracker = 0;
+    cut_mu_iso = 0;
+    cut_2mu_cutOppositeCharge = 0;
 
     HZZ2l2nu_cut2e_met = 0;
     HZZ2l2nu_cut2mu_met = 0;
@@ -692,5 +722,6 @@ H4LTools::H4LTools(int year, bool DEBUG_Main)
     HZZ_emuCR_cutbtag = 0;
     HZZ_emuCR_cutdPhiJetMET = 0;
     HZZ_emuCR_cutMETgT100 = 0;
+    
 }
 #endif

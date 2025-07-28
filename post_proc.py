@@ -6,6 +6,9 @@ import glob
 import tempfile
 
 from PhysicsTools.NanoAODTools.postprocessing.framework.postprocessor import PostProcessor
+from PhysicsTools.NanoAODTools.postprocessing.modules.common.muonScaleResProducer import *
+#from PhysicsTools.NanoAODTools.postprocessing.modules.common.muonScaleResProducer import *
+from PhysicsTools.NanoAODTools.postprocessing.modules.common.met_phi_correction import METPhiCorrector, Campaign
 from PhysicsTools.NanoAODTools.postprocessing.modules.common.muonScaleResProducer import (
     muonScaleRes2016pre,
     muonScaleRes2016,
@@ -60,7 +63,7 @@ def main():
     testfilelist = []
     modulesToRun = []
     isMC = True
-    isFSR = True
+    isFSR = True # set false for now
     isFiducialAna = True
     year = None
     cfgFile = None
@@ -106,6 +109,18 @@ def main():
         jsonFileName = "data/golden_json/Cert_314472-325175_13TeV_Legacy2018_Collisions18_JSON.txt"
         sfFileName = "DeepCSV_102XSF_V2.csv"
         modulesToRun.extend([muonScaleRes2018()])
+        #corrector = METPhiCorrector(
+            #campaign=Campaign.UL_2018,
+            #is_data=True,
+            #is_puppi=False,
+        #)
+        #corr_pt, corr_phi = corrector(
+            #uncorr_pt=35.0,
+            #uncorr_phi=-0.5,
+            #npv=15,
+        #)
+        #corr_pt, corr_phi = corrector(35.0, -0.5, 15, run=1)
+        #metCorrector=corrector
     if "UL17" in first_file or "UL2017" in first_file:
         year = 2017
         cfgFile = "config/Input_2017.yml"
@@ -142,11 +157,12 @@ def main():
         modulesToRun.extend([H4LCppModule(), GenVarModule()])
         if (args.WithSyst):
             jetmetCorrector = createJMECorrector(isMC=isMC, dataYear=year, jesUncert="All", jetType = "AK4PFchs")
-            fatJetCorrector = createJMECorrector(isMC=isMC, dataYear=year, jesUncert="All", jetType = "AK8PFPuppi")
+            #fatJetCorrector = createJMECorrector(isMC=isMC, dataYear=year, jesUncert="All", jetType = "AK8PFPuppi")
             # btagSF = lambda: btagSFProducer("UL"+str(year), algo="deepjet",selectedWPs=['L','M','T','shape_corr'], sfFileName=sfFileName)
             # btagSF = lambda: btagSFProducer(era = "UL"+str(year), algo = "deepcsv")
-            puidSF = lambda: JetSFMaker("%s" % year)
-            modulesToRun.extend([jetmetCorrector(), fatJetCorrector(), puidSF()])
+            #puidSF = lambda: JetSFMaker("%s" % year)
+            #modulesToRun.extend([jetmetCorrector(), fatJetCorrector(), puidSF()])
+            modulesToRun.extend([jetmetCorrector()])
             # modulesToRun.extend([jetmetCorrector(), fatJetCorrector(), btagSF(), puidSF()])
 
         # FIXME: No PU weight for 2022
@@ -168,8 +184,9 @@ def main():
         modulesToRun.extend([H4LCppModule()])
         if (args.WithSyst):
             jetmetCorrector = createJMECorrector(isMC=isMC, dataYear=year, jesUncert="All", jetType = "AK4PFchs")
-            fatJetCorrector = createJMECorrector(isMC=isMC, dataYear=year, jesUncert="All", jetType = "AK8PFPuppi")
-            modulesToRun.extend([jetmetCorrector(), fatJetCorrector()])
+            #fatJetCorrector = createJMECorrector(isMC=isMC, dataYear=year, jesUncert="All", jetType = "AK8PFPuppi")
+            #modulesToRun.extend([jetmetCorrector(), fatJetCorrector()])
+            modulesToRun.extend([jetmetCorrector()])
 
         temp_keep_drop_file = create_temp_keep_drop_file(keep_drop_rules_Data_MC)
         print("DEBUG: Keep and drop file: {}".format(temp_keep_drop_file))
