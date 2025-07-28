@@ -83,7 +83,7 @@ queue infile, outfile, eospath, outfilename, logtxt from {condor_file_name}.txt
 """)
     outjdl_file.close()
 
-    with open('input_data_files/'+InputFileFromWhereReadDASNames) as in_file:
+    with open(InputFileFromWhereReadDASNames) as in_file:
         count = 0
         count_jobs = 0
         output_string_list = []
