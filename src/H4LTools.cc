@@ -1428,6 +1428,61 @@ bool H4LTools::ZZSelection_2l2nu()
     if (DEBUG)
         std::cout << "Size of jets: [inside 2l2nu] " << HZZ2l2qNu_nJets << std::endl;
 
+    unsigned int jet1index, jet2index;
+    jet1index = 99;
+    jet2index = 99;
+    if(jetidx.size()>0)
+    {
+        if(jetidx.size()==1)
+        {
+            jet1index = jetidx[0];
+        }
+        if(jetidx.size()==2)
+        {
+            jet1index = jetidx[0];
+            jet2index = jetidx[1];
+            if(Jet_pt[jetidx[1]]>Jet_pt[jetidx[0]])
+            {
+                jet1index = jetidx[1];
+                jet2index = jetidx[0];
+            }
+        }
+        if(jetidx.size()>2)
+        {
+            jet1index = jetidx[0];
+            jet2index = jetidx[1];
+            if(Jet_pt[jetidx[1]]>Jet_pt[jetidx[0]])
+            {
+                jet1index = jetidx[1];
+                jet2index = jetidx[0];
+            }
+            for (unsigned int pj=2;pj<jetidx.size();pj++){
+                if((Jet_pt[jetidx[pj]]>jet1index)&&(Jet_pt[jetidx[pj]]>jet2index)){
+                    jet1index = jetidx[pj];
+                }
+                if(Jet_pt[jetidx[pj]]>jet2index){
+                    jet2index = jetidx[pj];
+                }
+            }
+        }
+    }
+
+    TLorentzVector Jet1,Jet2;
+    if(jetidx.size()>0){
+        Jet1.SetPtEtaPhiM(Jet_pt[jet1index],Jet_eta[jet1index],Jet_phi[jet1index],Jet_mass[jet1index]);
+        pTj1 = Jet1.Pt();
+        etaj1 = Jet1.Eta();
+        phij1 = Jet1.Phi();
+        mj1 = Jet1.M();
+    if(jetidx.size()>1){
+        Jet2.SetPtEtaPhiM(Jet_pt[jet2index],Jet_eta[jet2index],Jet_phi[jet2index],Jet_mass[jet2index]);
+        pTj2 = Jet2.Pt();
+        etaj2 = Jet2.Eta();
+        phij2 = Jet2.Phi();
+        mj2 = Jet2.M();
+        }
+    }
+
     // Get VBF jets having dEta>4.0 and mjj>500
     // If there are more than one pair of VBF jets, select the pair with highest mjj
     float VBF_jj_mjj = 0.0;

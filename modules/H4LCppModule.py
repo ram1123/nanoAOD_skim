@@ -669,6 +669,15 @@ class HZZAnalysisCppProducer(Module):
             phiZ2 = self.worker.Z2.Phi()
             massZ2 = self.worker.Z2.M()
 
+            pTj1 = self.worker.pTj1
+            etaj1 = self.worker.etaj1
+            phij1 = self.worker.phij1
+            mj1 = self.worker.mj1
+            pTj2 = self.worker.pTj2
+            etaj2 = self.worker.etaj2
+            phij2 = self.worker.phij2
+            mj2 = self.worker.mj2
+
         if (foundZZCandidate_2l2q):
             keepIt = True
             passZZ2l2qSelection = True
@@ -770,14 +779,7 @@ class HZZAnalysisCppProducer(Module):
             etaL4 = self.worker.etaL4
             phiL4 = self.worker.phiL4
             massL4 = self.worker.massL4
-            pTj1 = self.worker.pTj1
-            etaj1 = self.worker.etaj1
-            phij1 = self.worker.phij1
-            mj1 = self.worker.mj1
-            pTj2 = self.worker.pTj2
-            etaj2 = self.worker.etaj2
-            phij2 = self.worker.phij2
-            mj2 = self.worker.mj2
+            
 
             if pTL4>pTL3:
                 pTL3, pTL4 = pTL4, pTL3
