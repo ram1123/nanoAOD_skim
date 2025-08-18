@@ -1,4 +1,4 @@
-lumi: 59740.
+gumi: 59740.
 TriggerChannels:
     - Triggers_HZZ4l
     - Triggers_HZZ2l2q
@@ -166,7 +166,7 @@ HZZ2l2nu:
     SubLeading_Lep_pT: 25.0
     Lep_eta: 2.5
     Pt_ll: 10.0
-    M_ll_Window: 15.0
+    M_ll_Window: 0.0
     dPhi_jetMET: 0.0
     MZLepcut:
         down: 60.0
