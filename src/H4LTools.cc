@@ -1011,8 +1011,8 @@ bool H4LTools::GetZ1_2l2qOR2l2nu()
     {
         return foundZ1Candidate;
     }
-    if (!(nTightMu == 2 || nTightEle == 2))
-    //if (!(nTightMu == 2))
+    //if (!(nTightMu == 2 || nTightEle == 2))
+    if (!(nTightMu == 2))
     {
         return foundZ1Candidate;
     }
@@ -1071,7 +1071,7 @@ bool H4LTools::GetZ1_2l2qOR2l2nu()
     Z1nofsr = Zlistnofsr[Z1index];
 
     // The invariant mass of dilepton system within 15 GeV of the known Z boson mass, ensuring that the pair likely originates from a Z-boson decay
-    if (fabs(Z1.M() - Zmass) > HZZ2l2nu_M_ll_Window)
+    if (fabs(Z1.M() - Zmass) > 80)
     {
         return foundZ1Candidate;
     }

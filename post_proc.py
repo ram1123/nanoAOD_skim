@@ -140,6 +140,11 @@ def main():
         sfFileName = "DeepCSV_102XSF_V2.csv"
         modulesToRun.extend([muonScaleRes2016()])
 
+    if cfgFile is None:
+        year = 2018   
+        cfgFile = "config/Input_2018.yml"
+        modulesToRun.extend([muonScaleRes2018()])
+
     H4LCppModule = lambda: HZZAnalysisCppProducer(year=year, cfgFile=cfgFile,
                                                   isMC=isMC, isFSR=isFSR,
                                                   cutFlowJSONFile=args.cutFlowFile,
@@ -155,6 +160,7 @@ def main():
     if isMC:
         GenVarModule = lambda : GenVarsProducer() # FIXME: Gen variable producer module is not working
         modulesToRun.extend([H4LCppModule(), GenVarModule()])
+        #modulesToRun.extend([H4LCppModule()])
         if (args.WithSyst):
             jetmetCorrector = createJMECorrector(isMC=isMC, dataYear=year, jesUncert="All", jetType = "AK4PFchs")
             #fatJetCorrector = createJMECorrector(isMC=isMC, dataYear=year, jesUncert="All", jetType = "AK8PFPuppi")

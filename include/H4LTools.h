@@ -130,15 +130,18 @@ public:
         Jet_puId.push_back(Jet_puId_); // 1 or 0?
     }
 
-    void SetFatJets(float Jet_pt_, float Jet_eta_, float Jet_phi_, float Jet_mass_, int Jet_jetId_, float Jet_btagDeepB_,
+    //void SetFatJets(float Jet_pt_, float Jet_eta_, float Jet_phi_, float Jet_mass_, int Jet_jetId_, float Jet_btagDeepB_,
+                    //float Jet_PNZvsQCD_)
+    void SetFatJets(float Jet_pt_, float Jet_eta_, float Jet_phi_, float Jet_mass_, int Jet_jetId_,
                     float Jet_PNZvsQCD_)
+    
     {
         FatJet_pt.push_back(Jet_pt_);
         FatJet_eta.push_back(Jet_eta_);
         FatJet_phi.push_back(Jet_phi_);
         FatJet_SDmass.push_back(Jet_mass_);
         FatJet_jetId.push_back(Jet_jetId_);
-        FatJet_btagDeepB.push_back(Jet_btagDeepB_);
+        //FatJet_btagDeepB.push_back(Jet_btagDeepB_);
         FatJet_PNZvsQCD.push_back(Jet_PNZvsQCD_); // 1 or 0?
     }
 
@@ -399,7 +402,7 @@ public:
         FatJet_phi.clear();
         FatJet_eta.clear();
         FatJet_SDmass.clear();
-        FatJet_btagDeepB.clear();
+        //FatJet_btagDeepB.clear();
         FatJet_PNZvsQCD.clear();
         FatJet_jetId.clear();
         GenJet_pt.clear();
@@ -625,7 +628,8 @@ private:
     float MET_pt, MET_phi;
     float MET_sumEt, MT_2l2nu;
 
-    std::vector<float> FatJet_pt, FatJet_phi, FatJet_eta, FatJet_SDmass, FatJet_btagDeepB, FatJet_PNZvsQCD;
+    std::vector<float> FatJet_pt, FatJet_phi, FatJet_eta, FatJet_SDmass, FatJet_PNZvsQCD;
+    //std::vector<float> FatJet_btagDeepB;
     std::vector<int> FatJet_jetId;
     std::vector<float> GenJet_pt, GenJet_eta, GenJet_phi, GenJet_mass;
 

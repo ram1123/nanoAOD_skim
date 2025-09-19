@@ -371,6 +371,7 @@ class HZZAnalysisCppProducer(Module):
         """process event, return True (go to next module) or False (fail,
         go to next event)"""
         #if event.run != 317297 or event.luminosityBlock != 401 or event.event != 631542580:
+        #if event.Electron_pt.GetSize() > 0:
             #return False
         #if event.nElectron != 1 or event.nMuon != 1:
             #return False
@@ -578,7 +579,8 @@ class HZZAnalysisCppProducer(Module):
             self.worker.SetJets(xj.pt,xj.eta,xj.phi,xj.mass,xj.jetId, xj.btagDeepFlavB, xj.puId)
 
         for xj in FatJets:
-            self.worker.SetFatJets(xj.pt, xj.eta, xj.phi, xj.msoftdrop, xj.jetId, xj.btagDeepB, xj.particleNet_ZvsQCD)
+            #self.worker.SetFatJets(xj.pt, xj.eta, xj.phi, xj.msoftdrop, xj.jetId, xj.btagDeepB, xj.particleNet_ZvsQCD)
+            self.worker.SetFatJets(xj.pt, xj.eta, xj.phi, xj.msoftdrop, xj.jetId, xj.particleNet_ZvsQCD)
 
 
         #corr_pt, corr_phi = self.corrector(
