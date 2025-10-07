@@ -1011,8 +1011,8 @@ bool H4LTools::GetZ1_2l2qOR2l2nu()
     {
         return foundZ1Candidate;
     }
-    //if (!(nTightMu == 2 || nTightEle == 2))
-    if (!(nTightMu == 2))
+    if (!(nTightMu == 2 || nTightEle == 2))
+    //if (!(nTightMu == 2))
     {
         return foundZ1Candidate;
     }
