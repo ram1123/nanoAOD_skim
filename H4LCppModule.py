@@ -393,6 +393,7 @@ class HZZAnalysisCppProducer(Module):
         if (passedZ1LSelection): keepIt = True
         if (passedFullSelection): keepIt = True
         if (passedZXCRSelection): keepIt = True
+        
         Lepointer = self.worker.Lepointer
         lep_Hindex = []
         lep_Hindex_vec = self.worker.lep_Hindex
@@ -445,6 +446,7 @@ class HZZAnalysisCppProducer(Module):
 
         if (foundZZCandidate):
             self.passZZEvts += 1
+                  
         pTZ1 = self.worker.Z1.Pt()
         etaZ1 = self.worker.Z1.Eta()
         phiZ1 = self.worker.Z1.Phi()

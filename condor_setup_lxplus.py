@@ -7,7 +7,7 @@ import os
 import sys
 import datetime
 
-sys.path.append("Utils/.")
+sys.path.append("scripts/utils/.")
 
 from color_style import style
 
@@ -41,7 +41,7 @@ def main(args):
 
     # Create log files
     import infoCreaterGit
-    SumamryOfCurrentSubmission = raw_input("\n\nWrite summary for current job submission: ")
+    SumamryOfCurrentSubmission = input("\n\nWrite summary for current job submission: ") # in python3 raw_input is renamed as input
     infoLogFiles = infoCreaterGit.BasicInfoCreater('summary.dat',SumamryOfCurrentSubmission)
     infoLogFiles.generate_git_patch_and_log()
 
@@ -64,34 +64,33 @@ def main(args):
     os.system('xrdcp ' + CMSSWRel+".tgz" + '  root://eosuser.cern.ch/'+storeDir+'/' + CMSSWRel+".tgz")
 
     post_proc_to_run = "post_proc.py"
-    command = "python "+post_proc_to_run
+    command = "python3 "+post_proc_to_run
+    condor_arguments_list = []  # A list that contains all the arguments to be passed for each job
 
-    Transfer_Input_Files = ("keep_and_drop.txt")     # FIXME: Generalise this.
-    # Transfer_Input_Files = ("Cert_271036-284044_13TeV_PromptReco_Collisions16_JSON.txt, " +
-    #                         "Cert_294927-306462_13TeV_PromptReco_Collisions17_JSON.txt, " +
-    #                         "Cert_314472-325175_13TeV_PromptReco_Collisions18_JSON.txt, " +
-    #                         "keep_and_drop_data.txt")
+    outjdl_file = open(condor_file_name+".jdl","w")
+    condor_queue = "espresso" if args.debug else condor_queue
+    outjdl_file.write(f"""+JobFlavour = "{condor_queue}"
+Executable = {condor_file_name}.sh
+Universe = vanilla
+Notification = ERROR
+Should_Transfer_Files = NO
+x509userproxy = $ENV(X509_USER_PROXY)
+Output = {output_log_path}/$(logtxt)_$(Process).stdout
+Error = {output_log_path}/$(logtxt)_$(Process).err
+Log = {output_log_path}/$(logtxt)_$(Process).log
+Arguments = "$(infile) $(outfile) $(eospath) $(outfilename)"
+queue infile, outfile, eospath, outfilename, logtxt from {condor_file_name}.txt
+""")
+    outjdl_file.close()
 
-    #with open('input_data_Files/sample_list_v6_2017_campaign.dat') as in_file:
-    with open('input_data_Files/'+InputFileFromWhereReadDASNames) as in_file:
-        outjdl_file = open(condor_file_name+".jdl","w")
-        outjdl_file.write("+JobFlavour   = \""+condor_queue+"\"\n")
-        outjdl_file.write("Executable = "+condor_file_name+".sh\n")
-        outjdl_file.write("Universe = vanilla\n")
-        outjdl_file.write("Notification = ERROR\n")
-        outjdl_file.write("Should_Transfer_Files = YES\n")
-        outjdl_file.write("WhenToTransferOutput = ON_EXIT\n")
-        outjdl_file.write("Transfer_Input_Files = "+Transfer_Input_Files + ",  " + post_proc_to_run+"\n")
-        outjdl_file.write("x509userproxy = $ENV(X509_USER_PROXY)\n")
-        outjdl_file.write("requirements = TARGET.OpSysAndVer =?= \"AlmaLinux9\"\n")
-        outjdl_file.write("MY.WantOS = \"el7\"\n")
+    with open(InputFileFromWhereReadDASNames) as in_file:
         count = 0
         count_jobs = 0
         output_string_list = []
         for SampleDASName in in_file:
             if SampleDASName[0] == "#": continue
             count = count +1
-            #if count > 1: break
+            # if count > 1: break
             print(style.RED +"="*51+style.RESET+"\n")
             print ("==> Sample : ",count)
             sample_name = SampleDASName.split('/')[1]
@@ -133,8 +132,8 @@ def main(args):
             #  print "==> output_path = ",output_path
 
             ########################################
-            #print 'dasgoclient --query="file dataset='+SampleDASName.strip()+'"'
-            #print "..."
+            # print 'dasgoclient --query="file dataset='+SampleDASName.strip()+'"'
+            # print "..."
             if use_custom_eos:
                 xrd_redirector = 'root://cms-xrd-global.cern.ch/'
                 output = os.popen(use_custom_eos_cmd + SampleDASName.strip()).read()
@@ -144,14 +143,18 @@ def main(args):
 
             count_root_files = 0
             for root_file in output.split():
-                #print "=> ",root_file
+                # print "=> ",root_file
                 count_root_files+=1
                 count_jobs += 1
-                outjdl_file.write("Output = "+output_log_path+"/"+sample_name+"_$(Process).stdout\n")
-                outjdl_file.write("Error  = "+output_log_path+"/"+sample_name+"_$(Process).err\n")
-                outjdl_file.write("Log  = "+output_log_path+"/"+sample_name+"_$(Process).log\n")
-                outjdl_file.write("Arguments = "+(xrd_redirector+root_file)+" "+output_path+"  "+EOS_Output_path+ " " + (root_file.split('/')[-1]).split('.')[0] + "\n")
-                outjdl_file.write("Queue \n")
+                condor_arguments_list.append(
+                    (
+                        xrd_redirector + root_file,
+                        output_path,
+                        EOS_Output_path,
+                        (root_file.split("/")[-1]).split(".")[0],
+                        output_path.split("/")[-2], # This argument is used for the log file name
+                    )
+                )
                 if args.debug:
                     # break the for loop after 1 iteration to submit only 1 job
                     break
@@ -160,56 +163,65 @@ def main(args):
                 break
             print("Number of files: ",count_root_files)
             print("Number of jobs (till now): ",count_jobs)
-        outjdl_file.close();
 
+    # Write all condor jobs arguments from list to a file with same name as condor_file_name but with .txt extension
+    with open(condor_file_name+".txt", "w") as f:
+        for item in condor_arguments_list:
+            f.write("{}\n".format(",".join(item)))
 
-    outScript = open(condor_file_name+".sh","w");
-    outScript.write('#!/bin/bash');
-    outScript.write("\n"+'echo "Starting job on " `date`');
-    outScript.write("\n"+'echo "Running on: `uname -a`"');
-    outScript.write("\n"+'echo "System software: `cat /etc/redhat-release`"');
-    outScript.write("\n"+'source /cvmfs/cms.cern.ch/cmsset_default.sh');
-    outScript.write("\n"+'echo "====> List input arguments : " ');
-    outScript.write("\n"+'echo "1. nanoAOD ROOT file: ${1}"');
-    outScript.write("\n"+'echo "2. EOS path to store output root file: ${2}"');
-    outScript.write("\n"+'echo "3. EOS path from where we copy CMSSW: ${3}"');
-    outScript.write("\n"+'echo "4. Output root file name: ${4}"');
-    outScript.write("\n"+'echo "========================================="');
-    outScript.write("\n"+'echo "copy cmssw tar file from store area"');
-    outScript.write("\n"+'xrdcp -f  root://eosuser.cern.ch/${3}/'+CMSSWRel +'.tgz  .');
-    outScript.write("\n"+'tar -xf '+ CMSSWRel +'.tgz' );
-    outScript.write("\n"+'rm '+ CMSSWRel +'.tgz' );
-    outScript.write("\n"+'cd ' + CMSSWRel + '/src/PhysicsTools/NanoAODTools/python/postprocessing/analysis/'+TOP_LEVEL_DIR_NAME+'/' );
-    outScript.write("\n"+'rm *.root');
-    outScript.write("\n"+'scramv1 b ProjectRename');
-    outScript.write("\n"+'eval `scram runtime -sh`');
-    outScript.write("\n"+'echo "========================================="');
-    outScript.write("\n"+'echo "cat post_proc.py"');
-    outScript.write("\n"+'echo "..."');
-    outScript.write("\n"+'cat post_proc.py');
-    outScript.write("\n"+'echo "..."');
-    outScript.write("\n"+'echo "========================================="');
-    if args.NOsyst:
-        outScript.write("\n"+command + " --entriesToRun 0  --inputFile ${1} --outputFile ${4}_hadd.root --DownloadFileToLocalThenRun True  --NOsyst");
-    else:
-        outScript.write("\n"+command + " --entriesToRun 0  --inputFile ${1} --outputFile ${4}_hadd.root --DownloadFileToLocalThenRun True");
-    outScript.write("\n"+'echo "====> List root files : " ');
-    outScript.write("\n"+'ls -ltrh *.root');
-    outScript.write("\n"+'ls -ltrh *.json');
-    outScript.write("\n"+'echo "====> copying *.root file to stores area..." ');
-    outScript.write("\n"+'if ls ${4}_hadd.root 1> /dev/null 2>&1; then');
-    outScript.write("\n"+'    echo "File ${4}_hadd.root exists. Copy this."');
-    outScript.write("\n"+'    echo "xrdcp -f ${4}_hadd.root  root://eosuser.cern.ch/${2}/${4}_Skim.root"');
-    outScript.write("\n"+'    xrdcp -f ${4}_hadd.root  root://eosuser.cern.ch/${2}/${4}_Skim.root');
-    # outScript.write("\n"+'    echo "xrdcp -f ${4}.json  root://eosuser.cern.ch/${2}/cutFlow_${4}.json"');
-    outScript.write("\n"+'else');
-    outScript.write("\n"+'    echo "Something wrong: file ${4}_hadd.root does not exists, please check the post_proc.py script."');
-    outScript.write("\n"+'fi');
-    outScript.write("\n"+'rm *.root');
-    outScript.write("\n"+'cd ${_CONDOR_SCRATCH_DIR}');
-    outScript.write("\n"+'rm -rf ' + CMSSWRel);
-    outScript.write("\n");
-    outScript.close();
+    # Create the executable file for condor jobs
+    outScript = open(condor_file_name + ".sh", "w")
+    # Variables for the outScript
+    entries = 100 if args.debug else 0
+    syst_flag="--WithSyst" if args.WithSyst else ""
+
+    outScript.write(f"""#!/bin/bash
+echo "Starting job on " `date`
+echo "Running on: `uname -a`"
+echo "System software: `cat /etc/redhat-release`"
+source /cvmfs/cms.cern.ch/cmsset_default.sh
+echo "====> List input arguments : "
+echo "1. nanoAOD ROOT file: ${{1}}"
+echo "2. EOS path to store output root file: ${{2}}"
+echo "3. EOS path from where we copy CMSSW: ${{3}}"
+echo "4. Output root file name: ${{4}}"
+echo "========================================="
+echo "copy cmssw tar file from store area"
+xrdcp -f root://eosuser.cern.ch/${{3}}/{CMSSWRel}.tgz .
+tar -xf {CMSSWRel}.tgz
+rm {CMSSWRel}.tgz
+cd {CMSSWRel}/src/PhysicsTools/NanoAODTools/python/postprocessing/analysis/{TOP_LEVEL_DIR_NAME}/
+rm *.root
+scramv1 b ProjectRename
+eval `scram runtime -sh`
+echo "========================================="
+echo "cat post_proc.py"
+echo "..."
+cat post_proc.py
+echo "..."
+echo "========================================="
+output_file=${{4}}_hadd.root
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CMSSW_BASE/src/PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim/JHUGenMELA/MELA/data/el9_amd64_gcc12
+eval `external/JHUGenMELA/MELA/setup.sh env`
+{command} --entriesToRun {entries} --inputFile ${{1}} --outputFile ${{output_file}}  --DownloadFileToLocalThenRun True {syst_flag}
+echo "====> List root files : "
+ls -ltrh *.root
+ls -ltrh *.json
+echo "====> copying *.root file to stores area..."
+if ls ${{output_file}} 1> /dev/null 2>&1; then
+    echo "File ${{output_file}} exists. Copy this."
+    echo "xrdcp -f ${{output_file}} root://eosuser.cern.ch/${{2}}/${{4}}_Skim.root"
+    xrdcp -f ${{output_file}} root://eosuser.cern.ch/${{2}}/${{4}}_Skim.root
+    echo "xrdcp -f ${{4}}.json root://eosuser.cern.ch/${{2}}/cutFlow_${{4}}.json"
+    xrdcp -f ${{4}}.json root://eosuser.cern.ch/${{2}}/cutFlow_${{4}}.json
+else
+    echo "Something wrong: file ${{output_file}} does not exists, please check the post_proc.py script."
+fi
+rm *.root
+cd ${{_CONDOR_SCRATCH_DIR}}
+rm -rf {CMSSWRel}
+""")
+    outScript.close()
     os.system("chmod 777 "+condor_file_name+".sh");
 
     print("\n#===> Set Proxy Using:")
@@ -219,7 +231,7 @@ def main(args):
     print("export X509_USER_PROXY=~/x509up_u48539")
     print("\n#Submit jobs:")
     print("condor_submit "+condor_file_name+".jdl")
-    #os.system("condor_submit "+condor_file_name+".jdl")
+    # os.system("condor_submit "+condor_file_name+".jdl")
 
 # Below patch is to format the help command as it is
 class PreserveWhitespaceFormatter(argparse.RawTextHelpFormatter, argparse.ArgumentDefaultsHelpFormatter):
@@ -235,7 +247,7 @@ if __name__ == "__main__":
     parser.add_argument("--eos_output_path", default='', help="EOS path for output files. By default it is `/eos/user/<UserInitials>/<UserName>/nanoAOD_ntuples`")
     parser.add_argument("--condor_log_path", default='./', help="Path where condor log should be saved. By default is the current working directory")
     parser.add_argument("--condor_file_name", default='submit_condor_jobs', help="Name for the condor file.")
-    parser.add_argument("--condor_queue", default="testmatch", help="""
+    parser.add_argument("--condor_queue", default="tomorrow", help="""
                         Condor queue options: (Reference: https://twiki.cern.ch/twiki/bin/view/ABPComputing/LxbatchHTCondor#Queue_Flavours)
 
                         name            Duration
@@ -251,9 +263,9 @@ if __name__ == "__main__":
 
     parser.add_argument("--post_proc", default="post_proc.py", help="Post process script to run.")
     parser.add_argument("--transfer_input_files", default="keep_and_drop.txt", help="Files to be transferred as input.")
-    parser.add_argument("--NOsyst", default=False, action='store_true', help="Run without systematics.")
+    parser.add_argument("--WithSyst", default=False, action='store_true', help="Run without systematics.")
     parser.add_argument("--debug", default=False, action='store_true', help="Debug mode.")
 
     args = parser.parse_args()
     main(args)
-#condor_setup_lxplus.py
+# condor_setup_lxplus.py

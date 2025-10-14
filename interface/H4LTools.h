@@ -136,7 +136,7 @@ class H4LTools {
       void SetGenParts(float GenPart_pt_, int GenPart_genPartIdxMother_, int GenPart_pdgId_){
         GenPart_pt.push_back(GenPart_pt_);
         GenPart_genPartIdxMother.push_back(GenPart_genPartIdxMother_);
-        GenPart_pdgId.push_back(GenPart_genPartIdxMother_);
+        GenPart_pdgId.push_back(GenPart_pdgId_);
       }
       void SetObjectNum(unsigned nElectron_,unsigned nMuon_,unsigned nJet_,unsigned nFsrPhoton_){
         nElectron = nElectron_; 
@@ -305,7 +305,7 @@ class H4LTools {
         Jet_pt.clear();Jet_phi.clear();Jet_eta.clear();Jet_mass.clear();Jet_btagDeepC.clear();
         Jet_jetId.clear();Jet_puId.clear();
         FsrPhoton_dROverEt2.clear();FsrPhoton_phi.clear();FsrPhoton_eta.clear();FsrPhoton_pt.clear();FsrPhoton_relIso03.clear();
-        GenPart_pt.clear();
+        GenPart_pt.clear();GenPart_pdgId.clear();GenPart_genPartIdxMother.clear();
         Z_pt.clear();Z_eta.clear();Z_phi.clear(); Z_mass.clear();Z_noFSR_pt.clear(); Z_noFSR_eta.clear();
         Z_noFSR_phi.clear(); Z_noFSR_mass.clear(); Z_lepindex1.clear(); Z_lepindex2.clear();
         Zlist.clear();
@@ -450,7 +450,7 @@ H4LTools::H4LTools(int year, bool isMC_){
 
 int H4LTools::motherID(int Genidx){
     int ID=0;
-    while(GenPart_pdgId[GenPart_genPartIdxMother[Genidx]]!=2212 || abs(GenPart_pdgId[GenPart_genPartIdxMother[Genidx]])!=21 || abs(GenPart_pdgId[GenPart_genPartIdxMother[Genidx]])>6){
+    while(abs(GenPart_pdgId[GenPart_genPartIdxMother[Genidx]])>6){
         if(GenPart_pdgId[GenPart_genPartIdxMother[Genidx]]!=GenPart_pdgId[Genidx]){
             ID=GenPart_pdgId[GenPart_genPartIdxMother[Genidx]]; return ID;
         }
@@ -458,12 +458,12 @@ int H4LTools::motherID(int Genidx){
             Genidx=GenPart_genPartIdxMother[Genidx];
         }
     }
-    return 2212;
+    return 0;
 }
 
 int H4LTools::motheridx(int Genidx){
     int ID=0;
-    while(GenPart_pdgId[GenPart_genPartIdxMother[Genidx]]!=2212 || abs(GenPart_pdgId[GenPart_genPartIdxMother[Genidx]])!=21 || abs(GenPart_pdgId[GenPart_genPartIdxMother[Genidx]])>6){
+    while(abs(GenPart_pdgId[GenPart_genPartIdxMother[Genidx]])>6){
         if(GenPart_pdgId[GenPart_genPartIdxMother[Genidx]]!=GenPart_pdgId[Genidx]){
             ID=GenPart_genPartIdxMother[Genidx]; return ID;
         }
