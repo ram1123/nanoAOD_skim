@@ -172,7 +172,7 @@ queue infile, outfile, eospath, outfilename, logtxt from {condor_file_name}.txt
     # Create the executable file for condor jobs
     outScript = open(condor_file_name + ".sh", "w")
     # Variables for the outScript
-    entries = 100 if args.debug else 0
+    entries = 10000 if args.debug else 0
     syst_flag="--WithSyst" if args.WithSyst else ""
 
     outScript.write(f"""#!/bin/bash

@@ -200,8 +200,11 @@ public:
     }
 
     void SetGenParts(float GenPart_pt_)
+    //void SetGenParts(float GenPart_pt_, int GenPart_genPartIdxMother_, int GenPart_pdgId_){
     {
         GenPart_pt.push_back(GenPart_pt_);
+        //GenPart_genPartIdxMother.push_back(GenPart_genPartIdxMother_);
+        //GenPart_pdgId.push_back(GenPart_pdgId_);
     }
 
     void SetObjectNum(unsigned nElectron_, unsigned nMuon_, unsigned nJet_, unsigned nFsrPhoton_)
@@ -429,6 +432,8 @@ public:
         // Generator  related variables
         nGenPart = 0;
         GenPart_pt.clear();
+        //GenPart_pdgId.clear();
+        //GenPart_genPartIdxMother.clear();
 
         // Reconstructed variables
         Zlist.clear();

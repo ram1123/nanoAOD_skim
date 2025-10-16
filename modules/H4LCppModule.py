@@ -370,9 +370,9 @@ class HZZAnalysisCppProducer(Module):
     def analyze(self, event):
         """process event, return True (go to next module) or False (fail,
         go to next event)"""
-        #if event.run != 317297 or event.luminosityBlock != 401 or event.event != 631542580:
+        if event.run != 317292 or event.luminosityBlock != 94 or event.event != 143096484:
         #if event.Electron_pt.GetSize() > 0:
-            #return False
+            return False
         #if event.nElectron != 1 or event.nMuon != 1:
             #return False
         #print("Event electron_pt =", event.Electron_pt)

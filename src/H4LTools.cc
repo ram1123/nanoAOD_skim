@@ -1427,7 +1427,10 @@ bool H4LTools::ZZSelection_2l2nu()
     HZZ2l2qNu_nJets = jetidx.size();
     if (DEBUG)
         std::cout << "Size of jets: [inside 2l2nu] " << HZZ2l2qNu_nJets << std::endl;
-
+    for (unsigned int i = 0; i < jetidx.size(); i++){
+    if (DEBUG)
+            std::cout << "DEBUG jets inside 2l2nu selection: Jet_pt.size() = " << Jet_pt.size() << ";" << " JetID = " << Jet_jetId[i] << ";" << "Jet_pt = " << Jet_pt[i] << ";" << " puID = " << Jet_puId[i] << " Jet index = " << i << std::endl;
+    }
     unsigned int jet1index, jet2index;
     jet1index = 99;
     jet2index = 99;
@@ -1457,10 +1460,13 @@ bool H4LTools::ZZSelection_2l2nu()
                 jet2index = jetidx[0];
             }
             for (unsigned int pj=2;pj<jetidx.size();pj++){
-                if((Jet_pt[jetidx[pj]]>jet1index)&&(Jet_pt[jetidx[pj]]>jet2index)){
+                //if((Jet_pt[jetidx[pj]]>Jet_pt[jet1index)&&(Jet_pt[jetidx[pj]]>jet2index)){
+		if((Jet_pt[jetidx[pj]]>Jet_pt[jet1index])&&(Jet_pt[jetidx[pj]]>Jet_pt[jet2index])){
                     jet1index = jetidx[pj];
+		    std::cout << "pt of first jet = " << Jet_pt[jet1index] << std::endl;
+                    std::cout << "pt of second jet = " << Jet_pt[jet2index] << std::endl;
                 }
-                if(Jet_pt[jetidx[pj]]>jet2index){
+                if(Jet_pt[jetidx[pj]]>Jet_pt[jet2index]){
                     jet2index = jetidx[pj];
                 }
             }
@@ -1482,6 +1488,8 @@ bool H4LTools::ZZSelection_2l2nu()
         mj2 = Jet2.M();
         }
     }
+    std::cout << "lastround pt of first jet = " << pTj1 << std::endl;
+    std::cout << "lastround pt of second jet = " << pTj2 << std::endl;
 
     // Get VBF jets having dEta>4.0 and mjj>500
     // If there are more than one pair of VBF jets, select the pair with highest mjj
