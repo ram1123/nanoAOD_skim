@@ -1164,18 +1164,6 @@ bool H4LTools::GetZ1_emuCR()
          std::cout << "##Zlep1pt,Zlep2pt (emu control region): " << ElelistFsr[TightEleindex[0]].Pt() << ", " << MulistFsr[TightMuindex[0]].Pt() << std::endl;
 
     Z1 = ElelistFsr[TightEleindex[0]] + MulistFsr[TightMuindex[0]];
-    /*TLorentzVector Lep1, Lep2;
-    Lep1 = ElelistFsr[TightEleindex[0]];
-    Lep2 = MulistFsr[TightMuindex[0]];
-
-    pTL1 = ElelistFsr[TightEleindex[0]].Pt();
-    pTL2 = MulistFsr[TightMuindex[0]].Pt();
-    etaL1 = ElelistFsr[TightEleindex[0]].Eta();
-    etaL2 = MulistFsr[TightMuindex[0]].Eta();
-    phiL1 = ElelistFsr[TightEleindex[0]].Phi();
-    phiL2 = MulistFsr[TightMuindex[0]].Phi();
-    massL1 = ElelistFsr[TightEleindex[0]].M();
-    massL2 = MulistFsr[TightMuindex[0]].M();*/
 
     TLorentzVector ele = ElelistFsr[TightEleindex[0]];
     TLorentzVector mu = MulistFsr[TightMuindex[0]];
@@ -1233,15 +1221,6 @@ bool H4LTools::GetZ1_emuCR()
     if (DEBUG)
         std::cout << "*****$$$$***** Z_emu mass: " << Z1.M() << std::endl;
 
-    /*
-    //side band
-    if (!(((Z1.M() > 40) && (Z1.M() < 70)) || ((Z1.M() > 110) && (Z1.M() < 200))))
-    {
-        return foundZ1_emuCRCandidate;                     //UNCOMMENT FOR THE EVENTS IN SIDE BAND REGION
-    }
-    HZZemuCR_cutmZ1Window_SB++;
-    std::cout << "*****$$$$***** Z_emu mass_sideband: " << Z1.M() << std::endl;
-    */
     /// pT selection of dilepton
     if (Z1.Pt() < 25)
     {
@@ -1387,11 +1366,7 @@ bool H4LTools::ZZSelection_2l2nu()
     {
         std::cout << "Passed dPhiJetMET cut" << std::endl;
         std::cout << "MET_pt: " << MET_pt << std::endl;
-	std::cout << "inside emu MET_pt: " << MET_pt << std::endl;
-	std::cout << "inside emu lep1: " << pTL1 << std::endl;
-	std::cout << "inside emu lep2 pt: " << pTL2 << std::endl;
-	std::cout << "inside emu massZ1: " << Z1.M() << std::endl;
-	std::cout << "inside emu Z1 pt: " << Z1.Pt() << std::endl;
+	    std::cout << "inside 2l2nu selection loop, MET_pt: " << MET_pt << std::endl;
     }
     if (DEBUG) {
         std::cout << "***** Corrected MET pt inside 2l2nu selection: " << MET_pt << std::endl;
@@ -1460,11 +1435,9 @@ bool H4LTools::ZZSelection_2l2nu()
                 jet2index = jetidx[0];
             }
             for (unsigned int pj=2;pj<jetidx.size();pj++){
-                //if((Jet_pt[jetidx[pj]]>Jet_pt[jet1index)&&(Jet_pt[jetidx[pj]]>jet2index)){
-		if((Jet_pt[jetidx[pj]]>Jet_pt[jet1index])&&(Jet_pt[jetidx[pj]]>Jet_pt[jet2index])){
+                
+		    if((Jet_pt[jetidx[pj]]>Jet_pt[jet1index])&&(Jet_pt[jetidx[pj]]>Jet_pt[jet2index])){
                     jet1index = jetidx[pj];
-		    std::cout << "pt of first jet = " << Jet_pt[jet1index] << std::endl;
-                    std::cout << "pt of second jet = " << Jet_pt[jet2index] << std::endl;
                 }
                 if(Jet_pt[jetidx[pj]]>Jet_pt[jet2index]){
                     jet2index = jetidx[pj];
@@ -1488,9 +1461,7 @@ bool H4LTools::ZZSelection_2l2nu()
         mj2 = Jet2.M();
         }
     }
-    std::cout << "lastround pt of first jet = " << pTj1 << std::endl;
-    std::cout << "lastround pt of second jet = " << pTj2 << std::endl;
-
+    
     // Get VBF jets having dEta>4.0 and mjj>500
     // If there are more than one pair of VBF jets, select the pair with highest mjj
     float VBF_jj_mjj = 0.0;

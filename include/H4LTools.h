@@ -158,7 +158,6 @@ public:
         MET_pt = MET_pt_;
         MET_phi = MET_phi_;
         MET_sumEt = MET_sumEt_;
-        //	std::cout<<"Inside header file: MET_sumEt = " << MET_sumEt_ << "\t" << MET_sumEt << std::endl;
     }
 
     void SetMuons(float Muon_pt_, float Muon_eta_, float Muon_phi_, float Muon_mass_, bool Muon_isGlobal_, bool Muon_isTracker_,
@@ -166,7 +165,6 @@ public:
                   int Muon_nTrackerLayers_, bool Muon_isPFcand_, int Muon_pdgId_, int Muon_charge_, float Muon_pfRelIso03_all_)
     {
         Muon_pt.push_back(Muon_pt_);
-       //std::cout << "Muon_pt inside header file -Set Muon-" << Muon_pt_ << std::endl;
         Muon_phi.push_back(Muon_phi_);
         Muon_eta.push_back(Muon_eta_);
         Muon_mass.push_back(Muon_mass_);
@@ -200,11 +198,8 @@ public:
     }
 
     void SetGenParts(float GenPart_pt_)
-    //void SetGenParts(float GenPart_pt_, int GenPart_genPartIdxMother_, int GenPart_pdgId_){
     {
         GenPart_pt.push_back(GenPart_pt_);
-        //GenPart_genPartIdxMother.push_back(GenPart_genPartIdxMother_);
-        //GenPart_pdgId.push_back(GenPart_pdgId_);
     }
 
     void SetObjectNum(unsigned nElectron_, unsigned nMuon_, unsigned nJet_, unsigned nFsrPhoton_)
@@ -432,8 +427,7 @@ public:
         // Generator  related variables
         nGenPart = 0;
         GenPart_pt.clear();
-        //GenPart_pdgId.clear();
-        //GenPart_genPartIdxMother.clear();
+        
 
         // Reconstructed variables
         Zlist.clear();
