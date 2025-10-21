@@ -28,6 +28,7 @@ nanoAOD skiming code for H->ZZ->2l2Q studies.
 
    # External package: yaml-cpp
    git clone git@github.com:jbeder/yaml-cpp.git external/yaml-cpp
+   git checkout 28f93bd
    cd external/yaml-cpp/
    git apply ../yamlcpp_pkg_py2to3.patch
    mkdir build
@@ -55,7 +56,7 @@ nanoAOD skiming code for H->ZZ->2l2Q studies.
 
    ```bash
    cd $CMSSW_BASE/src/PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim
-   export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/afs/cern.ch/work/r/rasharma/h2l2nu/checkNewSetup_15July2024/CMSSW_14_0_2/src/PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim/JHUGenMELA/MELA/data/el9_amd64_gcc12
+   export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CMSSW_BASE/src/PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim/JHUGenMELA/MELA/data/el9_amd64_gcc12
    # NOTE: The above export command is needed to run just before running the post_proc.py script. Otherwise, it will give error.
    voms-proxy-init --voms cms --valid 168:00
    python3 post_proc.py
