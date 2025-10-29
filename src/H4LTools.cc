@@ -361,6 +361,23 @@ std::vector<float> H4LTools::MuonFsrPhi(){
     }
     return lepPhi;
 }*/
+int H4LTools::GetLepGenMatchedID(TLorentzVector Lep){
+    int matchidx = -1;
+    float minDistance = 99;
+    for(int k=0; k<nGenPart; k++){
+        if (GenPart_status[k]!=1) continue;
+        TLorentzVector MatchingGEN;
+        MatchingGEN.SetPtEtaPhiM(GenPart_pt[k],GenPart_eta[k],GenPart_phi[k],GenPart_mass[k]);
+        float distance = MatchingGEN.DeltaR(Lep);
+        if (distance>0.3) continue;
+        if (distance<minDistance){
+            matchidx = k;
+            minDistance = distance;
+        }
+        
+    }
+    return matchidx;
+}
 
 void H4LTools::LeptonSelection(){
     
@@ -468,10 +485,11 @@ void H4LTools::LeptonSelection(){
             //lep_tightId.push_back(0.);
         }
         if (isMC){
-            lep_genindex.push_back(Electron_genPartIdx[Electronindex[ae]]);
-            lep_matchedR03_PdgId.push_back(GenPart_pdgId[Electron_genPartIdx[Electronindex[ae]]]);
-            lep_matchedR03_MomId.push_back(motherID(Electron_genPartIdx[Electronindex[ae]]));
-            lep_matchedR03_MomMomId.push_back(motherID(motheridx(Electron_genPartIdx[Electronindex[ae]])));
+            int eleGenIndex = GetLepGenMatchedID(Elelist[ae]);
+            lep_genindex.push_back(eleGenIndex);
+            lep_matchedR03_PdgId.push_back(GenPart_pdgId[eleGenIndex]);
+            lep_matchedR03_MomId.push_back(motherID(eleGenIndex));
+            lep_matchedR03_MomMomId.push_back(motherID(motheridx(eleGenIndex)));
         } 
         else {
             lep_genindex.push_back(-1);
@@ -536,10 +554,11 @@ void H4LTools::LeptonSelection(){
             //lep_tightId.push_back(0.);
         }
         if (isMC) {
-            lep_genindex.push_back(Muon_genPartIdx[Muonindex[amu]]);
-            lep_matchedR03_PdgId.push_back(GenPart_pdgId[Muon_genPartIdx[Muonindex[amu]]]);
-            lep_matchedR03_MomId.push_back(motherID(Muon_genPartIdx[Muonindex[amu]]));
-            lep_matchedR03_MomMomId.push_back(motherID(motheridx(Muon_genPartIdx[Muonindex[amu]])));
+            int MuonGenIndex = GetLepGenMatchedID(Mulist[amu]);
+            lep_genindex.push_back(MuonGenIndex);
+            lep_matchedR03_PdgId.push_back(GenPart_pdgId[MuonGenIndex]);
+            lep_matchedR03_MomId.push_back(motherID(MuonGenIndex));
+            lep_matchedR03_MomMomId.push_back(motherID(motheridx(MuonGenIndex)));
         }
         else {
             lep_genindex.push_back(-1);
@@ -1397,7 +1416,6 @@ void H4LTools::findHiggsCandidate()
             TLorentzVector li, lj;
             li.SetPtEtaPhiM(lep_pt[i],lep_eta[i],lep_phi[i],lep_mass[i]);
             lj.SetPtEtaPhiM(lep_pt[j],lep_eta[j],lep_phi[j],lep_mass[j]);
-
             TLorentzVector lifsr, ljfsr;
             lifsr.SetPtEtaPhiM(lepFSR_pt[i],lepFSR_eta[i],lepFSR_phi[i],lepFSR_mass[i]);
             ljfsr.SetPtEtaPhiM(lepFSR_pt[j],lepFSR_eta[j],lepFSR_phi[j],lepFSR_mass[j]);

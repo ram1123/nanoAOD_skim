@@ -334,7 +334,7 @@ class HZZAnalysisCppProducer(Module):
             genparts = Collection(event, "GenPart")
             genjets = Collection(event, "GenJet")
             for xg in genparts:
-                self.worker.SetGenParts(xg.pt, xg.genPartIdxMother, xg.pdgId)
+                self.worker.SetGenParts(xg.pt,xg.eta,xg.phi,xg.mass,xg.status,xg.genPartIdxMother, xg.pdgId)
             for xm in muons:
                 self.worker.SetMuonsGen(xm.genPartIdx)
             for xe in electrons:
@@ -446,6 +446,13 @@ class HZZAnalysisCppProducer(Module):
 
         if (foundZZCandidate):
             self.passZZEvts += 1
+        if (passedZ1LSelection):
+            if (abs(lep_id[2])==13 and lep_matchedR03_PdgId[2]==23):
+                print(lep_matchedR03_PdgId[2], lep_matchedR03_MomId[2], lep_matchedR03_MomMomId[2])
+            if (abs(lep_id[2])==13 and lep_matchedR03_MomId[2]==23):
+                print(lep_matchedR03_PdgId[2], lep_matchedR03_MomId[2], lep_matchedR03_MomMomId[2])
+            if (abs(lep_id[2])==13 and lep_matchedR03_MomMomId[2]==23):
+                print(lep_matchedR03_PdgId[2], lep_matchedR03_MomId[2], lep_matchedR03_MomMomId[2])
                   
         pTZ1 = self.worker.Z1.Pt()
         etaZ1 = self.worker.Z1.Eta()

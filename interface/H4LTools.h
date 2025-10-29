@@ -133,8 +133,12 @@ class H4LTools {
         FsrPhoton_electronIdx.push_back(FsrPhoton_electronIdx_);
         FsrPhoton_muonIdx.push_back(FsrPhoton_muonIdx_);
       }
-      void SetGenParts(float GenPart_pt_, int GenPart_genPartIdxMother_, int GenPart_pdgId_){
+      void SetGenParts(float GenPart_pt_, float GenPart_eta_,float GenPart_phi_,float GenPart_mass_,int GenPart_status_,int GenPart_genPartIdxMother_, int GenPart_pdgId_){
         GenPart_pt.push_back(GenPart_pt_);
+        GenPart_eta.push_back(GenPart_eta_);
+        GenPart_phi.push_back(GenPart_phi_);
+        GenPart_mass.push_back(GenPart_mass_);
+        GenPart_status.push_back(GenPart_status_);
         GenPart_genPartIdxMother.push_back(GenPart_genPartIdxMother_);
         GenPart_pdgId.push_back(GenPart_pdgId_);
       }
@@ -225,7 +229,7 @@ class H4LTools {
       bool flag4e;
       bool flag4mu;
       bool flag2e2mu;
-
+      int GetLepGenMatchedID(TLorentzVector Lep);
       void LeptonSelection();
       void findZ1LCandidate();
       std::vector<unsigned int> looseEle,looseMu,bestEle,bestMu, tighteleforjetidx, tightmuforjetidx;
@@ -305,7 +309,7 @@ class H4LTools {
         Jet_pt.clear();Jet_phi.clear();Jet_eta.clear();Jet_mass.clear();Jet_btagDeepC.clear();
         Jet_jetId.clear();Jet_puId.clear();
         FsrPhoton_dROverEt2.clear();FsrPhoton_phi.clear();FsrPhoton_eta.clear();FsrPhoton_pt.clear();FsrPhoton_relIso03.clear();
-        GenPart_pt.clear();GenPart_pdgId.clear();GenPart_genPartIdxMother.clear();
+        GenPart_pt.clear();GenPart_eta.clear();GenPart_phi.clear();GenPart_mass.clear();GenPart_status.clear();GenPart_pdgId.clear();GenPart_genPartIdxMother.clear();
         Z_pt.clear();Z_eta.clear();Z_phi.clear(); Z_mass.clear();Z_noFSR_pt.clear(); Z_noFSR_eta.clear();
         Z_noFSR_phi.clear(); Z_noFSR_mass.clear(); Z_lepindex1.clear(); Z_lepindex2.clear();
         Zlist.clear();
@@ -394,8 +398,8 @@ class H4LTools {
 
       std::vector<float> FsrPhoton_dROverEt2,FsrPhoton_phi,FsrPhoton_pt,FsrPhoton_relIso03,FsrPhoton_eta,FsrPhoton_muonIdx,FsrPhoton_electronIdx;
       
-      std::vector<float> GenPart_pt;
-      std::vector<int> GenPart_pdgId, GenPart_genPartIdxMother;
+      std::vector<float> GenPart_pt, GenPart_eta, GenPart_phi, GenPart_mass;
+      std::vector<int> GenPart_pdgId,GenPart_status, GenPart_genPartIdxMother;
       
       
       unsigned nElectron,nMuon,nJet,nGenPart,nFsrPhoton;
