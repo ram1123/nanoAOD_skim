@@ -453,6 +453,7 @@ H4LTools::H4LTools(int year, bool isMC_){
 }
 
 int H4LTools::motherID(int Genidx){
+    if (Genidx==-1) return 0;
     int ID=0;
     while(abs(GenPart_pdgId[GenPart_genPartIdxMother[Genidx]])>6){
         if(GenPart_pdgId[GenPart_genPartIdxMother[Genidx]]!=GenPart_pdgId[Genidx]){
@@ -466,6 +467,7 @@ int H4LTools::motherID(int Genidx){
 }
 
 int H4LTools::motheridx(int Genidx){
+    if (Genidx==-1) return -1;
     int ID=0;
     while(abs(GenPart_pdgId[GenPart_genPartIdxMother[Genidx]])>6){
         if(GenPart_pdgId[GenPart_genPartIdxMother[Genidx]]!=GenPart_pdgId[Genidx]){
@@ -475,9 +477,10 @@ int H4LTools::motheridx(int Genidx){
             Genidx=GenPart_genPartIdxMother[Genidx];
         }
     }
-    return 0;
+    return -1;
 }
 int H4LTools::mothermotherID(int Genidx){
+    if (Genidx==-1) return 0;
     int ID=0;
     while(GenPart_pdgId[GenPart_genPartIdxMother[Genidx]]!=2212 || abs(GenPart_pdgId[GenPart_genPartIdxMother[Genidx]])!=21 || abs(GenPart_pdgId[GenPart_genPartIdxMother[Genidx]])>6){
         if(GenPart_pdgId[GenPart_genPartIdxMother[Genidx]]!=GenPart_pdgId[Genidx] && GenPart_pdgId[GenPart_genPartIdxMother[GenPart_genPartIdxMother[Genidx]]]!=GenPart_pdgId[Genidx] && GenPart_pdgId[GenPart_genPartIdxMother[GenPart_genPartIdxMother[Genidx]]]!=GenPart_pdgId[GenPart_genPartIdxMother[Genidx]] ){
