@@ -446,13 +446,6 @@ class HZZAnalysisCppProducer(Module):
 
         if (foundZZCandidate):
             self.passZZEvts += 1
-        if (passedZ1LSelection):
-            if (abs(lep_id[2])==13 and lep_matchedR03_PdgId[2]==23):
-                print(lep_matchedR03_PdgId[2], lep_matchedR03_MomId[2], lep_matchedR03_MomMomId[2])
-            if (abs(lep_id[2])==13 and lep_matchedR03_MomId[2]==23):
-                print(lep_matchedR03_PdgId[2], lep_matchedR03_MomId[2], lep_matchedR03_MomMomId[2])
-            if (abs(lep_id[2])==13 and lep_matchedR03_MomMomId[2]==23):
-                print(lep_matchedR03_PdgId[2], lep_matchedR03_MomId[2], lep_matchedR03_MomMomId[2])
                   
         pTZ1 = self.worker.Z1.Pt()
         etaZ1 = self.worker.Z1.Eta()
