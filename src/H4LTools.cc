@@ -34,6 +34,7 @@ std::vector<unsigned int> H4LTools::goodLooseMuons2012(){
         if (DEBUG)
             std::cout << "Inside goodLooseMuons2012:: Muon_pt[" << i << "] = " << Muon_pt[i] << std::endl;
         if ((Muon_pt[i]>MuPtcut)&&(fabs(Muon_eta[i])<MuEtacut)&&((Muon_isGlobal[i]||Muon_isTracker[i]||Muon_isPFcand[i])&&(Muon_mediumId[i]))){
+        //if ((Muon_pt[i]>MuPtcut)&&(fabs(Muon_eta[i])<MuEtacut)&&((Muon_tightId[i]))){
             LooseMuonindex.push_back(i);
       //      std::cout << nMuon << std::endl;
           }
@@ -67,6 +68,7 @@ std::vector<unsigned int> H4LTools::goodMuons2015_noIso_noPf(std::vector<unsigne
     std::vector<unsigned int> bestMuonindex;
     for (unsigned int i=0; i<Muonindex.size(); i++){
         if ((Muon_pt[Muonindex[i]]>MuPtcut)&&(fabs(Muon_eta[Muonindex[i]])<MuEtacut)&&(Muon_isGlobal[Muonindex[i]]||Muon_isTracker[Muonindex[i]])&&(Muon_mediumId[Muonindex[i]])){
+        //if ((Muon_pt[Muonindex[i]]>MuPtcut)&&(fabs(Muon_eta[Muonindex[i]])<MuEtacut)&&(Muon_tightId[Muonindex[i]])){
             //if (Muon_sip3d[Muonindex[i]]<Musip3dCut){
                 if((fabs(Muon_dxy[Muonindex[i]])<MuLoosedxycut)&&(fabs(Muon_dz[Muonindex[i]])<MuLoosedzcut)){
                     bestMuonindex.push_back(Muonindex[i]);
@@ -99,7 +101,7 @@ std::vector<bool> H4LTools::passTight_BDT_Id(){
     //unsigned nE = (*nElectron).Get()[0];
     for (unsigned int i=0; i<Electron_pt.size(); i++){
 
-        mvaVal = Electron_mvaFall17V2Iso_WP90[i];
+        mvaVal = Electron_mvaIso_WP90[i];
 //        if(mvaVal > cutVal){
             tightid.push_back(mvaVal);
             //std::cout << nElectron << std::endl;
@@ -140,21 +142,100 @@ std::vector<unsigned int> H4LTools::goodFsrPhotons(){
     return goodFsrPhoton;
 }
 
+bool H4LTools::PassJetIDv15(unsigned int i, bool isPUPPI)
+{
+    const float abseta = fabs(Jet_eta[i]);
+
+    const float CEMF = Jet_chEmEF[i];
+    const float CHF  = Jet_chHEF[i];
+    const int   CHM  = Jet_chMultiplicity[i];
+    const float NEMF = Jet_neEmEF[i];
+    const float NHF  = Jet_neHEF[i];
+    const float MUF  = Jet_muEF[i];
+    const int   NumConst = Jet_nConstituents[i];
+    const int   NumNeutral = Jet_neMultiplicity[i];
+
+    // |eta| <= 2.6 (AK4CHS & AK4PUPPI, LepVeto)
+    if (abseta <= 2.6)
+    {
+        return (CEMF < 0.8 &&
+                //CHM > 0 &&
+                CHF > 0 &&
+                NumConst > 1 &&
+                NEMF < 0.9 &&
+                MUF < 0.8 &&
+                NHF < 0.9);
+    }
+
+    // 2.6 < |eta| <= 2.7
+    if (abseta > 2.6 && abseta <= 2.7)
+    {
+        if (!isPUPPI) // AK4CHS
+        {
+            return (CEMF < 0.8 &&
+                    //CHM > 0 &&
+                    NEMF < 0.99 &&
+                    MUF < 0.8 &&
+                    NHF < 0.9);
+        }
+        else // AK4PUPPI
+        {
+            return (CEMF < 0.8 &&
+                    NEMF < 0.99 &&
+                    MUF < 0.8 &&
+                    NHF < 0.9);
+        }
+    }
+
+    // 2.7 < |eta| <= 3.0
+    if (abseta > 2.7 && abseta <= 3.0)
+    {
+        if (!isPUPPI) // AK4CHS
+        {
+            return (NEMF > 0.01 &&
+                    NEMF < 0.99 );
+                    //NumNeutral > 1);
+        }
+        else // AK4PUPPI
+        {
+            return (NHF < 0.9999);
+        }
+    }
+
+    // |eta| > 3.0
+    if (abseta > 3.0)
+    {
+        if (!isPUPPI) // AK4CHS
+        {
+            return (NEMF < 0.90 &&
+                    NHF > 0.2);
+                    //NumNeutral > 10);
+        }
+        else // AK4PUPPI
+        {
+            return (NEMF < 0.90);
+                    //NumNeutral > 2);
+        }
+    }
+
+    return false;
+}
+
 
 std::vector<unsigned int> H4LTools::SelectedJets(std::vector<unsigned int> ele, std::vector<unsigned int> mu)
 {
     std::vector<unsigned int> goodJets;
-    //std::vector<unsigned int> puJets;
-    //std::vector<unsigned int> genuineJets;
- 
-    //genuineJets.clear();
-    //puJets.clear();
+    const bool isPUPPI = true;   // true = AK4PUPPI, false = AK4CHS // for v15
+
     for (unsigned int i = 0; i < Jet_pt.size(); i++)
     {
         if ((Jet_pt[i] <= JetPtcut)) continue;
         if (fabs(Jet_eta[i]) >= JetEtacut) continue;
-        if (Jet_jetId[i] <= 0) continue;
-        if ((Jet_pt[i] < 50) && (Jet_puId[i] != 7)) continue;
+
+        if (!PassJetIDv15(i, isPUPPI)) continue; // for v15
+
+        //if (Jet_jetId[i] <= 0) continue;  // for v9
+        //if ((Jet_pt[i] < 50) && (Jet_puId[i] != 7)) continue; //for v9
         if (DEBUG)
             std::cout << "DEBUG: Jet_pt.size() = " << Jet_pt.size() << ";" << " JetID = " << Jet_jetId[i] << ";" << "Jet_pt = " << Jet_pt[i] << ";" << " puID = " << Jet_puId[i] << " Jet index = " << i << std::endl;
         int overlaptag = 0;
@@ -439,6 +520,7 @@ void H4LTools::LeptonSelection(){
         Mulist.push_back(Mu);
         muid.push_back(AllMuid[Muonindex[imu]]);
         Muiso.push_back(Muon_pfRelIso03_all[Muonindex[imu]]);
+        
     }
 
     ElelistFsr = BatchFsrRecovery(Elelist);
@@ -1251,9 +1333,9 @@ bool H4LTools::ZZSelection_2l2q()
         {
             for (unsigned int i = 0; i < FatJetidx.size(); i++)
             {
-                if (FatJet_PNZvsQCD[FatJetidx[i]] < 0.9) continue;
-                if (FatJet_pt[FatJetidx[i]] < 200.0) continue;
-                // if (FatJet_msoftdrop[FatJetidx[i]] < 40.0) continue;
+                if (FatJet_PNZvsQCD[FatJetidx[i]] < 0.9) continue; // commented out for v15
+                if (FatJet_pt[FatJetidx[i]] < 200.0) continue; //commented out for v15
+            // if (FatJet_msoftdrop[FatJetidx[i]] < 40.0) continue;
                 // if (FatJet_msoftdrop[FatJetidx[i]] > 180.0) continue;
 
                 foundZZCandidate = true;
@@ -1261,8 +1343,8 @@ bool H4LTools::ZZSelection_2l2q()
                 cut2l1J++;
                 cut2l1Jor2j++;
 
-                boostedJet_PNScore = FatJet_PNZvsQCD[FatJetidx[i]];
-                boostedJet_Index = FatJetidx[i];
+                boostedJet_PNScore = FatJet_PNZvsQCD[FatJetidx[i]];// commented out for v15
+                boostedJet_Index = FatJetidx[i];// commented out for v15
 
                 Z2.SetPtEtaPhiM(FatJet_pt[FatJetidx[i]], FatJet_eta[FatJetidx[i]], FatJet_phi[FatJetidx[i]], FatJet_SDmass[FatJetidx[i]]);
             }

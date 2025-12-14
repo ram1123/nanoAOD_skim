@@ -140,6 +140,11 @@ def main():
         sfFileName = "DeepCSV_102XSF_V2.csv"
         modulesToRun.extend([muonScaleRes2016()])
 
+    if "UL2018_NanoAODv15" in first_file:
+        year = 2018
+        cfgFile = "config/Input_2018.yml"
+
+
     if cfgFile is None:
         year = 2018   
         cfgFile = "config/Input_2018.yml"

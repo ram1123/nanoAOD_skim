@@ -518,6 +518,7 @@ class HZZAnalysisCppProducer(Module):
         jets = Collection(event, "Jet")
         FatJets = Collection(event, "FatJet")
         met = Object(event, "MET", None)
+        puppimet = Object(event, "PuppiMET", None)
         if self.year == 2018:
             corrector = METPhiCorrector(
             campaign=Campaign.UL_2018,
@@ -536,13 +537,13 @@ class HZZAnalysisCppProducer(Module):
             is_data=False,
             is_puppi=False,
             )
-
-        corr_pt, corr_phi = corrector(
-        met.pt,
-        met.phi,
-        npv=event.PV_npvs,
-        run=event.run
-        )
+        #MET correction for v9
+        #corr_pt, corr_phi = corrector(
+        #met.pt,
+        #met.phi,
+        #npv=event.PV_npvs,
+        #run=event.run
+        #)
 
         # for photon in Photons:
         #     # Keep photons if pT > 55, |eta| < 2.5 and skip the transition region of barrel and endcap
@@ -560,8 +561,9 @@ class HZZAnalysisCppProducer(Module):
                 self.worker.SetGenJets(xg.pt, xg.eta, xg.phi, xg.mass)
 
         for xe in electrons:
-            self.worker.SetElectrons(xe.pt, xe.eta, xe.phi, xe.mass, xe.dxy,
-                                      xe.dz, xe.mvaFall17V2Iso_WP90, xe.pdgId, xe.pfRelIso03_all)
+            #self.worker.SetElectrons(xe.pt, xe.eta, xe.phi, xe.mass, xe.dxy,
+                                      #xe.dz, xe.mvaFall17V2Iso_WP90, xe.pdgId, xe.pfRelIso03_all) #for v9
+            self.worker.SetElectrons(xe.pt, xe.eta, xe.phi, xe.mass, xe.dxy, xe.dz, xe.pdgId, xe.mvaIso_WP90, xe.pfRelIso03_all) # for v15
             if self.DEBUG:
                 print("Electrons: pT, eta: {}, {}".format(xe.pt, xe.eta))
 
@@ -574,25 +576,24 @@ class HZZAnalysisCppProducer(Module):
 
         for xf in fsrPhotons:
             self.worker.SetFsrPhotons(xf.dROverEt2,xf.eta,xf.phi,xf.pt,xf.relIso03)
-
+        
+        # for v9
+        #for xj in jets:
+            #self.worker.SetJets(xj.pt,xj.eta,xj.phi,xj.mass,xj.jetId, xj.btagDeepFlavB, xj.puId)
+        # for v15
         for xj in jets:
-            self.worker.SetJets(xj.pt,xj.eta,xj.phi,xj.mass,xj.jetId, xj.btagDeepFlavB, xj.puId)
+            self.worker.SetJets(xj.pt,xj.eta,xj.phi,xj.mass,xj.btagDeepFlavB, xj.chEmEF, xj.neEmEF, xj.chHEF, xj.neHEF, xj.muEF, xj.nConstituents, xj.chMultiplicity, xj.neMultiplicity) 
 
-        for xj in FatJets:
+        #for xj in FatJets:
             #self.worker.SetFatJets(xj.pt, xj.eta, xj.phi, xj.msoftdrop, xj.jetId, xj.btagDeepB, xj.particleNet_ZvsQCD)
-            self.worker.SetFatJets(xj.pt, xj.eta, xj.phi, xj.msoftdrop, xj.jetId, xj.particleNet_ZvsQCD)
+            #self.worker.SetFatJets(xj.pt, xj.eta, xj.phi, xj.msoftdrop)
 
-
-        #corr_pt, corr_phi = self.corrector(
-            #met.pt, met.phi, npv=15, run=event.run
-        #)     
-
-        self.worker.SetMET(corr_pt, corr_phi, met.sumEt)
+        #self.worker.SetMET(corr_pt, corr_phi, met.sumEt) #for v9
+        self.worker.SetPuppiMET(puppimet.pt, puppimet.phi, puppimet.sumEt) # for v15
         if self.DEBUG:
             print("***** MET: corr_pt, corr_phi, sumEt: {}, {}, {}".format(corr_pt, corr_phi, met.sumEt))
             print("***** MET not corrected: pt, phi, sumEt: {}, {}, {}".format(met.pt, met.phi, met.sumEt))
             print("***** Event branch MET_pt =", event.MET_pt)
-        #self.worker.SetMET(met.corr_pt,met.phi,met.sumEt)
 
         self.worker.LeptonSelection()
         foundZZCandidate_4l = False    # for 4l
@@ -860,8 +861,8 @@ class HZZAnalysisCppProducer(Module):
         self.out.fillBranch("etaZ2",etaZ2)
         self.out.fillBranch("phiZ2",phiZ2)
         self.out.fillBranch("massZ2",massZ2)
-        self.out.fillBranch("pT_MET",corr_pt)
-        self.out.fillBranch("phi_MET",corr_phi)
+        #self.out.fillBranch("pT_MET",corr_pt) #for v9
+        #self.out.fillBranch("phi_MET",corr_phi) #for v9
 
         self.out.fillBranch("mass4l",mass4l)
         self.out.fillBranch("pT4l",pT4l)

@@ -102,7 +102,8 @@ public:
         btag_deepJet_Tight = btag_deepJet_Tight_;
     }
 
-    void SetElectrons(float Electron_pt_, float Electron_eta_, float Electron_phi_, float Electron_mass_, float Electron_dxy_, float Electron_dz_,
+    //for v9
+    /*void SetElectrons(float Electron_pt_, float Electron_eta_, float Electron_phi_, float Electron_mass_, float Electron_dxy_, float Electron_dz_,
                       float Electron_mvaFall17V2Iso_WP90_, int Electron_pdgId_, float Electron_pfRelIso03_all_)
     {
         Electron_pt.push_back(Electron_pt_);
@@ -112,13 +113,30 @@ public:
         Electron_dxy.push_back(Electron_dxy_);
         Electron_dz.push_back(Electron_dz_);
         //Electron_sip3d.push_back(Electron_sip3d_);
-        //Electron_mvaFall17V2Iso.push_back(Electron_mvaFall17V2Iso_);
+        //Electron_mvaFall17V2Iso.push_back(Electron_mvaFall17V2Iso_); // no need
         Electron_mvaFall17V2Iso_WP90.push_back(Electron_mvaFall17V2Iso_WP90_);
         Electron_pdgId.push_back(Electron_pdgId_);
         Electron_pfRelIso03_all.push_back(Electron_pfRelIso03_all_);
+    }*/
+
+    //for v15
+    void SetElectrons(float Electron_pt_, float Electron_eta_, float Electron_phi_, float Electron_mass_, float Electron_dxy_, float Electron_dz_,
+        float Electron_mvaIso_WP90_, int Electron_pdgId_, float Electron_pfRelIso03_all_)
+    {
+    Electron_pt.push_back(Electron_pt_);
+    Electron_phi.push_back(Electron_phi_);
+    Electron_eta.push_back(Electron_eta_);
+    Electron_mass.push_back(Electron_mass_);
+    Electron_dxy.push_back(Electron_dxy_);
+    Electron_dz.push_back(Electron_dz_);
+    //Electron_sip3d.push_back(Electron_sip3d_);
+    Electron_mvaIso_WP90.push_back(Electron_mvaIso_WP90_);
+    Electron_pdgId.push_back(Electron_pdgId_);
+    Electron_pfRelIso03_all.push_back(Electron_pfRelIso03_all_);
     }
 
-    void SetJets(float Jet_pt_, float Jet_eta_, float Jet_phi_, float Jet_mass_, int Jet_jetId_, float Jet_btagDeepFlavB_,
+    // for v9
+    /*void SetJets(float Jet_pt_, float Jet_eta_, float Jet_phi_, float Jet_mass_, int Jet_jetId_, float Jet_btagDeepFlavB_,
                  int Jet_puId_)
     {
         Jet_pt.push_back(Jet_pt_);
@@ -128,21 +146,39 @@ public:
         Jet_btagDeepFlavB.push_back(Jet_btagDeepFlavB_);
         Jet_jetId.push_back(Jet_jetId_);
         Jet_puId.push_back(Jet_puId_); // 1 or 0?
+    }*/
+
+    //for v15
+    void SetJets(float Jet_pt_, float Jet_eta_, float Jet_phi_, float Jet_mass_, float Jet_btagDeepFlavB_,
+        float Jet_chEmEF_, float Jet_chHEF_, float Jet_neEmEF_, float Jet_neHEF_, float Jet_muEF_, int Jet_nConstituents_, int Jet_neMultiplicity_, int Jet_chMultiplicity_)
+   {
+    Jet_pt.push_back(Jet_pt_);
+    Jet_phi.push_back(Jet_phi_);
+    Jet_eta.push_back(Jet_eta_);
+    Jet_mass.push_back(Jet_mass_);
+    Jet_btagDeepFlavB.push_back(Jet_btagDeepFlavB_);
+    Jet_chEmEF.push_back(Jet_chEmEF_);
+    Jet_chHEF.push_back(Jet_chHEF_);
+    Jet_neEmEF.push_back(Jet_neEmEF_);
+    Jet_neHEF.push_back(Jet_neHEF_);
+    Jet_muEF.push_back(Jet_muEF_);
+    Jet_nConstituents.push_back(Jet_nConstituents_);
+    Jet_neMultiplicity.push_back(Jet_neMultiplicity_);
+    Jet_chMultiplicity.push_back(Jet_chMultiplicity_);
     }
 
-    //void SetFatJets(float Jet_pt_, float Jet_eta_, float Jet_phi_, float Jet_mass_, int Jet_jetId_, float Jet_btagDeepB_,
-                    //float Jet_PNZvsQCD_)
-    void SetFatJets(float Jet_pt_, float Jet_eta_, float Jet_phi_, float Jet_mass_, int Jet_jetId_,
+    void SetFatJets(float Jet_pt_, float Jet_eta_, float Jet_phi_, float Jet_mass_, int Jet_jetId_, float Jet_btagDeepB_,
                     float Jet_PNZvsQCD_)
+    //void SetFatJets(float Jet_pt_, float Jet_eta_, float Jet_phi_, float Jet_mass_)
     
     {
         FatJet_pt.push_back(Jet_pt_);
         FatJet_eta.push_back(Jet_eta_);
         FatJet_phi.push_back(Jet_phi_);
         FatJet_SDmass.push_back(Jet_mass_);
-        FatJet_jetId.push_back(Jet_jetId_);
+        FatJet_jetId.push_back(Jet_jetId_); //commented out for v15
         //FatJet_btagDeepB.push_back(Jet_btagDeepB_);
-        FatJet_PNZvsQCD.push_back(Jet_PNZvsQCD_); // 1 or 0?
+        FatJet_PNZvsQCD.push_back(Jet_PNZvsQCD_); // 1 or 0? //commented out for v15
     }
 
     void SetGenJets(float GenJet_pt_, float GenJet_eta_, float GenJet_phi_, float GenJet_mass_)
@@ -158,6 +194,13 @@ public:
         MET_pt = MET_pt_;
         MET_phi = MET_phi_;
         MET_sumEt = MET_sumEt_;
+    }
+
+    void SetPuppiMET(float MET_pt_, float MET_phi_, float MET_sumEt_)
+    {
+        PuppiMET_pt = MET_pt_;
+        PuppiMET_phi = MET_phi_;
+        PuppiMET_sumEt = MET_sumEt_;
     }
 
     void SetMuons(float Muon_pt_, float Muon_eta_, float Muon_phi_, float Muon_mass_, bool Muon_isGlobal_, bool Muon_isTracker_,
@@ -233,6 +276,7 @@ public:
     std::vector<float> MuonFsrPhi();
     std::vector<unsigned int> SelectedJets(std::vector<unsigned int> ele, std::vector<unsigned int> mu);
     std::vector<unsigned int> SelectedFatJets(std::vector<unsigned int> ele, std::vector<unsigned int> mu);
+    bool PassJetIDv15(unsigned int i, bool isPUPPI);
     //std::vector<unsigned int> SelectedJets(std::vector<unsigned int> ele, std::vector<unsigned int> mu, std::vector<unsigned int>& genuineJets, std::vector<unsigned int>& puJets);
 
 
@@ -352,6 +396,7 @@ public:
         Electron_dz.clear();
         Electron_sip3d.clear();
         Electron_mvaFall17V2Iso_WP90.clear();
+        Electron_mvaIso_WP90.clear();
         Electron_pdgId.clear();
         Electron_pfRelIso03_all.clear();
         Elechg.clear();
@@ -396,6 +441,14 @@ public:
         Jet_btagDeepFlavB.clear();
         Jet_jetId.clear();
         Jet_puId.clear();
+        Jet_chEmEF.clear();
+        Jet_chHEF.clear();
+        Jet_neEmEF.clear();
+        Jet_neHEF.clear();
+        Jet_muEF.clear();
+        Jet_nConstituents.clear();
+        Jet_neMultiplicity.clear();
+        Jet_chMultiplicity.clear();
         FatJet_pt.clear();
         FatJet_phi.clear();
         FatJet_eta.clear();
@@ -415,6 +468,11 @@ public:
         MET_pt = -999.0;
         MET_phi = -999.0; ////new
         MET_sumEt = -999.0;
+
+        // Puppi MET related variables
+        PuppiMET_pt = -999.0;
+        PuppiMET_phi = -999.0; 
+        PuppiMET_sumEt = -999.0;
 
         // FsrPhoton related variables
         nFsrPhoton = 0;
@@ -618,14 +676,18 @@ public:
 
 private:
     std::vector<float> Electron_pt, Electron_phi, Electron_eta, Electron_mass, Electron_dxy, Electron_dz, Electron_sip3d;
-    std::vector<float> Electron_mvaFall17V2Iso_WP90, Electron_pfRelIso03_all;
+    std::vector<float> Electron_mvaFall17V2Iso_WP90, Electron_pfRelIso03_all, Electron_mvaIso_WP90;
     std::vector<int> Electron_pdgId;
     bool isMC;
 
     std::vector<float> Jet_pt, Jet_phi, Jet_eta, Jet_mass, Jet_btagDeepFlavB;
     std::vector<int> Jet_jetId, Jet_puId;
+    std::vector<float> Jet_chEmEF, Jet_chHEF, Jet_neEmEF, Jet_neHEF, Jet_muEF;
+    std::vector<int> Jet_nConstituents, Jet_neMultiplicity, Jet_chMultiplicity;
     float MET_pt, MET_phi;
     float MET_sumEt, MT_2l2nu;
+    float PuppiMET_pt, PuppiMET_phi;
+    float PuppiMET_sumEt;
 
     std::vector<float> FatJet_pt, FatJet_phi, FatJet_eta, FatJet_SDmass, FatJet_PNZvsQCD;
     //std::vector<float> FatJet_btagDeepB;
