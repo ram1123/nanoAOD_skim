@@ -130,5 +130,6 @@ keep_drop_rules_Data_MC = [
     "keep DeltaRl1l2",
     "keep Pz_neutrino",
     "keep pT_MET",
+    "keep Jet*",
     "keep phi_MET"
 ]
