@@ -236,8 +236,6 @@ std::vector<unsigned int> H4LTools::SelectedJets(std::vector<unsigned int> ele, 
 
         //if (Jet_jetId[i] <= 0) continue;  // for v9
         //if ((Jet_pt[i] < 50) && (Jet_puId[i] != 7)) continue; //for v9
-        if (DEBUG)
-            std::cout << "DEBUG: Jet_pt.size() = " << Jet_pt.size() << ";" << " JetID = " << Jet_jetId[i] << ";" << "Jet_pt = " << Jet_pt[i] << ";" << " puID = " << Jet_puId[i] << " Jet index = " << i << std::endl;
         int overlaptag = 0;
         TLorentzVector jettest;
         jettest.SetPtEtaPhiM(Jet_pt[i], Jet_eta[i], Jet_phi[i], Jet_mass[i]);
@@ -1447,26 +1445,26 @@ bool H4LTools::ZZSelection_2l2nu()
     if (DEBUG)
     {
         std::cout << "Passed dPhiJetMET cut" << std::endl;
-        std::cout << "MET_pt: " << MET_pt << std::endl;
-	    std::cout << "inside 2l2nu selection loop, MET_pt: " << MET_pt << std::endl;
+        std::cout << "PuppiMET_pt: " << PuppiMET_pt << std::endl;
+	    std::cout << "inside 2l2nu selection loop, PuppiMET_pt: " << PuppiMET_pt << std::endl;
     }
     if (DEBUG) {
-        std::cout << "***** Corrected MET pt inside 2l2nu selection: " << MET_pt << std::endl;
-        std::cout << "***** Corrected MET phi inside 2l2nu selection: " << MET_phi << std::endl;
+        std::cout << "***** Corrected MET pt inside 2l2nu selection: " << PuppiMET_pt << std::endl;
+        std::cout << "***** Corrected MET phi inside 2l2nu selection: " << PuppiMET_phi << std::endl;
     }
-    if (MET_pt > 100)
+    if (PuppiMET_pt > 100)
     {
         HZZ2l2nu_cutMETgT100++;
     }
 
-    Z2_met.SetPtEtaPhiE(MET_pt, 0, MET_phi, MET_pt);
+    Z2_met.SetPtEtaPhiE(PuppiMET_pt, 0, PuppiMET_phi, PuppiMET_pt);
 
     ZZ_metsystem = Z1 + Z2_met;
     ZZ_metsystemnofsr = Z1nofsr + Z2_met;
 
     float Pz_nu;
     float Pz_neutrino;
-    Pz_nu = ((Z1.M()*Z1.M())/4)- (MET_pt*MET_pt);
+    Pz_nu = ((Z1.M()*Z1.M())/4)- (PuppiMET_pt*PuppiMET_pt);
     //if (Pz_nu < 0) {
         std::complex<double> complex_pz(0, std::sqrt(-1 * Pz_nu));
         Pz_neutrino = std::abs(complex_pz);
@@ -1486,7 +1484,7 @@ bool H4LTools::ZZSelection_2l2nu()
         std::cout << "Size of jets: [inside 2l2nu] " << HZZ2l2qNu_nJets << std::endl;
     for (unsigned int i = 0; i < jetidx.size(); i++){
     if (DEBUG)
-            std::cout << "DEBUG jets inside 2l2nu selection: Jet_pt.size() = " << Jet_pt.size() << ";" << " JetID = " << Jet_jetId[i] << ";" << "Jet_pt = " << Jet_pt[i] << ";" << " puID = " << Jet_puId[i] << " Jet index = " << i << std::endl;
+            std::cout << "DEBUG jets inside 2l2nu selection: Jet_pt.size() = " << Jet_pt.size() << ";" << "Jet_pt = " << Jet_pt[i] << ";" << " Jet index = " << i << std::endl;
     }
     unsigned int jet1index, jet2index;
     jet1index = 99;

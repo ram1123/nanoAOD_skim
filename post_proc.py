@@ -109,18 +109,6 @@ def main():
         jsonFileName = "data/golden_json/Cert_314472-325175_13TeV_Legacy2018_Collisions18_JSON.txt"
         sfFileName = "DeepCSV_102XSF_V2.csv"
         modulesToRun.extend([muonScaleRes2018()])
-        #corrector = METPhiCorrector(
-            #campaign=Campaign.UL_2018,
-            #is_data=True,
-            #is_puppi=False,
-        #)
-        #corr_pt, corr_phi = corrector(
-            #uncorr_pt=35.0,
-            #uncorr_phi=-0.5,
-            #npv=15,
-        #)
-        #corr_pt, corr_phi = corrector(35.0, -0.5, 15, run=1)
-        #metCorrector=corrector
     if "UL17" in first_file or "UL2017" in first_file:
         year = 2017
         cfgFile = "config/Input_2017.yml"
@@ -140,15 +128,18 @@ def main():
         sfFileName = "DeepCSV_102XSF_V2.csv"
         modulesToRun.extend([muonScaleRes2016()])
 
-    if "UL2018_NanoAODv15" in first_file:
+    if "UL2018_NanoAODv15" in first_file or "UL18NanoAODv15" in first_file:
         year = 2018
         cfgFile = "config/Input_2018.yml"
+        jsonFileName = "data/golden_json/Cert_314472-325175_13TeV_Legacy2018_Collisions18_JSON.txt"
+        sfFileName = "DeepCSV_102XSF_V2.csv"
+        #modulesToRun.extend([muonScaleRes2018()])
 
 
-    if cfgFile is None:
-        year = 2018   
-        cfgFile = "config/Input_2018.yml"
-        modulesToRun.extend([muonScaleRes2018()])
+    #if cfgFile is None:
+        #year = 2018   
+        #cfgFile = "config/Input_2018.yml"
+        #modulesToRun.extend([muonScaleRes2018()])
 
     H4LCppModule = lambda: HZZAnalysisCppProducer(year=year, cfgFile=cfgFile,
                                                   isMC=isMC, isFSR=isFSR,

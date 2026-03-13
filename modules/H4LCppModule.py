@@ -370,7 +370,7 @@ class HZZAnalysisCppProducer(Module):
     def analyze(self, event):
         """process event, return True (go to next module) or False (fail,
         go to next event)"""
-        #if event.run != 317292 or event.luminosityBlock != 94 or event.event != 143096484:
+        #if event.run != 317292 or event.luminosityBlock != 95 or event.event != 144614313:
         #if event.Electron_pt.GetSize() > 0:
             #return False
         #if event.nElectron != 1 or event.nMuon != 1:
@@ -487,8 +487,6 @@ class HZZAnalysisCppProducer(Module):
         phi4l = -999.
         mass4l = -999.
         DeltaRl1l2 = -999.
-        #Pz_neutrino = -999.
-
         TriggerMap = {}
         passedTrig = False
         for TriggerChannel in self.cfg['TriggerChannels']:
@@ -523,27 +521,27 @@ class HZZAnalysisCppProducer(Module):
             corrector = METPhiCorrector(
             campaign=Campaign.UL_2018,
             is_data=False,
-            is_puppi=False,
+            is_puppi=True,
             )
         if self.year == 2017:
             corrector = METPhiCorrector(
             campaign=Campaign.UL_2017,
             is_data=False,
-            is_puppi=False,
+            is_puppi=True,
             )
         if self.year == 2016:
             corrector = METPhiCorrector(
             campaign=Campaign.UL_2016,
             is_data=False,
-            is_puppi=False,
+            is_puppi=True,
             )
-        #MET correction for v9
-        #corr_pt, corr_phi = corrector(
-        #met.pt,
-        #met.phi,
-        #npv=event.PV_npvs,
-        #run=event.run
-        #)
+        #MET correction for v15
+        corr_pt, corr_phi = corrector(
+        puppimet.pt,
+        puppimet.phi,
+        npv=event.PV_npvs,
+        run=event.run
+        )
 
         # for photon in Photons:
         #     # Keep photons if pT > 55, |eta| < 2.5 and skip the transition region of barrel and endcap
@@ -589,11 +587,12 @@ class HZZAnalysisCppProducer(Module):
             #self.worker.SetFatJets(xj.pt, xj.eta, xj.phi, xj.msoftdrop)
 
         #self.worker.SetMET(corr_pt, corr_phi, met.sumEt) #for v9
-        self.worker.SetPuppiMET(puppimet.pt, puppimet.phi, puppimet.sumEt) # for v15
+        #self.worker.SetPuppiMET(puppimet.pt, puppimet.phi, puppimet.sumEt) # for v15
+        self.worker.SetPuppiMET(corr_pt, corr_phi, puppimet.sumEt)
         if self.DEBUG:
-            print("***** MET: corr_pt, corr_phi, sumEt: {}, {}, {}".format(corr_pt, corr_phi, met.sumEt))
-            print("***** MET not corrected: pt, phi, sumEt: {}, {}, {}".format(met.pt, met.phi, met.sumEt))
-            print("***** Event branch MET_pt =", event.MET_pt)
+            print("***** MET: corr_pt, corr_phi, sumEt: {}, {}, {}".format(corr_pt, corr_phi, puppimet.sumEt))
+            print("***** MET not corrected: pt, phi, sumEt: {}, {}, {}".format(puppimet.pt, puppimet.phi, puppimet.sumEt))
+            print("***** Event branch MET_pt =", event.PuppiMET_pt)
 
         self.worker.LeptonSelection()
         foundZZCandidate_4l = False    # for 4l
@@ -861,8 +860,8 @@ class HZZAnalysisCppProducer(Module):
         self.out.fillBranch("etaZ2",etaZ2)
         self.out.fillBranch("phiZ2",phiZ2)
         self.out.fillBranch("massZ2",massZ2)
-        #self.out.fillBranch("pT_MET",corr_pt) #for v9
-        #self.out.fillBranch("phi_MET",corr_phi) #for v9
+        self.out.fillBranch("pT_MET",corr_pt) #for v15
+        self.out.fillBranch("phi_MET",corr_phi) #for v15
 
         self.out.fillBranch("mass4l",mass4l)
         self.out.fillBranch("pT4l",pT4l)
