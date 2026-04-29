@@ -98,6 +98,7 @@ int make_datacard() {
     out << "kmax *\n";
     out << "----------------\n";
 
+    out << "shapes data_obs * input_root_file_combine_v3.root data_obs\n";
     out << "shapes * * input_root_file_combine_v3.root $PROCESS $PROCESS_$SYSTEMATIC\n";
     out << "----------------\n";
 
@@ -134,11 +135,25 @@ int make_datacard() {
         out << yield[p] << " ";
     }
     out << "\n";
+    out << "--------------------------------\n";
 
+    //--------------------------------
+// LUMI SYSTEMATIC
+//--------------------------------
+out << "lumi lnN ";
+
+for (auto &p : proc) {
+
+    if (p == "signal_alpha") {
+        out << "0.84 ";   // signal affected
+    } else {
+        out << "0.84 ";   // all MC affected
+    }
+}
+out << "\n";
     //------------------------------------------------
     // SYSTEMATIC LINE
     //------------------------------------------------
-    out << "--------------------------------\n";
     out << "alpha shape ";
 
     for (auto &p : proc) {
