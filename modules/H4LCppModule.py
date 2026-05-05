@@ -520,19 +520,19 @@ class HZZAnalysisCppProducer(Module):
         if self.year == 2018:
             corrector = METPhiCorrector(
             campaign=Campaign.UL_2018,
-            is_data=False,
+            is_data=not self.isMC,
             is_puppi=True,
             )
         if self.year == 2017:
             corrector = METPhiCorrector(
             campaign=Campaign.UL_2017,
-            is_data=False,
+            is_data=not self.isMC,
             is_puppi=True,
             )
         if self.year == 2016:
             corrector = METPhiCorrector(
             campaign=Campaign.UL_2016,
-            is_data=False,
+            is_data=not self.isMC,
             is_puppi=True,
             )
         #MET correction for v15

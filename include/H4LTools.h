@@ -152,6 +152,8 @@ public:
     void SetJets(float Jet_pt_, float Jet_eta_, float Jet_phi_, float Jet_mass_, float Jet_btagDeepFlavB_,
         float Jet_chEmEF_, float Jet_chHEF_, float Jet_neEmEF_, float Jet_neHEF_, float Jet_muEF_, int Jet_nConstituents_, int Jet_neMultiplicity_, int Jet_chMultiplicity_)
    {
+
+
     Jet_pt.push_back(Jet_pt_);
     Jet_phi.push_back(Jet_phi_);
     Jet_eta.push_back(Jet_eta_);
@@ -196,11 +198,12 @@ public:
         MET_sumEt = MET_sumEt_;
     }
 
-    void SetPuppiMET(float MET_pt_, float MET_phi_, float MET_sumEt_)
+    void SetPuppiMET(float PuppiMET_pt_, float PuppiMET_phi_, float PuppiMET_sumEt_)
     {
-        PuppiMET_pt = MET_pt_;
-        PuppiMET_phi = MET_phi_;
-        PuppiMET_sumEt = MET_sumEt_;
+
+        PuppiMET_pt = PuppiMET_pt_;
+        PuppiMET_phi = PuppiMET_phi_;
+        PuppiMET_sumEt = PuppiMET_sumEt_;
     }
 
     void SetMuons(float Muon_pt_, float Muon_eta_, float Muon_phi_, float Muon_mass_, bool Muon_isGlobal_, bool Muon_isTracker_,
@@ -602,6 +605,10 @@ public:
         ZZ_metsystemnofsr.SetPtEtaPhiM(0.0, 0.0, 0.0, 0.0);
         ZZ_emuCRsystemnofsr.SetPtEtaPhiM(0.0, 0.0, 0.0, 0.0);
         ZZ_emuCRsystem.SetPtEtaPhiM(0.0, 0.0, 0.0, 0.0);
+
+        //type 1 met correction
+        t1_px_offset = 0.0;
+        t1_py_offset = 0.0;
     }
 
     bool isFSR = true;
@@ -688,6 +695,8 @@ private:
     float MET_sumEt, MT_2l2nu;
     float PuppiMET_pt, PuppiMET_phi;
     float PuppiMET_sumEt;
+    float t1_px_offset;
+    float t1_py_offset;
 
     std::vector<float> FatJet_pt, FatJet_phi, FatJet_eta, FatJet_SDmass, FatJet_PNZvsQCD;
     //std::vector<float> FatJet_btagDeepB;

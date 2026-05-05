@@ -7,7 +7,6 @@ import tempfile
 
 from PhysicsTools.NanoAODTools.postprocessing.framework.postprocessor import PostProcessor
 from PhysicsTools.NanoAODTools.postprocessing.modules.common.muonScaleResProducer import *
-#from PhysicsTools.NanoAODTools.postprocessing.modules.common.muonScaleResProducer import *
 from PhysicsTools.NanoAODTools.postprocessing.modules.common.met_phi_correction import METPhiCorrector, Campaign
 from PhysicsTools.NanoAODTools.postprocessing.modules.common.muonScaleResProducer import (
     muonScaleRes2016pre,
@@ -101,7 +100,7 @@ def main():
         jsonFileName = "data/golden_json/Cert_Collisions2022_355100_362760_Golden.json"
         sfFileName = "DeepCSV_102XSF_V2.csv" # FIXME: Update for year 2022
         modulesToRun.extend([muonScaleRes2022()]) # FIXME: Update for year 2022
-    if "UL18" in first_file or "UL2018" in first_file:
+    if "UL18NanoAODv9" in first_file or "UL2018_MiniAODv2_NanoAODv9" in first_file:
         """UL2018 for identification of 2018 UL data and UL18 for identification of 2018 UL MC
         """
         year = 2018
@@ -109,12 +108,13 @@ def main():
         jsonFileName = "data/golden_json/Cert_314472-325175_13TeV_Legacy2018_Collisions18_JSON.txt"
         sfFileName = "DeepCSV_102XSF_V2.csv"
         modulesToRun.extend([muonScaleRes2018()])
-    if "UL17" in first_file or "UL2017" in first_file:
+    if "UL17NanoAODv15" in first_file or "UL2017" in first_file:
         year = 2017
         cfgFile = "config/Input_2017.yml"
         jsonFileName="data/golden_json/Cert_294927-306462_13TeV_UL2017_Collisions17_GoldenJSON.txt"
         sfFileName = "DeepCSV_102XSF_V2.csv"
         modulesToRun.extend([muonScaleRes2017()])
+
     if "20UL16NanoAODAPVv9" in first_file:
         year = 2016
         cfgFile = "config/Input_2016.yml"
@@ -133,7 +133,7 @@ def main():
         cfgFile = "config/Input_2018.yml"
         jsonFileName = "data/golden_json/Cert_314472-325175_13TeV_Legacy2018_Collisions18_JSON.txt"
         sfFileName = "DeepCSV_102XSF_V2.csv"
-        #modulesToRun.extend([muonScaleRes2018()])
+        modulesToRun.extend([muonScaleRes2018()])
 
 
     #if cfgFile is None:
@@ -159,12 +159,13 @@ def main():
         #modulesToRun.extend([H4LCppModule()])
         if (args.WithSyst):
             jetmetCorrector = createJMECorrector(isMC=isMC, dataYear=year, jesUncert="All", jetType = "AK4PFchs")
-            #fatJetCorrector = createJMECorrector(isMC=isMC, dataYear=year, jesUncert="All", jetType = "AK8PFPuppi")
+            fatJetCorrector = createJMECorrector(isMC=isMC, dataYear=year, jesUncert="All", jetType = "AK8PFPuppi")
             # btagSF = lambda: btagSFProducer("UL"+str(year), algo="deepjet",selectedWPs=['L','M','T','shape_corr'], sfFileName=sfFileName)
-            # btagSF = lambda: btagSFProducer(era = "UL"+str(year), algo = "deepcsv")
-            #puidSF = lambda: JetSFMaker("%s" % year)
+            btagSF = lambda: btagSFProducer(era = "UL"+str(year), algo = "deepcsv")
+            puidSF = lambda: JetSFMaker("%s" % year)
             #modulesToRun.extend([jetmetCorrector(), fatJetCorrector(), puidSF()])
-            modulesToRun.extend([jetmetCorrector()])
+            modulesToRun.extend([jetmetCorrector(), fatJetCorrector(), puidSF(), muonScaleRes(), gammaSF()])
+            #modulesToRun.extend([jetmetCorrector()])
             # modulesToRun.extend([jetmetCorrector(), fatJetCorrector(), btagSF(), puidSF()])
 
         # FIXME: No PU weight for 2022
@@ -186,9 +187,9 @@ def main():
         modulesToRun.extend([H4LCppModule()])
         if (args.WithSyst):
             jetmetCorrector = createJMECorrector(isMC=isMC, dataYear=year, jesUncert="All", jetType = "AK4PFchs")
-            #fatJetCorrector = createJMECorrector(isMC=isMC, dataYear=year, jesUncert="All", jetType = "AK8PFPuppi")
-            #modulesToRun.extend([jetmetCorrector(), fatJetCorrector()])
-            modulesToRun.extend([jetmetCorrector()])
+            fatJetCorrector = createJMECorrector(isMC=isMC, dataYear=year, jesUncert="All", jetType = "AK8PFPuppi")
+            modulesToRun.extend([jetmetCorrector(), fatJetCorrector()])
+            #modulesToRun.extend([jetmetCorrector()])
 
         temp_keep_drop_file = create_temp_keep_drop_file(keep_drop_rules_Data_MC)
         print("DEBUG: Keep and drop file: {}".format(temp_keep_drop_file))
