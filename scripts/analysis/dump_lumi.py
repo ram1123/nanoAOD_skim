@@ -41,7 +41,7 @@ class LumiDumper(Module):
             json.dump(self.lumi_dict, f, indent=2)
 
 # Input ROOT file
-input_file = "/eos/user/a/avijay/Mergedrootfiles_hzz_new/file_26march/data/data_2018_noDuplicates.root"
+input_file = "/eos/user/a/avijay/Mergedrootfiles_hzz_new/file_10may/singlemuon/singlemuon.root"
 
 # Run PostProcessor
 p = PostProcessor(
