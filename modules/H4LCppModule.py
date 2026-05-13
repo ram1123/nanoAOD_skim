@@ -4,12 +4,34 @@ import ROOT
 import yaml
 import json
 import os
+from contextlib import contextmanager
 from collections import OrderedDict
 
 from modules.Helper import *
 from modules.METFilters import passFilters
 
 ROOT.PyConfig.IgnoreCommandLineOptions = True
+
+
+@contextmanager
+def suppress_native_output(enabled=True):
+    if not enabled:
+        yield
+        return
+
+    null_fd = os.open(os.devnull, os.O_WRONLY)
+    saved_stdout = os.dup(1)
+    saved_stderr = os.dup(2)
+    try:
+        os.dup2(null_fd, 1)
+        os.dup2(null_fd, 2)
+        yield
+    finally:
+        os.dup2(saved_stdout, 1)
+        os.dup2(saved_stderr, 2)
+        os.close(saved_stdout)
+        os.close(saved_stderr)
+        os.close(null_fd)
 
 
 class HZZAnalysisCppProducer(Module):
@@ -23,7 +45,8 @@ class HZZAnalysisCppProducer(Module):
         self.DEBUG = DEBUG
         self.cfgFile = cfgFile
         self.cfg = self._load_config(cfgFile)
-        self.worker = ROOT.H4LTools(self.year, self.DEBUG)
+        with suppress_native_output(enabled=not self.DEBUG):
+            self.worker = ROOT.H4LTools(self.year, self.DEBUG)
         self._initialize_worker(self.cfg)
         self.worker.isFSR = isFSR
         self._initialize_counters()

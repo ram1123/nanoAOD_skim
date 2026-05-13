@@ -939,7 +939,8 @@ bool H4LTools::GetZ1_2l2qOR2l2nu()
     {
         return foundZ1Candidate;
     }
-    if (!(nTightMu == 2 || nTightEle == 2))
+    // Restrict the 2l2q/2l2nu path to exactly one same-flavor dilepton pair.
+    if (!((nTightMu == 2 && nTightEle == 0) || (nTightEle == 2 && nTightMu == 0)))
     {
         return foundZ1Candidate;
     }
@@ -953,11 +954,13 @@ bool H4LTools::GetZ1_2l2qOR2l2nu()
     if (DEBUG)
         std::cout << "nTightEleChgSum: " << nTightEleChgSum << "\tnTightMuChgSum: " << nTightMuChgSum << std::endl;
 
-    // Check if the absolute values of nTightEleChgSum and nTightMuChgSum are not zero
-    if (std::abs(nTightEleChgSum) != 0 && std::abs(nTightMuChgSum) != 0)
+    // For same-flavor dilepton events, a non-zero charge sum means a same-sign pair.
+    if ((nTightEle == 2 && std::abs(nTightEleChgSum) != 0) ||
+        (nTightMu == 2 && std::abs(nTightMuChgSum) != 0))
     {
         HZZ2l2qNu_cutOppositeCharge++;
         HZZ2l2qNu_cutOppositeChargeFlag = true;
+        return foundZ1Candidate;
     }
 
     if (DEBUG)
@@ -982,15 +985,34 @@ bool H4LTools::GetZ1_2l2qOR2l2nu()
     }
     HZZ2l2qNu_cutETAl1l2++;
 
-    // Find ZZ candidate
+    // Find the best opposite-sign Z candidate in case multiple pairs are present.
     std::vector<int> Z1CanIndex;
     for (unsigned int m = 0; m < (Zlist.size()); m++)
     {
-        Z1CanIndex.push_back(m);
+        if ((Zlep1chg[m] + Zlep2chg[m]) == 0)
+            Z1CanIndex.push_back(m);
+    }
+
+    if (Z1CanIndex.empty())
+    {
+        HZZ2l2qNu_cutOppositeCharge++;
+        HZZ2l2qNu_cutOppositeChargeFlag = true;
+        return foundZ1Candidate;
     }
 
     int Z1index;
     Z1index = Z1CanIndex[0];
+    float bestMassDiff = fabs(Zlist[Z1index].M() - Zmass);
+    for (unsigned int idx = 1; idx < Z1CanIndex.size(); idx++)
+    {
+        int candidateIndex = Z1CanIndex[idx];
+        float massDiff = fabs(Zlist[candidateIndex].M() - Zmass);
+        if (massDiff < bestMassDiff)
+        {
+            bestMassDiff = massDiff;
+            Z1index = candidateIndex;
+        }
+    }
     Z1 = Zlist[Z1index];
     Z1nofsr = Zlistnofsr[Z1index];
 

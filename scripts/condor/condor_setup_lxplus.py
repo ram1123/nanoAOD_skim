@@ -263,7 +263,7 @@ if __name__ == "__main__":
 
     parser.add_argument("--post_proc", default="post_proc.py", help="Post process script to run.")
     parser.add_argument("--transfer_input_files", default="keep_and_drop.txt", help="Files to be transferred as input.")
-    parser.add_argument("--WithSyst", default=False, action='store_true', help="Run without systematics.")
+    parser.add_argument("--WithSyst", default=False, action='store_true', help="Enable JME systematics modules during post-processing.")
     parser.add_argument("--debug", default=False, action='store_true', help="Debug mode.")
 
     args = parser.parse_args()

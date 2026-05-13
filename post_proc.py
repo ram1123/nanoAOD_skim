@@ -35,7 +35,12 @@ def parse_arguments():
     parser.add_argument('-c', '--cutFlowFile', default="cutFlow.json", type=str, help="Cut flow file name")
     parser.add_argument("-n", "--entriesToRun", default=100, type=int, help="Set  to 0 if need to run over all entries else put number of entries to run")
     parser.add_argument("-d", "--DownloadFileToLocalThenRun", default=True, type=bool, help="Download file to local then run")
-    parser.add_argument("--WithSyst", default=False, action="store_true", help="Do not run systematics")
+    parser.add_argument(
+        "--WithSyst",
+        default=False,
+        action="store_true",
+        help="Enable JME systematics modules (AK4 JEC/JER/MET, AK8 JEC/JER, and Jet PUID SF branches).",
+    )
     parser.add_argument("--DEBUG", default=False, action="store_true", help="Print debug information")
     parser.add_argument("--channels",  choices=["all", "4l", "2l2q", "2l2v"],  default="2l2v",
                         help="Channels to run: all, 4l, 2l2q, or 2l2v")
@@ -53,6 +58,31 @@ def create_temp_keep_drop_file(rules):
     temp_file.close()
     return temp_file.name
 
+
+def print_correction_summary(year_label, isMC, with_syst):
+    print("Correction summary:")
+    print("  Supported years in this workflow: 2016pre, 2016post, 2017, 2018")
+    print(f"  Detected supported year: {year_label}")
+    print(f"  Sample type: {'MC' if isMC else 'Data'}")
+    print("  Always run:")
+    print("    - H4LCppModule event processing")
+    if isMC:
+        print("    - GenVarsProducer")
+        print("    - Muon Rochester/scale-res correction")
+        print("    - PU reweighting (puAutoWeight)")
+    else:
+        print("    - Golden JSON filtering in PostProcessor")
+
+    if with_syst:
+        print("  Enabled with --WithSyst:")
+        print("    - AK4 JEC/JER/MET uncertainties")
+        print("    - AK8 fat-jet JEC/JER uncertainties")
+        if isMC:
+            print("    - Jet PUID SF branches")
+            print("    - BTag SF producer is currently imported but not enabled")
+    else:
+        print("  --WithSyst not set: JME systematics modules are not run")
+
 def main():
     args = parse_arguments()
 
@@ -63,6 +93,7 @@ def main():
     isFSR = True
     isFiducialAna = True
     year = None
+    year_label = None
     cfgFile = None
     jsonFileName = None
     sfFileName = None
@@ -102,28 +133,37 @@ def main():
         """UL2018 for identification of 2018 UL data and UL18 for identification of 2018 UL MC
         """
         year = 2018
+        year_label = "2018"
         cfgFile = "config/Input_2018.yml"
         jsonFileName = "data/golden_json/Cert_314472-325175_13TeV_Legacy2018_Collisions18_JSON.txt"
         sfFileName = "DeepCSV_102XSF_V2.csv"
         modulesToRun.extend([muonScaleRes2018()])
     if "UL17" in first_file or "UL2017" in first_file:
         year = 2017
+        year_label = "2017"
         cfgFile = "config/Input_2017.yml"
         jsonFileName="data/golden_json/Cert_294927-306462_13TeV_UL2017_Collisions17_GoldenJSON.txt"
         sfFileName = "DeepCSV_102XSF_V2.csv"
         modulesToRun.extend([muonScaleRes2017()])
     if "20UL16NanoAODAPVv9" in first_file:
         year = 2016
+        year_label = "2016pre"
         cfgFile = "config/Input_2016.yml"
         jsonFileName = "data/golden_json/Cert_271036-284044_13TeV_Legacy2016_Collisions16_JSON.txt"
         sfFileName = "DeepCSV_102XSF_V2.csv"
         modulesToRun.extend([muonScaleRes2016pre()])
     if "20UL16NanoAODv9" in first_file:
         year = 2016
+        year_label = "2016post"
         cfgFile = "config/Input_2016.yml"
         jsonFileName = "data/golden_json/Cert_271036-284044_13TeV_Legacy2016_Collisions16_JSON.txt"
         sfFileName = "DeepCSV_102XSF_V2.csv"
         modulesToRun.extend([muonScaleRes2016()])
+
+    if year is None:
+        print("ERROR: Could not determine a supported year from the first input file.")
+        print("Supported years in this workflow: 2016pre, 2016post, 2017, 2018")
+        exit(1)
 
     H4LCppModule = lambda: HZZAnalysisCppProducer(year=year, cfgFile=cfgFile,
                                                   isMC=isMC, isFSR=isFSR,
@@ -131,11 +171,13 @@ def main():
                                                   channels=args.channels,
                                                   DEBUG=args.DEBUG
                                                   )
-    print("systematic info: {}".format(args.WithSyst))
+    print("Systematics enabled (--WithSyst): {}".format(args.WithSyst))
+    print("Detected supported year: {}".format(year_label))
     print("Input json file: {}".format(jsonFileName))
     print("Input cfg file: {}".format(cfgFile))
     print("isMC: {}".format(isMC))
     print("isFSR: {}".format(isFSR))
+    print_correction_summary(year_label, isMC, args.WithSyst)
 
     if isMC:
         GenVarModule = lambda : GenVarsProducer() # FIXME: Gen variable producer module is not working
