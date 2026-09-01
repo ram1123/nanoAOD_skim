@@ -4,6 +4,13 @@
 #include <vector>
 
 
+//H4LTools::H4LTools(bool isMC_) : isMC(isMC_) {
+    //if (isMC)
+        //std::cout << "H4LTools: Running in MC mode" << std::endl;
+    //else
+        //std::cout << "H4LTools: Running in Data mode" << std::endl;
+//}
+
 std::vector<unsigned int> H4LTools::goodLooseElectrons2012(){
     std::vector<unsigned int> LooseElectronindex;
     for (unsigned int i=0; i<Electron_pt.size(); i++){
@@ -19,23 +26,49 @@ std::vector<unsigned int> H4LTools::goodLooseElectrons2012(){
     return LooseElectronindex;
 }
 
+
 std::vector<unsigned int> H4LTools::goodLooseMuons2012(){
     std::vector<unsigned int> LooseMuonindex;
+    //bool muonpt = false;
     for (unsigned int i=0; i<Muon_eta.size(); i++){
         if (DEBUG)
             std::cout << "Inside goodLooseMuons2012:: Muon_pt[" << i << "] = " << Muon_pt[i] << std::endl;
         if ((Muon_pt[i]>MuPtcut)&&(fabs(Muon_eta[i])<MuEtacut)&&((Muon_isGlobal[i]||Muon_isTracker[i]||Muon_isPFcand[i])&&(Muon_mediumId[i]))){
+        //if ((Muon_pt[i]>MuPtcut)&&(fabs(Muon_eta[i])<MuEtacut)&&((Muon_tightId[i]))){
             LooseMuonindex.push_back(i);
       //      std::cout << nMuon << std::endl;
-        }
+          }
+            if ((Muon_eta.size()>1)&&(Muon_pt[i]>MuPtcut)) {
+               cut_mu_pt++;
+	       //muonpt = true;
+            }
+	    if ((Muon_eta.size()>1)&&(fabs(Muon_eta[i])<MuEtacut)) {
+                cut_mu_eta++;
+            }
+	    if ((Muon_eta.size()>1)&&(Muon_mediumId[i])){
+		cut_mu_mediumid++;
+            }
+	    if ((Muon_eta.size()>1)&&((Muon_isGlobal[i]||Muon_isTracker[i]))){
+                cut_mu_isglobal_istracker++;
+            }
+        
     }
 
     return LooseMuonindex;
+
+    //if (muonpt) {
+        //cut_mu_pt;
+//}
+
 }
+
+
+
 std::vector<unsigned int> H4LTools::goodMuons2015_noIso_noPf(std::vector<unsigned int> Muonindex){
     std::vector<unsigned int> bestMuonindex;
     for (unsigned int i=0; i<Muonindex.size(); i++){
         if ((Muon_pt[Muonindex[i]]>MuPtcut)&&(fabs(Muon_eta[Muonindex[i]])<MuEtacut)&&(Muon_isGlobal[Muonindex[i]]||Muon_isTracker[Muonindex[i]])&&(Muon_mediumId[Muonindex[i]])){
+        //if ((Muon_pt[Muonindex[i]]>MuPtcut)&&(fabs(Muon_eta[Muonindex[i]])<MuEtacut)&&(Muon_tightId[Muonindex[i]])){
             //if (Muon_sip3d[Muonindex[i]]<Musip3dCut){
                 if((fabs(Muon_dxy[Muonindex[i]])<MuLoosedxycut)&&(fabs(Muon_dz[Muonindex[i]])<MuLoosedzcut)){
                     bestMuonindex.push_back(Muonindex[i]);
@@ -68,7 +101,7 @@ std::vector<bool> H4LTools::passTight_BDT_Id(){
     //unsigned nE = (*nElectron).Get()[0];
     for (unsigned int i=0; i<Electron_pt.size(); i++){
 
-        mvaVal = Electron_mvaFall17V2Iso_WP90[i];
+        mvaVal = Electron_mvaIso_WP90[i];
 //        if(mvaVal > cutVal){
             tightid.push_back(mvaVal);
             //std::cout << nElectron << std::endl;
@@ -109,17 +142,100 @@ std::vector<unsigned int> H4LTools::goodFsrPhotons(){
     return goodFsrPhoton;
 }
 
+bool H4LTools::PassJetIDv15(unsigned int i, bool isPUPPI)
+{
+    const float abseta = fabs(Jet_eta[i]);
+
+    const float CEMF = Jet_chEmEF[i];
+    const float CHF  = Jet_chHEF[i];
+    const int   CHM  = Jet_chMultiplicity[i];
+    const float NEMF = Jet_neEmEF[i];
+    const float NHF  = Jet_neHEF[i];
+    const float MUF  = Jet_muEF[i];
+    const int   NumConst = Jet_nConstituents[i];
+    const int   NumNeutral = Jet_neMultiplicity[i];
+
+    // |eta| <= 2.6 (AK4CHS & AK4PUPPI, LepVeto)
+    if (abseta <= 2.6)
+    {
+        return (CEMF < 0.8 &&
+                //CHM > 0 &&
+                CHF > 0 &&
+                NumConst > 1 &&
+                NEMF < 0.9 &&
+                MUF < 0.8 &&
+                NHF < 0.9);
+    }
+
+    // 2.6 < |eta| <= 2.7
+    if (abseta > 2.6 && abseta <= 2.7)
+    {
+        if (!isPUPPI) // AK4CHS
+        {
+            return (CEMF < 0.8 &&
+                    //CHM > 0 &&
+                    NEMF < 0.99 &&
+                    MUF < 0.8 &&
+                    NHF < 0.9);
+        }
+        else // AK4PUPPI
+        {
+            return (CEMF < 0.8 &&
+                    NEMF < 0.99 &&
+                    MUF < 0.8 &&
+                    NHF < 0.9);
+        }
+    }
+
+    // 2.7 < |eta| <= 3.0
+    if (abseta > 2.7 && abseta <= 3.0)
+    {
+        if (!isPUPPI) // AK4CHS
+        {
+            return (NEMF > 0.01 &&
+                    NEMF < 0.99 );
+                    //NumNeutral > 1);
+        }
+        else // AK4PUPPI
+        {
+            return (NHF < 0.9999);
+        }
+    }
+
+    // |eta| > 3.0
+    if (abseta > 3.0)
+    {
+        if (!isPUPPI) // AK4CHS
+        {
+            return (NEMF < 0.90 &&
+                    NHF > 0.2);
+                    //NumNeutral > 10);
+        }
+        else // AK4PUPPI
+        {
+            return (NEMF < 0.90);
+                    //NumNeutral > 2);
+        }
+    }
+
+    return false;
+}
+
+
 std::vector<unsigned int> H4LTools::SelectedJets(std::vector<unsigned int> ele, std::vector<unsigned int> mu)
 {
     std::vector<unsigned int> goodJets;
+    const bool isPUPPI = true;   // true = AK4PUPPI, false = AK4CHS // for v15
+
     for (unsigned int i = 0; i < Jet_pt.size(); i++)
     {
         if ((Jet_pt[i] <= JetPtcut)) continue;
         if (fabs(Jet_eta[i]) >= JetEtacut) continue;
-        if (Jet_jetId[i] <= 0) continue;
-        if ((Jet_pt[i] < 50) && (Jet_puId[i] != 7)) continue;
-        if (DEBUG)
-            std::cout << "DEBUG: Jet_pt.size() = " << Jet_pt.size() << ";" << " JetID = " << Jet_jetId[i] << ";" << "Jet_pt = " << Jet_pt[i] << ";" << " puID = " << Jet_puId[i] << std::endl;
+
+        if (!PassJetIDv15(i, isPUPPI)) continue; // for v15
+
+        //if (Jet_jetId[i] <= 0) continue;  // for v9
+        //if ((Jet_pt[i] < 50) && (Jet_puId[i] != 7)) continue; //for v9
         int overlaptag = 0;
         TLorentzVector jettest;
         jettest.SetPtEtaPhiM(Jet_pt[i], Jet_eta[i], Jet_phi[i], Jet_mass[i]);
@@ -139,9 +255,41 @@ std::vector<unsigned int> H4LTools::SelectedJets(std::vector<unsigned int> ele, 
         }
         if (overlaptag == 0)
             goodJets.push_back(i);
+
+        /*
+        // genuine jet and PU jet selection
+        bool isGenuine = false;
+        if (isMC) {  
+        for (unsigned int j = 0; j < GenJet_pt.size(); j++){
+            TLorentzVector genjettest;
+            genjettest.SetPtEtaPhiM(GenJet_pt[j], GenJet_eta[j], GenJet_phi[j], GenJet_mass[j]);
+            if (genjettest.DeltaR(jettest) < 0.4)
+            {
+                isGenuine = true;
+            }
+        }
+    }
+        if (DEBUG)
+            std::cout << "DEBUG: Genuine Jet index = " << i << "; isGenuine = " << isGenuine <<  std::endl;
+        // Fill the genuine and PU jet vectors
+        if (isGenuine)
+        {
+            genuineJets.push_back(i);
+        }
+        else
+        {
+            puJets.push_back(i);
+            
+        }
+        
+
+*/
     }
     return goodJets;
+    //return genuineJets;
+    //return puJets;
 }
+
 
 // Pre-selection for Fat-jets
 std::vector<unsigned int> H4LTools::SelectedFatJets(std::vector<unsigned int> ele, std::vector<unsigned int> mu)
@@ -370,6 +518,7 @@ void H4LTools::LeptonSelection(){
         Mulist.push_back(Mu);
         muid.push_back(AllMuid[Muonindex[imu]]);
         Muiso.push_back(Muon_pfRelIso03_all[Muonindex[imu]]);
+        
     }
 
     ElelistFsr = BatchFsrRecovery(Elelist);
@@ -392,7 +541,7 @@ void H4LTools::LeptonSelection(){
           }
 
         }
-        if((Eid[ae]==true)&&(RelEleIsoNoFsr<0.35)){
+        if((Eid[ae]==true)&&(RelEleIsoNoFsr<0.15)){
             nTightEle++;
             TightEleindex.push_back(ae);
             nTightEleChgSum += Elechg[ae];
@@ -416,11 +565,14 @@ void H4LTools::LeptonSelection(){
               }
           }
         }
-        if((muid[amu]==true)&&(RelIsoNoFsr<0.35)){
+        if((muid[amu]==true)&&(RelIsoNoFsr<0.2)){
             nTightMu++;
             TightMuindex.push_back(amu);
             nTightMuChgSum += Muchg[amu];
         }
+        if (RelIsoNoFsr<0.35){
+		cut_mu_iso++;
+	}
     }
 
 
@@ -940,6 +1092,7 @@ bool H4LTools::GetZ1_2l2qOR2l2nu()
         return foundZ1Candidate;
     }
     if (!(nTightMu == 2 || nTightEle == 2))
+    //if (!(nTightMu == 2))
     {
         return foundZ1Candidate;
     }
@@ -954,10 +1107,14 @@ bool H4LTools::GetZ1_2l2qOR2l2nu()
         std::cout << "nTightEleChgSum: " << nTightEleChgSum << "\tnTightMuChgSum: " << nTightMuChgSum << std::endl;
 
     // Check if the absolute values of nTightEleChgSum and nTightMuChgSum are not zero
-    if (std::abs(nTightEleChgSum) != 0 && std::abs(nTightMuChgSum) != 0)
+    //if (std::abs(nTightEleChgSum) == 0 || std::abs(nTightMuChgSum) == 0)
+    if ((nTightEle == 2 && std::abs(nTightEleChgSum == 0)) || (nTightMu == 2 && std::abs(nTightMuChgSum == 0)))
     {
         HZZ2l2qNu_cutOppositeCharge++;
         HZZ2l2qNu_cutOppositeChargeFlag = true;
+    }
+    if (std::abs(nTightMuChgSum) == 0){
+    cut_2mu_cutOppositeCharge++;
     }
 
     if (DEBUG)
@@ -995,7 +1152,7 @@ bool H4LTools::GetZ1_2l2qOR2l2nu()
     Z1nofsr = Zlistnofsr[Z1index];
 
     // The invariant mass of dilepton system within 15 GeV of the known Z boson mass, ensuring that the pair likely originates from a Z-boson decay
-    if (fabs(Z1.M() - Zmass) > HZZ2l2nu_M_ll_Window)
+    if (fabs(Z1.M() - Zmass) > 80)
     {
         return foundZ1Candidate;
     }
@@ -1023,8 +1180,9 @@ bool H4LTools::GetZ1_2l2qOR2l2nu()
     phiL2 = Lep2.Phi();
     massL2 = Lep2.M();
 
-    if(Lep1.DeltaR(Lep2)<0.3){
-    foundZ1Candidate = false;
+    DeltaRl1l2 = Lep1.DeltaR(Lep2);
+    if(DeltaRl1l2<0.3){
+      return foundZ1Candidate;
     }
 
     jetidx = SelectedJets(tighteleforjetidx, tightmuforjetidx);
@@ -1087,19 +1245,34 @@ bool H4LTools::GetZ1_emuCR()
          std::cout << "##Zlep1pt,Zlep2pt (emu control region): " << ElelistFsr[TightEleindex[0]].Pt() << ", " << MulistFsr[TightMuindex[0]].Pt() << std::endl;
 
     Z1 = ElelistFsr[TightEleindex[0]] + MulistFsr[TightMuindex[0]];
+
+    TLorentzVector ele = ElelistFsr[TightEleindex[0]];
+    TLorentzVector mu = MulistFsr[TightMuindex[0]];
+
     TLorentzVector Lep1, Lep2;
-    Lep1 = ElelistFsr[TightEleindex[0]];
-    Lep2 = MulistFsr[TightMuindex[0]];
 
-    pTL1 = ElelistFsr[TightEleindex[0]].Pt();
-    pTL2 = MulistFsr[TightMuindex[0]].Pt();
-    etaL1 = ElelistFsr[TightEleindex[0]].Eta();
-    etaL2 = MulistFsr[TightMuindex[0]].Eta();
-    phiL1 = ElelistFsr[TightEleindex[0]].Phi();
-    phiL2 = MulistFsr[TightMuindex[0]].Phi();
-    massL1 = ElelistFsr[TightEleindex[0]].M();
-    massL2 = MulistFsr[TightMuindex[0]].M();
+    if (ele.Pt() >= mu.Pt()) {
+        Lep1 = ele;
+        Lep2 = mu;
+    } else {
+        Lep1 = mu;
+        Lep2 = ele;
+    }
 
+    pTL1 = Lep1.Pt();
+    pTL2 = Lep2.Pt();
+    etaL1 = Lep1.Eta();
+    etaL2 = Lep2.Eta();
+    phiL1 = Lep1.Phi();
+    phiL2 = Lep2.Phi();
+    massL1 = Lep1.M();
+    massL2 = Lep2.M();
+
+    DeltaRl1l2 = Lep1.DeltaR(Lep2);
+    if(DeltaRl1l2<0.3){
+        return foundZ1_emuCRCandidate;
+    }
+    
     /// pT selection
     if ((pTL1 < HZZ2l2nu_Leading_Lep_pT || pTL2 < HZZ2l2nu_SubLeading_Lep_pT))
     {
@@ -1118,8 +1291,7 @@ bool H4LTools::GetZ1_emuCR()
     HZZemuCR_cutETAl1l2++;
     if (DEBUG)
         std::cout << "*****$$$$*****Zlep1eta,Zlep2eta (emu control region): " << etaL1 << ", " << etaL2 << std::endl;
-    // std::cout << "##HELLO##Z_emu mass: " << Z1_emuCR.M() <<  std::endl;
-    // std::cout << "##HELLO#Z_emu Pt: " << Z1_emuCR.Pt() <<  std::endl;
+  
 
     if (fabs(Z1.M() - Zmass) > 160)
     {
@@ -1130,15 +1302,6 @@ bool H4LTools::GetZ1_emuCR()
     if (DEBUG)
         std::cout << "*****$$$$***** Z_emu mass: " << Z1.M() << std::endl;
 
-    /*
-    //side band
-    if (!(((Z1.M() > 40) && (Z1.M() < 70)) || ((Z1.M() > 110) && (Z1.M() < 200))))
-    {
-        return foundZ1_emuCRCandidate;                     //UNCOMMENT FOR THE EVENTS IN SIDE BAND REGION
-    }
-    HZZemuCR_cutmZ1Window_SB++;
-    std::cout << "*****$$$$***** Z_emu mass_sideband: " << Z1.M() << std::endl;
-    */
     /// pT selection of dilepton
     if (Z1.Pt() < 25)
     {
@@ -1169,9 +1332,9 @@ bool H4LTools::ZZSelection_2l2q()
         {
             for (unsigned int i = 0; i < FatJetidx.size(); i++)
             {
-                if (FatJet_PNZvsQCD[FatJetidx[i]] < 0.9) continue;
-                if (FatJet_pt[FatJetidx[i]] < 200.0) continue;
-                // if (FatJet_msoftdrop[FatJetidx[i]] < 40.0) continue;
+                if (FatJet_PNZvsQCD[FatJetidx[i]] < 0.9) continue; // commented out for v15
+                if (FatJet_pt[FatJetidx[i]] < 200.0) continue; //commented out for v15
+            // if (FatJet_msoftdrop[FatJetidx[i]] < 40.0) continue;
                 // if (FatJet_msoftdrop[FatJetidx[i]] > 180.0) continue;
 
                 foundZZCandidate = true;
@@ -1179,8 +1342,8 @@ bool H4LTools::ZZSelection_2l2q()
                 cut2l1J++;
                 cut2l1Jor2j++;
 
-                boostedJet_PNScore = FatJet_PNZvsQCD[FatJetidx[i]];
-                boostedJet_Index = FatJetidx[i];
+                boostedJet_PNScore = FatJet_PNZvsQCD[FatJetidx[i]];// commented out for v15
+                boostedJet_Index = FatJetidx[i];// commented out for v15
 
                 Z2.SetPtEtaPhiM(FatJet_pt[FatJetidx[i]], FatJet_eta[FatJetidx[i]], FatJet_phi[FatJetidx[i]], FatJet_SDmass[FatJetidx[i]]);
             }
@@ -1283,22 +1446,26 @@ bool H4LTools::ZZSelection_2l2nu()
     if (DEBUG)
     {
         std::cout << "Passed dPhiJetMET cut" << std::endl;
-        std::cout << "MET_pt: " << MET_pt << std::endl;
+        std::cout << "PuppiMET_pt: " << PuppiMET_pt << std::endl;
+	    std::cout << "inside 2l2nu selection loop, PuppiMET_pt: " << PuppiMET_pt << std::endl;
     }
-
-    if (MET_pt > 100)
+    if (DEBUG) {
+        std::cout << "***** Corrected MET pt inside 2l2nu selection: " << PuppiMET_pt << std::endl;
+        std::cout << "***** Corrected MET phi inside 2l2nu selection: " << PuppiMET_phi << std::endl;
+    }
+    if (PuppiMET_pt > 100)
     {
         HZZ2l2nu_cutMETgT100++;
     }
 
-    Z2_met.SetPtEtaPhiE(MET_pt, 0, MET_phi, MET_pt);
+    Z2_met.SetPtEtaPhiE(PuppiMET_pt, 0, PuppiMET_phi, PuppiMET_pt);
 
     ZZ_metsystem = Z1 + Z2_met;
     ZZ_metsystemnofsr = Z1nofsr + Z2_met;
 
     float Pz_nu;
     float Pz_neutrino;
-    Pz_nu = ((Z1.M()*Z1.M())/4)- (MET_pt*MET_pt);
+    Pz_nu = ((Z1.M()*Z1.M())/4)- (PuppiMET_pt*PuppiMET_pt);
     //if (Pz_nu < 0) {
         std::complex<double> complex_pz(0, std::sqrt(-1 * Pz_nu));
         Pz_neutrino = std::abs(complex_pz);
@@ -1316,7 +1483,66 @@ bool H4LTools::ZZSelection_2l2nu()
     HZZ2l2qNu_nJets = jetidx.size();
     if (DEBUG)
         std::cout << "Size of jets: [inside 2l2nu] " << HZZ2l2qNu_nJets << std::endl;
+    for (unsigned int i = 0; i < jetidx.size(); i++){
+    if (DEBUG)
+            std::cout << "DEBUG jets inside 2l2nu selection: Jet_pt.size() = " << Jet_pt.size() << ";" << "Jet_pt = " << Jet_pt[i] << ";" << " Jet index = " << i << std::endl;
+    }
+    unsigned int jet1index, jet2index;
+    jet1index = 99;
+    jet2index = 99;
+    if(jetidx.size()>0)
+    {
+        if(jetidx.size()==1)
+        {
+            jet1index = jetidx[0];
+        }
+        if(jetidx.size()==2)
+        {
+            jet1index = jetidx[0];
+            jet2index = jetidx[1];
+            if(Jet_pt[jetidx[1]]>Jet_pt[jetidx[0]])
+            {
+                jet1index = jetidx[1];
+                jet2index = jetidx[0];
+            }
+        }
+        if(jetidx.size()>2)
+        {
+            jet1index = jetidx[0];
+            jet2index = jetidx[1];
+            if(Jet_pt[jetidx[1]]>Jet_pt[jetidx[0]])
+            {
+                jet1index = jetidx[1];
+                jet2index = jetidx[0];
+            }
+            for (unsigned int pj=2;pj<jetidx.size();pj++){
+                
+		    if((Jet_pt[jetidx[pj]]>Jet_pt[jet1index])&&(Jet_pt[jetidx[pj]]>Jet_pt[jet2index])){
+                    jet1index = jetidx[pj];
+                }
+                if(Jet_pt[jetidx[pj]]>Jet_pt[jet2index]){
+                    jet2index = jetidx[pj];
+                }
+            }
+        }
+    }
 
+    TLorentzVector Jet1,Jet2;
+    if(jetidx.size()>0){
+        Jet1.SetPtEtaPhiM(Jet_pt[jet1index],Jet_eta[jet1index],Jet_phi[jet1index],Jet_mass[jet1index]);
+        pTj1 = Jet1.Pt();
+        etaj1 = Jet1.Eta();
+        phij1 = Jet1.Phi();
+        mj1 = Jet1.M();
+    if(jetidx.size()>1){
+        Jet2.SetPtEtaPhiM(Jet_pt[jet2index],Jet_eta[jet2index],Jet_phi[jet2index],Jet_mass[jet2index]);
+        pTj2 = Jet2.Pt();
+        etaj2 = Jet2.Eta();
+        phij2 = Jet2.Phi();
+        mj2 = Jet2.M();
+        }
+    }
+    
     // Get VBF jets having dEta>4.0 and mjj>500
     // If there are more than one pair of VBF jets, select the pair with highest mjj
     float VBF_jj_mjj = 0.0;

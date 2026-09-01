@@ -1,4 +1,4 @@
-lumi: 59740.
+gumi: 59740.
 TriggerChannels:
     - Triggers_HZZ4l
     - Triggers_HZZ2l2q
@@ -34,27 +34,58 @@ Triggers_HZZ2l2q:
 Triggers_HZZ2l2nu:
     # DoubleMu
     - event.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass3p8
+    - event.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass8
+    - event.HLT_Mu19_TrkIsoVVL_Mu9_TrkIsoVVL_DZ_Mass3p8
+    - event.HLT_Mu19_TrkIsoVVL_Mu9_TrkIsoVVL_DZ_Mass8
     # Single Mu
-    - event.HLT_IsoMu20
+    #- event.HLT_IsoMu20
+    #- event.HLT_IsoMu24
+    #- event.HLT_IsoMu27
     - event.HLT_IsoMu24
     - event.HLT_IsoMu27
+    - event.HLT_IsoMu30
+    - event.HLT_Mu50
     # Double Electron
     - event.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL
     - event.HLT_DoubleEle25_CaloIdL_MW
     # Single Electron
-    - event.HLT_Ele32_WPTight_Gsf
+    #- event.HLT_Ele32_WPTight_Gsf
     # MuEGamma
-    - event.HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ
+    #- event.HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ
+    #- event.HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_DZ
+    - event.HLT_Mu12_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ
+    - event.HLT_Mu12_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL
     - event.HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_DZ
+    - event.HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL
+    - event.HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ
+    - event.HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL
+    # EGamma
+    - event.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ
+    - event.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL
+    - event.HLT_DiEle27_WPTightCaloOnly_L1DoubleEG
+
+    #Double electron
+    - event.HLT_DoubleEle33_CaloIdL_MW
+    - event.HLT_DoubleEle25_CaloIdL_MW
+    - event.HLT_DoubleEle27_CaloIdL_MW
+    - event.HLT_DoublePhoton70
+    - event.HLT_Ele115_CaloIdVT_GsfTrkIdT
+    - event.HLT_Ele27_WPTight_Gsf
+    - event.HLT_Ele32_WPTight_Gsf
+    - event.HLT_Ele35_WPTight_Gsf
+    - event.HLT_Ele38_WPTight_Gsf
+    - event.HLT_Ele40_WPTight_Gsf
+    - event.HLT_Ele32_WPTight_Gsf_L1DoubleEG
+    - event.HLT_Photon200
     # SinglePhoton
-    - event.HLT_Photon50_R9Id90_HE10_IsoM
-    - event.HLT_Photon75_R9Id90_HE10_IsoM
-    - event.HLT_Photon75_R9Id90_HE10_IsoM_EBOnly_CaloMJJ300_PFJetsMJJ400DEta3
-    - event.HLT_Photon75_R9Id90_HE10_IsoM_EBOnly_CaloMJJ400_PFJetsMJJ600DEta3
-    - event.HLT_Photon90_R9Id90_HE10_IsoM
-    - event.HLT_Photon120_R9Id90_HE10_IsoM
-    - event.HLT_Photon165_R9Id90_HE10_IsoM
-    - event.HLT_Photon300_NoHE
+    #- event.HLT_Photon50_R9Id90_HE10_IsoM
+    #- event.HLT_Photon75_R9Id90_HE10_IsoM
+    #- event.HLT_Photon75_R9Id90_HE10_IsoM_EBOnly_CaloMJJ300_PFJetsMJJ400DEta3
+    #- event.HLT_Photon75_R9Id90_HE10_IsoM_EBOnly_CaloMJJ400_PFJetsMJJ600DEta3
+    #- event.HLT_Photon90_R9Id90_HE10_IsoM
+    #- event.HLT_Photon120_R9Id90_HE10_IsoM
+    #- event.HLT_Photon165_R9Id90_HE10_IsoM
+    #- event.HLT_Photon300_NoHE
 
 
 Triggers_HZZ2l2nu_SingleLep:
@@ -106,10 +137,10 @@ Higgscut:
 
 Electron:
     pTcut: 25  #7
-    Etacut: 2.1 #2.5
+    Etacut: 2.5 #2.5
     #Sip3dcut: 4
-    Loosedxycut: 0.045 #0.5
-    Loosedzcut: 0.2 #1
+    Loosedxycut: 0.045 #0.5 
+    Loosedzcut: 0.2 #1 #0.2
     ttH:
         WP: 0.8
     BDTWP:
@@ -129,8 +160,8 @@ Muon:
 
     Etacut: 2.4
     #Sip3dcut: 4
-    Loosedxycut: 0.045 #0.5
-    Loosedzcut: 0.2 #1
+    Loosedxycut: 0.045 #0.5 #0.045
+    Loosedzcut: 0.2 #1 #0.2
     Tightdxycut: 0.045 #0.2
     Tightdzcut: 0.2 #0.5
     TightTrackerLayercut: 5
@@ -166,7 +197,7 @@ HZZ2l2nu:
     SubLeading_Lep_pT: 25.0
     Lep_eta: 2.5
     Pt_ll: 10.0
-    M_ll_Window: 15.0
+    M_ll_Window: 0.0
     dPhi_jetMET: 0.0
     MZLepcut:
         down: 60.0

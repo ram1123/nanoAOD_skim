@@ -6,6 +6,7 @@ import glob
 import tempfile
 
 from PhysicsTools.NanoAODTools.postprocessing.framework.postprocessor import PostProcessor
+from PhysicsTools.NanoAODTools.postprocessing.modules.common.met_phi_correction import METPhiCorrector, Campaign
 from PhysicsTools.NanoAODTools.postprocessing.modules.common.muonScaleResProducer import (
     muonScaleRes2016pre,
     muonScaleRes2016,
@@ -33,7 +34,7 @@ def parse_arguments():
     parser.add_argument('-o', '--outputFile', default="skimmed_nano.root", type=str, help="Output file name")
     parser.add_argument('-outDir', '--outputDir', default=".", type=str, help="Output directory")
     parser.add_argument('-c', '--cutFlowFile', default="cutFlow.json", type=str, help="Cut flow file name")
-    parser.add_argument("-n", "--entriesToRun", default=100, type=int, help="Set  to 0 if need to run over all entries else put number of entries to run")
+    parser.add_argument("-n", "--entriesToRun", default=0, type=int, help="Set  to 0 if need to run over all entries else put number of entries to run")
     parser.add_argument("-d", "--DownloadFileToLocalThenRun", default=True, type=bool, help="Download file to local then run")
     parser.add_argument("--WithSyst", default=False, action="store_true", help="Do not run systematics")
     parser.add_argument("--DEBUG", default=False, action="store_true", help="Print debug information")
@@ -60,7 +61,7 @@ def main():
     testfilelist = []
     modulesToRun = []
     isMC = True
-    isFSR = True
+    isFSR = True # set false for now
     isFiducialAna = True
     year = None
     cfgFile = None
@@ -98,7 +99,7 @@ def main():
         jsonFileName = "data/golden_json/Cert_Collisions2022_355100_362760_Golden.json"
         sfFileName = "DeepCSV_102XSF_V2.csv" # FIXME: Update for year 2022
         modulesToRun.extend([muonScaleRes2022()]) # FIXME: Update for year 2022
-    if "UL18" in first_file or "UL2018" in first_file:
+    if "UL18NanoAODv9" in first_file or "UL2018_MiniAODv2_NanoAODv9" in first_file:
         """UL2018 for identification of 2018 UL data and UL18 for identification of 2018 UL MC
         """
         year = 2018
@@ -106,12 +107,13 @@ def main():
         jsonFileName = "data/golden_json/Cert_314472-325175_13TeV_Legacy2018_Collisions18_JSON.txt"
         sfFileName = "DeepCSV_102XSF_V2.csv"
         modulesToRun.extend([muonScaleRes2018()])
-    if "UL17" in first_file or "UL2017" in first_file:
+    if "UL17NanoAODv15" in first_file or "UL2017" in first_file:
         year = 2017
         cfgFile = "config/Input_2017.yml"
         jsonFileName="data/golden_json/Cert_294927-306462_13TeV_UL2017_Collisions17_GoldenJSON.txt"
         sfFileName = "DeepCSV_102XSF_V2.csv"
         modulesToRun.extend([muonScaleRes2017()])
+
     if "20UL16NanoAODAPVv9" in first_file:
         year = 2016
         cfgFile = "config/Input_2016.yml"
@@ -124,6 +126,19 @@ def main():
         jsonFileName = "data/golden_json/Cert_271036-284044_13TeV_Legacy2016_Collisions16_JSON.txt"
         sfFileName = "DeepCSV_102XSF_V2.csv"
         modulesToRun.extend([muonScaleRes2016()])
+
+    if "UL2018_NanoAODv15" in first_file or "UL18NanoAODv15" in first_file:
+        year = 2018
+        cfgFile = "config/Input_2018.yml"
+        jsonFileName = "data/golden_json/Cert_314472-325175_13TeV_Legacy2018_Collisions18_JSON.txt"
+        sfFileName = "DeepCSV_102XSF_V2.csv"
+        modulesToRun.extend([muonScaleRes2018()])
+
+
+    #if cfgFile is None:
+        #year = 2018   
+        #cfgFile = "config/Input_2018.yml"
+        #modulesToRun.extend([muonScaleRes2018()])
 
     H4LCppModule = lambda: HZZAnalysisCppProducer(year=year, cfgFile=cfgFile,
                                                   isMC=isMC, isFSR=isFSR,
@@ -140,13 +155,16 @@ def main():
     if isMC:
         GenVarModule = lambda : GenVarsProducer() # FIXME: Gen variable producer module is not working
         modulesToRun.extend([H4LCppModule(), GenVarModule()])
+        #modulesToRun.extend([H4LCppModule()])
         if (args.WithSyst):
             jetmetCorrector = createJMECorrector(isMC=isMC, dataYear=year, jesUncert="All", jetType = "AK4PFchs")
             fatJetCorrector = createJMECorrector(isMC=isMC, dataYear=year, jesUncert="All", jetType = "AK8PFPuppi")
             # btagSF = lambda: btagSFProducer("UL"+str(year), algo="deepjet",selectedWPs=['L','M','T','shape_corr'], sfFileName=sfFileName)
-            # btagSF = lambda: btagSFProducer(era = "UL"+str(year), algo = "deepcsv")
+            btagSF = lambda: btagSFProducer(era = "UL"+str(year), algo = "deepcsv")
             puidSF = lambda: JetSFMaker("%s" % year)
-            modulesToRun.extend([jetmetCorrector(), fatJetCorrector(), puidSF()])
+            #modulesToRun.extend([jetmetCorrector(), fatJetCorrector(), puidSF()])
+            modulesToRun.extend([jetmetCorrector(), fatJetCorrector(), puidSF(), muonScaleRes(), gammaSF()])
+            #modulesToRun.extend([jetmetCorrector()])
             # modulesToRun.extend([jetmetCorrector(), fatJetCorrector(), btagSF(), puidSF()])
 
         # FIXME: No PU weight for 2022
@@ -170,6 +188,7 @@ def main():
             jetmetCorrector = createJMECorrector(isMC=isMC, dataYear=year, jesUncert="All", jetType = "AK4PFchs")
             fatJetCorrector = createJMECorrector(isMC=isMC, dataYear=year, jesUncert="All", jetType = "AK8PFPuppi")
             modulesToRun.extend([jetmetCorrector(), fatJetCorrector()])
+            #modulesToRun.extend([jetmetCorrector()])
 
         temp_keep_drop_file = create_temp_keep_drop_file(keep_drop_rules_Data_MC)
         print("DEBUG: Keep and drop file: {}".format(temp_keep_drop_file))
