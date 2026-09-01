@@ -65,8 +65,16 @@ python3 post_proc.py -i <file.root | list.txt> -n 1000
 `set_env.sh` runs `voms-proxy-init` and `exit 1`s if the proxy file is missing. If
 you only need the environment, run the two MELA lines from `set_env.sh` yourself.
 
-There is **no test suite**. To smoke-test a change, run `post_proc.py` over one
-file with a small `--entriesToRun` and `--DEBUG`.
+There is **no test suite**. The canonical smoke test for any change is a single
+run over the bundled one-file list (a UL18 v9 GluGluHToZZTo2L2Nu signal file, so
+it exercises the 2l2nu path and auto-detects year=2018 / isMC):
+
+```bash
+python3 post_proc.py -i config/ExampleInputFileList.txt
+```
+
+Add `-n <N>` to cap events and `--DEBUG` for per-event selection detail. Other
+`config/ExampleInputFileList_*.txt` cover 4l, data, Run 3, and WW.
 
 ### `post_proc.py` arguments (note the defaults on this branch)
 
