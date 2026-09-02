@@ -53,3 +53,10 @@ rc=$?
 rm -f pb.json SyncLepton2018GGH.txt
 echo "### resulting src/:" ; ls -la src/H4LTools_cc.so 2>&1
 [ $rc -eq 0 ] && [ -f src/H4LTools_cc.so ] && echo "### PREBUILD OK -> $DST" || { echo "### PREBUILD FAILED"; exit 1; }
+
+echo "### tar the staged release for fast node-local extraction in jobs"
+TGZ="$(dirname "$DST")/$(basename "$DST").tgz"
+tar --exclude=.git -C "$(dirname "$DST")" -czf "$TGZ.tmp" "$(basename "$DST")" && mv -f "$TGZ.tmp" "$TGZ"
+ls -la "$TGZ"
+echo "### staged -> $DST"
+echo "### tarball -> $TGZ  (jobs extract this to node-local /tmp)"

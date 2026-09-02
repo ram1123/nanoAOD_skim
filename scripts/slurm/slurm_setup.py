@@ -102,9 +102,11 @@ def main():
     if not proxy:
         sys.exit("no grid proxy found -- run `voms-proxy-init -voms cms`")
 
-    if not os.path.isdir(args.cmssw_on_depot):
-        sys.exit("CMSSW not staged on /depot (%s).\n  run: bash scripts/slurm/stage_to_depot.sh"
-                 % args.cmssw_on_depot)
+    tgz = args.cmssw_on_depot.rstrip("/") + ".tgz"
+    if not os.path.isdir(args.cmssw_on_depot) or not os.path.isfile(tgz):
+        sys.exit("CMSSW not staged on /depot (need %s and %s).\n"
+                 "  run: bash scripts/slurm/stage_to_depot.sh"
+                 % (args.cmssw_on_depot, tgz))
 
     with open(in_list) as fh:
         datasets = [l.strip() for l in fh
@@ -180,7 +182,8 @@ def main():
 #SBATCH --output={sub}/logs/task_%a.out
 #SBATCH --error={sub}/logs/task_%a.out
 
-export HZZ_CMSSW="{cmssw}"
+export HZZ_INNER="{inner}"
+export HZZ_CMSSW_TGZ="{tgz}"
 export HZZ_TASKS="{tasks}"
 export HZZ_PROXY="{proxy}"
 export HZZ_BIND="{bind}"
@@ -188,14 +191,18 @@ export HZZ_ENTRIES="{entries}"
 export HZZ_CHANNELS="{channels}"
 export HZZ_SYST="{syst}"
 
-exec bash "{pkg}/scripts/slurm/job_wrapper.sh"
+exec bash "{wrapper}"
 """.format(name=args.submission_name, acct=args.account, part=args.partition,
            time=args.time, cpus=args.cpus, mem=args.mem, last=njobs - 1,
-           par=args.max_parallel, sub=subdir, cmssw=args.cmssw_on_depot,
+           par=args.max_parallel, sub=subdir,
+           inner=os.path.join(args.cmssw_on_depot, PKG_REL,
+                              "scripts/slurm/job_inner.sh"),
+           wrapper=os.path.join(args.cmssw_on_depot, PKG_REL,
+                                "scripts/slurm/job_wrapper.sh"),
+           tgz=args.cmssw_on_depot.rstrip("/") + ".tgz",
            tasks=tasks_tsv, proxy=depot_proxy, bind=args.depot_bind,
            entries=args.entries, channels=args.channels,
-           syst=("1" if args.with_syst else ""),
-           pkg=os.path.join(args.cmssw_on_depot, PKG_REL)))
+           syst=("1" if args.with_syst else "")))
     os.chmod(job_sh, 0o755)
 
     print("\n%d array tasks  ->  %s" % (njobs, job_sh))

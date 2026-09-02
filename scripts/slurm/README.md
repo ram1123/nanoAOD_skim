@@ -12,18 +12,22 @@ does **not** apply here):
 |---|---|
 | Jobs see `/cvmfs`, `/depot`, `/tmp` only — **not `/work` or `/eos`** | the CMSSW area must live on `/depot`; input via XRootD; output to `/depot` |
 | Hammer nodes are el8 / glibc 2.28; the JHU `libmcfm_710.so` needs glibc ≥ 2.29 | every job runs inside the **`cmssw-el9`** container |
+| MELA/MCFM init does thousands of small file ops; ~50× slower over the `/depot` NFS than local disk | each job extracts the staged release from a **tarball to node-local `/tmp`** and runs from there |
 | el8-built ROOT needs `libssl.so.1.1`, absent on AlmaLinux 9 | `external/el8compat_lib/` (host openssl-1.1 copy) is prepended to `LD_LIBRARY_PATH` |
 | `cmssw-el9` drops `APPTAINER_BINDPATH` entries whose mount point is not in the base image | `/depot` is bound with an explicit `-B` flag |
-| MELA/MCFM first-time init is CPU-heavy on shared Hammer cores (~10–15 min) | this is a fixed per-job cost — give `--time` headroom and skim whole files per job, not tiny `--entriesToRun` |
+| Grid proxy needed for XRootD | staged to `<submit>/x509_proxy` (on `/depot`, readable by the job); proxy lifetime bounds the run |
 
 ## One-time setup (re-run after any code / MELA change)
 
 ```bash
 bash scripts/slurm/stage_to_depot.sh
-# -> rsyncs $CMSSW_BASE to /depot/cms/users/<you>/HZZ2l2nu_skim/CMSSW_14_0_2
-#    runs `scram b ProjectRename`, pre-builds src/H4LTools_cc.so so array tasks
-#    never recompile in the shared tree.
 ```
+
+- rsyncs `$CMSSW_BASE` to `/depot/cms/users/<you>/HZZ2l2nu_skim/CMSSW_14_0_2`
+- `scram b ProjectRename`, pre-builds `src/H4LTools_cc.so` (jobs never recompile)
+- writes `CMSSW_14_0_2.tgz` beside it — each array task extracts this to
+  node-local `/tmp` and runs entirely from local disk (the `/depot` NFS is far
+  too slow for MELA/MCFM init)
 
 ## Submit
 
@@ -69,10 +73,10 @@ Key options (`--help` for all): `--output_base` (default
 
 | file | role |
 |---|---|
-| `stage_to_depot.sh` / `stage_inner.sh` | one-time /work → /depot mirror + H4LTools prebuild (runs in `cmssw-el9`) |
+| `stage_to_depot.sh` / `stage_inner.sh` | one-time /work → /depot mirror + `H4LTools_cc.so` prebuild + `CMSSW_14_0_2.tgz` (runs in `cmssw-el9`) |
 | `slurm_setup.py` | expand DAS list, generate `job.sh` + `tasks.tsv`, `sbatch` |
 | `job_wrapper.sh` | array-task entry (host): pick tasks.tsv row, enter `cmssw-el9 -B <depot>` |
-| `job_inner.sh` | inside container: cmsenv + MELA env + libssl shim, run `post_proc.py` in `/tmp`, copy skim to `/depot` |
+| `job_inner.sh` | inside container: extract `CMSSW_14_0_2.tgz` to node-local `/tmp`, cmsenv + MELA env + libssl shim, run `post_proc.py` from the local tree, copy skim + cutFlow to `/depot` |
 
 ## Resubmitting failures
 
