@@ -22,6 +22,7 @@ scale‑smearing group. Beam‑spot–constrained pT: this analysis's custom Nan
 
 | # | Source | Location | Snapshot / verified |
 |---|--------|----------|---------------------|
+| S0 | **CMS AN‑2016/325** §4.3 Table 6 (muon "tight arbitration" ID + iso Eq. 2), §4.4 (2l2nu pre‑selection, soft/loose 3rd‑lepton veto) | 2l2nu analysis note → `references/hzz-2l2nu.md` §2 + §2.3 below | 2016/legacy — **[Verify]** for UL/Run 3 |
 | S1 | H→µµ analysis note AN‑19‑124, §3.2–3.3 (muon selection, momentum, FSR) | skill‑author library: `AN2019_124_v7.pdf` — **not in repo** | local review 2026‑08‑31 |
 | S2 | `CERN-THESIS-2021-201`, §4.2.1 + ch. 5 | skill‑author library — **not in repo** | local review 2026‑08‑31 |
 | S3 | Beam‑spot–constrained muons for H→µµ | `MuonswithBSconstraintHmumu2_21.pdf` — **not in repo** | local review 2026‑08‑31 |
@@ -75,7 +76,29 @@ S1/S2 baseline also lists impact‑parameter cuts: `|dxy| < 0.05 cm`, `|dz| < 0.
 `SIP3D < 8`. `copperhead_processor.py` (~L950) does **not** apply these — the
 `mu*_dxy` / `dz` / `ip3d` / `sip3d` branches are only written as output columns.
 Confirm whether the analysis deliberately drops the IP cuts or whether this is a
-regression.
+regression. (This repo's `config/Input_<year>.yml` `Muon:` **does** carry
+`Loosedxycut` / `Loosedzcut` / `Tightdxycut` / `Tightdzcut` = 0.045 / 0.2 →
+`InitializeMucut` — check they reach the worker.)
+
+### 2.3 2l2nu — muons as the Z→µµ leg (AN‑2016/325 §4.3–§4.4)  **[HIG / AN‑2016‑325]**
+
+For the **2l2nu** channel (current focus) reference numbers from AN‑2016/325
+(2016/legacy — **[Verify]** vs the current UL/Run 2+3 note; `references/hzz-2l2nu.md`
+§2):
+
+| Requirement | AN‑2016/325 value | This repo |
+|-------------|-------------------|-----------|
+| `pT` | > **25 GeV** | `HZZ2l2nu.Leading/SubLeading_Lep_pT = 25` ✓ |
+| `\|η\|` | < **2.4** | `HZZ2l2nu.Lep_eta = 2.5` — **[Repo divergence]** (applies 2.5 to muons too) |
+| ID | "tight" muon (PF + global/tracker, tight arbitration, Table 6) | repo uses `mediumId` + `isGlobal\|isTracker` (`Muon.` cuts) — verify vs the HZZ recommendation |
+| Isolation | tight PF iso, Δβ (Eq. 2: `[I_ch + max(I_nh + I_γ − 0.5·I_ch^PU, 0)]/pT`) | `Muon.Isocut = 0.2` (`pfRelIso04_all`) |
+| dilepton | `\|m_{µµ} − 91\| < 15 GeV`, **not** charge‑required, reject if > 2 µ candidates | `M_ll_Window: 0.0` — **not applied** — **[Repo divergence]** |
+| Z `pT` | `p_T^{µµ} > 55 GeV` | `Pt_ll: 10.0` — **[Repo divergence]** |
+| 3rd‑lepton veto | loose muon `I_rel < 0.2`, **or** soft muon `pT > 3 GeV` | verify definitions |
+
+AN‑2016/325 systematics on the µµ leg: trigger 2%, ID+iso 2% per 2µ event, muon
+momentum scale 1% (propagated to MET), soft‑muon‑veto efficiency 96–99%
+(`references/hzz-2l2nu.md` §8).
 
 ---
 

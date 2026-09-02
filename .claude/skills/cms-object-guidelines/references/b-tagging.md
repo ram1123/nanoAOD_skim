@@ -17,13 +17,26 @@
 
 Responsible POG: **BTV** (B‑Tagging & Vertexing POG).
 
-Role in this analysis: b‑tagged AK4 jets are used for a **b‑jet veto / top control**
-in the VBF and ggH channels; not a signal object.
+Role in this analysis: b‑tagged AK4 jets are used for a **b‑jet veto** — it
+suppresses the top (t&#773;t / tW) non‑resonant background. In **2l2nu** the signal
+region rejects any event with a b‑tagged jet (AN‑2016/325 §4.4.5), and the
+non‑resonant `&alpha;`‑method sidebands *require* &ge; 1 b‑tag (§5.1). Not a signal
+object.
+
+- AN‑2016/325 (2016): **CSVv2 loose `> 0.423`**, jets `pT > 30 GeV`, `\|&eta;\| < 2.4`.
+  b‑veto efficiency uncertainty **2–4%** on MC‑driven processes (signal, WZ, ZZ),
+  from a `b/c` downgrade of 2% and a light‑jet upgrade of 11% envelope (§7.3, §8.1).
+- This repo: **DeepJet** (`Jet_btagDeepFlavB`) L/M/T counts
+  (`HZZ2l2qNu_n{Loose,Medium,Tight}BtagJets`); WPs in `config/Input_<year>.yml`
+  `Jet.deepJet_btag.*`. **The b‑veto itself is currently commented out in
+  `src/H4LTools.cc::ZZSelection_2l2nu()`** (`HZZ2l2nu_cutbtag` never incremented) —
+  **[Repo divergence]** from the note; no b‑tag SF is applied in the nominal skim.
 
 ## Stored sources
 
 | # | Source | Location | Snapshot / verified |
 |---|--------|----------|---------------------|
+| S0 | **CMS AN‑2016/325** §4.3 (b‑veto: CSVv2 `> 0.423` loose, jets `pT>30`, `\|η\|<2.4`), §4.4.5, §7.3, §8.1 (b‑veto systematic 2–4%) | 2l2nu analysis note → `references/hzz-2l2nu.md` §2, §8 | 2016/legacy — WP superseded by DeepJet |
 | S1 | This analysis's b‑tag statement ("loose and medium DeepCSV") | `docs/Official_recommendation.md` (Jet Selection & Corrections table) | local review 2026‑08‑31 |
 | C1 | Per‑year b‑jet acceptance + tagger working points | `configs/parameters/jet.yaml` (`btag_jet_*`, `btag_*_wp_*`) | 2026‑08‑31 |
 | C2 | Scale‑factor payloads | `configs/parameters/SF_filelist.yaml` (`btag_sf_json`, `btag_sf_csv`) | 2026‑08‑31 |

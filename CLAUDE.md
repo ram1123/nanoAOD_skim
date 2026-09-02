@@ -54,27 +54,70 @@ it end to end. The parts that matter:
 `src/H4LTools.cc` is **not** compiled by `scram`; ROOT ACLiC JIT-compiles it at
 runtime (see Architecture).
 
+### Environment on the Purdue AF (el8 host) &mdash; important
+
+This code was written for **el9** (lxplus9). The Purdue AF session and the
+Hammer nodes run **el8** (glibc 2.28), which is incompatible with the JHU
+precompiled `libmcfm_710.so` (needs glibc &ge; 2.29). So everything &mdash; build
+and run &mdash; must happen inside `cmssw-el9`:
+
+```bash
+/cvmfs/cms.cern.ch/common/cmssw-el9 -B /depot/cms/users/<you> -- bash <script>
+```
+
+- `-B <path>` is required for `/depot`: the `cmssw-el9` wrapper silently drops
+  `APPTAINER_BINDPATH` entries whose mount point is not in the base image.
+- el8-built ROOT then needs `libssl.so.1.1` / `libcrypto.so.1.1`, which
+  AlmaLinux 9 does not ship. A host copy lives in `external/el8compat_lib/`
+  (git-ignored) and must be prepended to `LD_LIBRARY_PATH` before `import ROOT`.
+- `MELA/setup.sh` itself fails here (it calls `tcsh`, not installed). MELA was
+  bootstrapped by hand: `cd external/JHUGenMELA/MELA/fortran && make` (builds
+  `libjhugenmela.so`), `cd .. && make nopython` (builds `libJHUGenMELAMELA.so`),
+  plus `libmcfm_710.so` + `libMG_SMEFTsim_v1.so` + `data/Pdfdata/NNPDF30_lo_as_0130.LHgrid`
+  fetched from `http://spin.pha.jhu.edu/`.
+
 ## Running interactively
 
 ```bash
-cmsenv
-source set_env.sh          # MELA env (LD_LIBRARY_PATH + `eval $(.../MELA/setup.sh env)`) + voms-proxy-init
-python3 post_proc.py -i <file.root | list.txt> -n 1000
+export APPTAINER_BINDPATH=... ; cd $CMSSW_BASE
+/cvmfs/cms.cern.ch/common/cmssw-el9 -B /depot/cms/users/<you> -- bash -lc '
+  source /cvmfs/cms.cern.ch/cmsset_default.sh; export SCRAM_ARCH=el8_amd64_gcc12
+  cd $CMSSW_BASE/src && eval `scramv1 runtime -sh`
+  cd $CMSSW_BASE/src/PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim
+  export X509_USER_PROXY=$HOME/x509_proxy
+  export LD_LIBRARY_PATH=$PWD/external/el8compat_lib:$LD_LIBRARY_PATH
+  eval $(external/JHUGenMELA/MELA/setup.sh env)
+  python3 post_proc.py -i config/ExampleInputFileList.txt -n 300
+'
 ```
 
-`set_env.sh` runs `voms-proxy-init` and `exit 1`s if the proxy file is missing. If
-you only need the environment, run the two MELA lines from `set_env.sh` yourself.
+(`set_env.sh` is the lxplus recipe &mdash; MELA `LD_LIBRARY_PATH` + `voms-proxy-init`.
+It does **not** enter a container and will not work standalone on the AF.)
 
-There is **no test suite**. The canonical smoke test for any change is a single
-run over the bundled one-file list (a UL18 v9 GluGluHToZZTo2L2Nu signal file, so
-it exercises the 2l2nu path and auto-detects year=2018 / isMC):
+There is **no test suite**. The canonical smoke test is a single run over the
+bundled one-file list &mdash; a UL18 **v15** `GluGluHToZZTo2L2Nu_M300` signal file
+(auto-detects year=2018 / isMC, exercises the 2l2nu path):
 
 ```bash
 python3 post_proc.py -i config/ExampleInputFileList.txt
 ```
 
-Add `-n <N>` to cap events and `--DEBUG` for per-event selection detail. Other
-`config/ExampleInputFileList_*.txt` cover 4l, data, Run 3, and WW.
+The code on this branch is **NanoAOD v15 only** (`Electron_mvaIso_WP90`, the new
+`SetJets` / `SetPuppiMET` signatures) &mdash; a v9 file fails with
+`RuntimeError: Unknown branch Electron_mvaIso_WP90`. `ExampleInputFileList.txt.v9bak`
+holds the old v9 entry. Add `-n <N>` to cap events, `--DEBUG` for per-event
+detail. Other `config/ExampleInputFileList_*.txt` cover 4l / data / Run 3 / WW.
+
+## Batch on Purdue (Slurm / Hammer)
+
+`scripts/slurm/` runs the skim as a Slurm job array (one task per input file).
+The `scripts/condor/` scripts are lxplus HTCondor and do **not** apply here.
+See [scripts/slurm/README.md](scripts/slurm/README.md). Flow: `stage_to_depot.sh`
+mirrors the release to `/depot` (Slurm cannot see `/work`) and pre-builds
+`src/H4LTools_cc.so`; `slurm_setup.py --input_file <das_list>` expands via
+`dasgoclient`, writes `job.sh` + `tasks.tsv`, and `sbatch`es. Jobs read input
+over Purdue XCache and run inside `cmssw-el9`. MELA/MCFM init is a fixed ~10&ndash;15 min
+per job on shared Hammer cores &mdash; skim whole files, not tiny `-n`.
 
 ### `post_proc.py` arguments (note the defaults on this branch)
 

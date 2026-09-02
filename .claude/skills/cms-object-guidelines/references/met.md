@@ -15,18 +15,26 @@
 > - This-repo pointers: **2l2nu is MET-driven** (`HZZ2l2nu_cutMETgT100`, dPhi(jet,MET), `MT_2l2nu`). MET-φ correction **is** applied: `H4LCppModule.analyze()` builds `METPhiCorrector(Campaign.UL_20XX, is_puppi=True)` from nanoAOD-tools and corrects `PuppiMET` → `pT_MET`/`phi_MET` (UL 2016/2017/2018 only). MET filters: `modules/METFilters.py` `passFilters(event, year)`.
 
 
-Responsible POG: **JME** (JetMET — MET group).
+Responsible POG: **JME** (JetMET — MET group). Channel strategy: `references/hzz-2l2nu.md`.
 
 MET object used throughout this analysis: **PuppiMET** (`PuppiMET_pt`, `PuppiMET_phi`,
-`PuppiMET_sumEt`). MET enters MET‑based event cleaning and a few category / DNN input
-variables; the analysis is not MET‑driven.
+`PuppiMET_sumEt`), with the MET‑φ correction applied in `H4LCppModule.analyze()`.
+
+**The 2l2nu channel is MET‑driven** — MET *is* the Z→νν leg. The signal region is
+defined by `MET > 125 GeV` plus `min|Δφ(jet, MET)| > 0.5` and `|Δφ(Z, MET)| > 0.5`,
+and the fit observable is the transverse mass `M_T(ℓℓ, MET)` (`references/hzz-2l2nu.md`
+§2–§3, AN‑2016/325 §4.3–§4.4, §6.1). The "not MET‑driven / category‑variable only"
+description below is **H→μμ (copperhead) legacy** and does not apply to 2l2nu — see §7.
+(The 4l channel is genuinely not MET‑driven.)
 
 ## Stored sources
 
 | # | Source | Location | Snapshot / verified |
 |---|--------|----------|---------------------|
 | S1 | Pointer to the official MET filter list | `docs/Run3_all_basic_Information.md` (MET / Noise Filters) → `https://twiki.cern.ch/twiki/bin/view/CMS/MissingETOptionalFiltersRun2#Run_3_2022_and_2023_data_and_MC` | local review 2026‑08‑31 |
+| S2 | **CMS AN‑2016/325** §4.3 (MET flavour + φ correction), §4.4 (Δφ cuts), §6.1 (MET > 125 GeV optimization) | 2l2nu analysis note — transcribed in `references/hzz-2l2nu.md` §2–§3 | 2016/legacy — method only, **[Verify]** numbers |
 | C1 | Implementation | `src/copperhead_processor.py` — PuppiMET blocks; `compute_jet_veto_jetfilter` (~L662); PuppiMET–jet horn recipe (~L489) | 2026‑08‑31 |
+| C2 | This‑repo 2l2nu MET path | `modules/H4LCppModule.py` `analyze()` `METPhiCorrector(Campaign.UL_20XX, is_puppi=True)` → `pT_MET`/`phi_MET`; `src/H4LTools.cc::ZZSelection_2l2nu()` (`HZZ2l2nu_cutdPhiJetMET`, `HZZ2l2nu_cutMETgT100`, `MT_2l2nu`) | skill‑update |
 | — | Type‑I propagation | via the JEC/JER sequence in `jets.md` §2 | 2026‑08‑31 |
 
 Not covered by stored sources → **Authoritative CMS verification required**: the exact
@@ -47,11 +55,16 @@ Run 2 vs Run 3; exact era; data vs MC; the MET flavour (**PuppiMET** here, not
 
 ## 2. Type‑I / propagation
 
-- The AK4 JEC and JER changes applied in stage‑1 are propagated to `PuppiMET`
+- The AK4 JEC and JER changes applied under `--WithSyst` are propagated to `PuppiMET`
   (`jets.md` §2). **[Implementation]**
-- **No** explicit MET‑XY (φ) or hadronic‑recoil correction is present in the configs.
-  **[Verify]** whether the target era's JME recommendation requires a MET‑φ correction on
-  PuppiMET (typically small/absent for PUPPI — confirm, do not assume).
+- **A MET‑φ (XY) correction IS applied** in this skim for 2l2nu:
+  `H4LCppModule.analyze()` builds `METPhiCorrector(Campaign.UL_20XX, is_data=…,
+  is_puppi=True)` from nanoAOD‑tools and corrects `PuppiMET.pt/phi` with
+  `npv=event.PV_npvs, run=event.run` → `pT_MET` / `phi_MET`. **`Campaign` covers
+  UL 2016/2017/2018 only** — any other `year` leaves the corrector undefined and
+  the job raises. **[Verify]** whether the current JME recommendation applies a
+  φ correction to *PUPPI* MET for the target era (often small/absent for PUPPI —
+  confirm, do not assume) and whether the nanoAOD‑tools payload matches it.
 
 ---
 
@@ -82,14 +95,18 @@ Run 2 vs Run 3; exact era; data vs MC; the MET flavour (**PuppiMET** here, not
 
 ## 5. Review checklist
 
-1. MET flavour = PuppiMET everywhere it is used.
-2. JEC/JER changes propagated to MET (Type‑I).
-3. MET‑φ correction decision recorded (currently none — §2).
+1. MET flavour = PuppiMET everywhere it is used (note the divergence from AN‑2016/325
+   PF Type‑I MET — §7).
+2. JEC/JER changes propagated to MET (Type‑I) under `--WithSyst`.
+3. MET‑φ correction: `METPhiCorrector` `Campaign` matches the era (UL 16/17/18 only)
+   and the payload matches the current JME PUPPI‑MET recommendation (§2).
 4. Recommended MET filter flags identified for the era and confirmed applied on data
-   and MC (§3).
-5. Analysis‑specific MET cleaning (§4) intended and documented.
-6. Systematics: if MET‑based uncertainties are needed, the PuppiMET
-   scale/resolution prescription is resolved.
+   and MC via `modules/METFilters.py` (§3).
+5. **2l2nu (§7)**: `min|Δφ(jet,MET)|>0.5`, `|Δφ(Z,MET)|>0.5`, `MET>125 GeV`
+   (rejecting), and the `M_T` definition all present and matching AN‑2016/325.
+6. Systematics: lepton‑scale → MET propagation; JES/JER/unclustered‑MET ±1σ
+   recompute MET+`M_T`+category+b‑tag; PuppiMET scale/resolution prescription
+   resolved if MET‑based uncertainties are needed.
 
 ---
 
@@ -97,24 +114,54 @@ Run 2 vs Run 3; exact era; data vs MC; the MET flavour (**PuppiMET** here, not
 
 | Observation | Detail |
 |-------------|--------|
-| MET filters | recommended `Flag_*` list not found applied in `copperhead_processor.py` — verify |
-| MET‑φ correction | none present — verify whether required for PuppiMET in the target era |
-| MET reset on jet‑veto filter | `PuppiMET_pt`/`sumEt` recomputed, `PuppiMET_phi` intentionally kept |
+| MET filters | recommended `Flag_*` list — verify applied per era via `modules/METFilters.py` `passFilters(event, year)` |
+| MET‑φ correction | **applied** for 2l2nu in `H4LCppModule.analyze()` (`METPhiCorrector`, UL 2016/17/18 only); a `year` outside that set leaves the corrector undefined and raises |
+| MET reset on jet‑veto filter | copperhead‑only; no equivalent in this skim |
 
 ---
 
-## 7. Evidence summary
+## 7. 2l2nu MET selection and observable (S2, C2)  **[HIG / AN‑2016‑325]**
+
+For the **2l2nu** channel MET builds the Z→νν leg. Full chain and the divergences
+between AN‑2016/325 and the current skim are in `references/hzz-2l2nu.md` §2–§3,
+§9; the MET‑specific points:
+
+- **MET flavour**: AN‑2016/325 uses **PF Type‑I MET** (CHS) with the 2016 MET‑φ
+  recipe; PUPPI MET was only "stored / explored". **This repo uses PuppiMET +
+  `METPhiCorrector`** — an intentional modernization, but it is a divergence from
+  the note. **[Verify]** the PuppiMET φ‑correction (`METPhiCorrector` `Campaign`)
+  against the current JME PUPPI‑MET recommendation for the target era.
+- **Signal‑region cuts** (AN‑2016/325 §4.4, §6.1):
+  1. `min|Δφ(jet, MET)| > 0.5` over jets `pT > 30 GeV` — repo `HZZ2l2nu_dPhi_jetMET`
+     / `HZZ2l2nu_cutdPhiJetMET`, **applied**.
+  2. `|Δφ(Z, MET)| > 0.5` — **not implemented** in `ZZSelection_2l2nu()`.
+  3. final `MET > 125 GeV` (optimized, common to all categories) — repo only
+     **increments** `HZZ2l2nu_cutMETgT100` at `PuppiMET_pt > 100` and does **not**
+     reject the event.
+- **Transverse mass** (AN‑2016/325 Eq. 6): the Z→νν leg is given the **PDG Z
+  mass**. Repo `MT_2l2nu = (Z1 + Z2_met).Mt()` with `Z2_met` a **massless**
+  4‑vector — a different definition. Confirm which is intended before it feeds a
+  fit.
+- **Systematics** touching MET (AN‑2016/325 §8.1): lepton momentum scale is
+  propagated to MET; JES / JER / **unclustered‑MET scale** are varied ±1σ and MET,
+  `M_T`, the jet category and the b‑tag are recomputed each time.
+
+---
+
+## 8. Evidence summary
 
 | Item | POG | Eras | Source | Established? |
 |------|-----|------|--------|--------------|
-| PuppiMET as the MET object | analysis | all | C1 | yes — analysis choice |
-| Type‑I propagation of JEC/JER | JME | all | `jets.md` §2, C1 | yes |
-| MET‑φ (XY) correction | JME | all | — | not applied; **[Verify]** if required |
-| MET noise / event filter list | JME | all | S1 | pointer only; **application not confirmed** |
+| PuppiMET as the MET object (2l2nu) | analysis | UL 16/17/18 | C2 | yes — repo choice; **divergence** from AN‑2016/325 PF Type‑I MET |
+| Type‑I propagation of JEC/JER | JME | all | `jets.md` §2 | under `--WithSyst` only |
+| MET‑φ (XY) correction on PuppiMET | JME | UL 16/17/18 | C2 | **applied** (`METPhiCorrector`); payload vs current JME rec **[Verify]** |
+| 2l2nu SR cuts: `min|Δφ(jet,MET)|>0.5`, `|Δφ(Z,MET)|>0.5`, `MET>125` | HIG | 2016 | S2 | method yes; repo applies only #1 fully — **[Repo divergence]** |
+| `M_T(ℓℓ,MET)` = AN‑2016/325 Eq. 6 | HIG | 2016 | S2 | note yes; repo uses a massless‑MET `TLorentzVector::Mt()` — **divergence** |
+| MET noise / event filter list | JME | all | S1, `modules/METFilters.py` | verify per era on data/MC |
 | PuppiMET scale/resolution uncertainty | JME | all | — | **Authoritative CMS verification required** |
-| Analysis MET–jet horn recipe; jet‑veto MET reset | analysis | Run 3 | C1 | yes — implementation confirmed |
 
 ## Last verified
 
 - Local source review: 2026‑08‑31
+- AN‑2016/325 (S2) transcription: skill update (this edit)
 - Current POG recommendation: pending

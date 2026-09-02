@@ -28,6 +28,7 @@ use `config/Input_<year>.yml` `Electron:` + `H4LTools::InitializeElecut` /
 | # | Source | Location | Snapshot / verified |
 |---|--------|----------|---------------------|
 | S1 | This analysis's electron‑veto definition | `docs/Official_recommendation.md` (Electron Selection table) | local review 2026‑08‑31 |
+| S0 | **CMS AN‑2016/325** §4.3 Table 5 (electron ID), §4.3 Eq. 1 (isolation), §4.4 (2l2nu pre‑selection, 3rd‑lepton veto) | 2l2nu analysis note → `references/hzz-2l2nu.md` §2, §2b below | 2016/legacy — **[Verify]** for UL/Run 3 |
 | S2 | EGM Run 3 offline ID names + WPs (`EgammaIDRecipesRun3`) | CMS PdmV `PdmVRun3Analysis`, "Notes from POGs / From E/Gamma" — see `lumi.md` §9 | via user, 2026‑09‑01 |
 | C1 | Per‑year working‑point keys | `configs/parameters/electron.yaml` | 2026‑08‑31 |
 | C2 | Implementation | `src/copperhead_processor.py` (electron‑veto block) | 2026‑08‑31 |
@@ -72,6 +73,29 @@ Working‑point key by NanoAOD campaign (C1):
 
 No IP or extra isolation cut is layered on top — the MVA‑with‑iso WP is the whole
 definition.
+
+---
+
+## 2b. 2l2nu / 2l2q — electrons as the Z→ee leg (AN‑2016/325 §4.3–§4.4)  **[HIG / AN‑2016‑325]**
+
+For the **2l2nu** channel (the current focus) electrons build the Z→ee candidate;
+they are a **primary selection object**, not a veto. Reference numbers from
+AN‑2016/325 (2016/legacy — **[Verify]** vs the current UL/Run 2+3 note; see
+`references/hzz-2l2nu.md` §2):
+
+| Requirement | AN‑2016/325 value | This repo |
+|-------------|-------------------|-----------|
+| `pT` | > **25 GeV** | `HZZ2l2nu.Leading/SubLeading_Lep_pT = 25` ✓ |
+| `\|η\|` | < **2.5**, exclude gap `1.44 < \|η\| < 1.57` | `HZZ2l2nu.Lep_eta = 2.5` ✓ (gap handling: verify) |
+| ID | cut‑based **tight** (§4.3 Table 5); §4.4 text says "medium" — note internal inconsistency | repo uses the **HZZ MVA WP** (`BDTWP` in `config`) / v9 `mvaFall17V2Iso_WP90` vs v15 `mvaIso_WP90` — an intentional modernization |
+| Isolation | tight, `I_rel` (Eq. 1: `[I_ch + max(I_nh + I_γ − A_eff·ρ, 0)]/pT`) | `Electron.Isocut = 0.15` |
+| dilepton | `\|m_{ee} − 91\| < 15 GeV`, **not** charge‑required, reject if > 2 e candidates | config `M_ll_Window: 0.0` — **not applied** — **[Repo divergence]** |
+| Z `pT` | `p_T^{ee} > 55 GeV` | config `Pt_ll: 10.0` — **[Repo divergence]** |
+| 3rd‑lepton veto | loose electron `I_rel < 0.15` & `pT > 10 GeV` | verify the loose definition |
+
+Because electrons are now a selection object, **energy scale + smearing and
+reco/ID(+iso) scale factors are required** (§3, §4) — not optional as the
+veto‑only text implies.
 
 ---
 

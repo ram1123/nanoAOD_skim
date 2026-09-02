@@ -16,7 +16,6 @@ summary.dat
 CMSSW_10*.*
 condor_logs/
 *.jdl
-*.sh
 *.root
 *.0
 __init__.py
