@@ -39,6 +39,19 @@ Typical assignments:
   configuration, and numerical problems;
 - `test-specialist`: reproducible tests, validation, and failure isolation.
 
+Skill routing when briefing a specialist (name the file in the task):
+
+- 2l2nu selection / categorization / transverse mass / background method →
+  `cms-object-guidelines/references/hzz-2l2nu.md`;
+- per-object WP / correction / SF / uncertainty →
+  the matching `cms-object-guidelines/references/*.md`;
+- datacard / nuisance parameters / K-factor uncertainties / interference
+  signal model / `higgs_combine/` / upper limits →
+  `cms-systematics-statistics` (`references/systematics.md`, `references/statistics.md`).
+
+A number whose only source is AN-2016/325 (2016/legacy) is unverified for the
+current era — say so in the brief.
+
 ## 4. Prepare bounded tasks
 
 Every delegated task must state:

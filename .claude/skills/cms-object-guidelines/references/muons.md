@@ -1,226 +1,159 @@
-# Muons — Stored CMS Recommendations
+# Muons — 2&ell;2&nu; Selection &amp; MUO Recommendations
 
-> This repo is the **H→ZZ→4l / 2l2q / 2l2nu NanoAOD-tools skim**
-> (`post_proc.py` → `modules/H4LCppModule.py` → C++ `src/H4LTools.cc`; cut values in
-> `config/Input_<year>.yml`). 
-> - Eras here: **Run 2 UL 2016 / 2017 / 2018** and some **2022**; NanoAOD **v9** and
->   **v15**. Run-3-2022/2023/2024/2025/2026-specific rows below do **not** apply.
-> - The CMS-POG recommendation content below is retained as a starting point and
->   **must be re-checked against this analysis's H→ZZ note / HIG group** before it is
->   treated as a requirement.
-> - This-repo pointers: cuts in `config/Input_<year>.yml` `Muon:` → `H4LTools::InitializeMucut`; Rochester via nanoAOD-tools `muonScaleRes20XX` (`Muon_corrected_pt`), no beam-spot-constrained pT; FSR recovery in `H4LTools::MuonFsr`. **Primary** selection object in every channel.
+> For the **X/H&rarr;ZZ&rarr;2&ell;2&nu; NanoAOD-tools skim**
+> (`post_proc.py` &rarr; `modules/H4LCppModule.py` &rarr; C++ `src/H4LTools.cc`;
+> cut values in `config/Input_<year>.yml` `Muon:` / `HZZ2l2nu:` &rarr;
+> `H4LTools::InitializeMucut` / `InitializeHZZ2l2nuCut`).
+>
+> - Eras: **Run 2 UL 2016 / 2017 / 2018** and some **2022**; NanoAOD **v9** and
+>   **v15**. Run-3-2023+ material does not apply.
+> - Muons build the **Z&rarr;&mu;&mu; leg** — a **primary** selection object.
+> - Momentum correction: nanoAOD-tools `muonScaleRes20XX` (Rochester) &rarr;
+>   `Muon_corrected_pt`, added for the year in `post_proc.py`. FSR recovery:
+>   `H4LTools::MuonFsr` (from the `FsrPhoton` collection).
+> - CMS-POG numbers below are a starting point — re-check against the current
+>   2&ell;2&nu; analysis note / HIG group before treating them as a requirement.
 
-
-Responsible POG: **MUO** (Muon POG). Momentum scale/resolution: MUO Rochester /
-scale‑smearing group. Beam‑spot–constrained pT: this analysis's custom NanoAODv12.
+Responsible POG: **MUO** (Muon POG). Channel strategy: `references/hzz-2l2nu.md`.
 
 ## Stored sources
 
 | # | Source | Location | Snapshot / verified |
 |---|--------|----------|---------------------|
-| S0 | **CMS AN‑2016/325** §4.3 Table 6 (muon "tight arbitration" ID + iso Eq. 2), §4.4 (2l2nu pre‑selection, soft/loose 3rd‑lepton veto) | 2l2nu analysis note → `references/hzz-2l2nu.md` §2 + §2.3 below | 2016/legacy — **[Verify]** for UL/Run 3 |
-| S1 | H→µµ analysis note AN‑19‑124, §3.2–3.3 (muon selection, momentum, FSR) | skill‑author library: `AN2019_124_v7.pdf` — **not in repo** | local review 2026‑08‑31 |
-| S2 | `CERN-THESIS-2021-201`, §4.2.1 + ch. 5 | skill‑author library — **not in repo** | local review 2026‑08‑31 |
-| S3 | Beam‑spot–constrained muons for H→µµ | `MuonswithBSconstraintHmumu2_21.pdf` — **not in repo** | local review 2026‑08‑31 |
-| S4 | HIG‑19‑006 TWiki snapshot | `CMS_HIG19006_twiki.pdf` — **not in repo** | local review 2026‑08‑31 |
-| C1 | Per‑year selection parameters | `configs/parameters/muon.yaml` | 2026‑08‑31 |
-| C2 | Trigger list | `configs/parameters/trigger.yaml` | 2026‑08‑31 |
-| C3 | Correction payload paths | `configs/parameters/correction_filelist.yaml` (`roccor_file`, `BS_res_calib_path`) | 2026‑08‑31 |
-| C4 | Scale‑factor payloads + map keys | `configs/parameters/SF_filelist.yaml` (`muSFFileList`) | 2026‑08‑31 |
-| C5 | Implementation | `src/copperhead_processor.py` muon block (~L900–1130); `src/corrections/{rochester,MuonScaRe,geofit,fsr_recovery,muon_sf}.py` | 2026‑08‑31 |
-| C6 | NanoAOD muon branch dictionary; Run 3 sync table | `docs/temp/muon_nanoAOD_docs.md`; `docs/Run3_all_basic_Information.md` | 2026‑08‑31 |
-| P1 | MUO POG entry points | `MuonPOG#User_Recommendations`; Run 3 `MuonRun32022`, `MuonRun3_2023` (from PdmV `PdmVRun3Analysis` — see `lumi.md` §9) | via user, 2026‑09‑01 |
+| S0 | **CMS AN-2016/325** &sect;4.3 Table 6 (muon "tight arbitration" ID + isolation Eq. 2), &sect;4.4 (2&ell;2&nu; pre-selection, soft/loose 3rd-lepton veto), &sect;7.2 / &sect;8.1 (ID+iso, momentum-scale, soft-veto uncertainties) | 2&ell;2&nu; analysis note &rarr; `references/hzz-2l2nu.md` &sect;2 | 2016/legacy — **[Verify]** for UL/Run 3 |
+| C1 | Per-year muon cuts | `config/Input_<year>.yml` `Muon:` (`pTcut`, `Etacut`, `Loose/Tight dxy/dz`, `TightTrackerLayercut`, `TightpTErrorcut`, `HighPtBound`, `Isocut`) &rarr; `H4LTools::InitializeMucut` | repo |
+| C2 | 2&ell;2&nu; leg cuts | `config/Input_<year>.yml` `HZZ2l2nu:` (`Leading/SubLeading_Lep_pT`, `Lep_eta`, `Pt_ll`, `M_ll_Window`) &rarr; `InitializeHZZ2l2nuCut` | repo |
+| C3 | Trigger lists | `config/Input_<year>.yml` `Triggers_HZZ2l2nu*` (large single-&mu; + double-&mu; + cross OR), evaluated by `modules/Helper.py:PassTrig` | repo |
+| C4 | Momentum correction | nanoAOD-tools `muonScaleRes2016/2017/2018` producer &rarr; `Muon_corrected_pt`, in `post_proc.py` | repo |
+| C5 | Selection logic | `src/H4LTools.cc` muon selection functions; FSR in `H4LTools::MuonFsr` | repo |
+| P1 | MUO POG entry point | `twiki.cern.ch/twiki/bin/view/CMS/MuonPOG#User_Recommendations` (+ the era's UL / Run 3 recommendation page) | reference |
 
-Not covered by stored sources → **Authoritative CMS verification required** (consult
-P1 for the target era): the MUO numeric ID/iso working‑point recommendation per era,
-the reco/tracking‑SF requirement, the Run 3 momentum‑calibration prescription, and the
+Not covered by stored sources &rarr; **Authoritative CMS verification required**
+(consult P1 + the current HZZ note): whether HZZ&rarr;2&ell;2&nu; prescribes **tight**
+vs **medium** muon ID for the target era, the numeric ID/iso working point, the
+reco/tracking-SF requirement, the Run 3 momentum-calibration prescription, and the
 correctionlib payload version.
 
-Classification tags: **[MUO official]**, **[Analysis‑specific]** (AN‑19‑124 choice),
-**[Implementation]** (code detail), **[Verify]** (not established from stored material).
+Classification tags: **[MUO official]**, **[HIG / AN-2016-325]**,
+**[Implementation]** (this repo), **[Verify]**, **[Repo divergence]**.
 
 ---
 
 ## 1. Required context
 
-Run 2 vs Run 3; exact era; data vs MC; NanoAOD version — **this repo uses a custom
-NanoAODv12 for Run 2 and 2022/2023 to get `Muon_bsConstrainedPt` / `…Chi2`; NanoAODv15
-for 2024+**; intended ID/iso working point; whether trigger SFs are needed.
+Era (2016preVFP / 2016postVFP / 2017 / 2018 / 2022); data vs MC; NanoAOD version
+(**v9** &rarr; stored `Muon_*` branches; **v15** &rarr; migrated branch names);
+intended ID/iso working point; whether muon **or** trigger SFs are needed — the
+nominal skim applies **none**.
 
 ---
 
-## 2. Baseline selection
+## 2. 2&ell;2&nu; muon selection (AN-2016/325 &sect;4.3&ndash;&sect;4.4)  **[HIG / AN-2016-325]**
 
-### 2.1 As implemented (C1, C5)
+Muons form the Z&rarr;&mu;&mu; candidate. Reference values from AN-2016/325
+(2016/legacy — **[Verify]** against the current UL / Run 2+3 note):
 
-Base per‑muon selection, `copperhead_processor.py` ~L950:
+| Requirement | AN-2016/325 | This repo |
+|-------------|-------------|-----------|
+| `pT` | > **25 GeV** | `HZZ2l2nu.Leading/SubLeading_Lep_pT = 25` &check; |
+| `\|&eta;\|` | < **2.4** | `HZZ2l2nu.Lep_eta = 2.5` (applied to muons too) — **[Repo divergence]** |
+| ID | **tight** muon: PF muon, `isGlobal` **or** `isTracker`, tight arbitration, track-fit quality (Table 6) | config `Muon:` `TightTrackerLayercut = 5`, `TightpTErrorcut = 0.3`, `Tight dxy/dz = 0.045 / 0.2`, `HighPtBound = 200` &rarr; `InitializeMucut`; verify the ID logic in `src/H4LTools.cc` matches tight, not medium |
+| Isolation | tight PF iso, &Delta;&beta; (Eq. 2: `[I_ch + max(I_nh + I_γ − 0.5·I_ch^PU, 0)] / pT`) | `Muon.Isocut = 0.2` on `pfRelIso04_all` |
+| dilepton | `\|m_{&mu;&mu;} − 91\| < 15 GeV`; leptons **not** required opposite charge; **reject the event if > 2 lepton candidates** | `HZZ2l2nu.M_ll_Window = 0.0` — window **not applied** — **[Repo divergence]** |
+| Z `pT` | `p_T^{&mu;&mu;} > 55 GeV` | `HZZ2l2nu.Pt_ll = 10.0` — **[Repo divergence]** |
+| 3rd-lepton veto | loose muon `I_rel < 0.2`, **or** soft muon `pT > 3 GeV` (+ loose electron, see `electrons.md`) | verify the loose/soft definitions in `src/H4LTools.cc` |
 
-| Cut | Value | Classification | Key / note |
-|-----|-------|----------------|------------|
-| pT | > **20 GeV** (all years) | analysis‑specific | `muon_pt_cut` — applied to `pt_raw` (pre‑Rochester); code carries a `FIXME: Why pt_raw` |
-| \|η\| | < **2.4** | detector acceptance | `muon_eta_cut` (on `eta_raw`) |
-| ID | **`mediumId`** | MUO cut‑based medium WP | `muon_id`, all years |
-| track type | `isGlobal` **or** `isTracker` | AN‑19‑124 Table 3.5 | hardcoded |
-| Isolation | `pfRelIso04_all` < **0.25** (after FSR) | loose MUO PF iso | `muon_iso_cut` |
+Event-level: number of good primary vertices > 0; &ge; 1 muon trigger-matched (&sect;3).
+Note the 2&ell;2&nu; dilepton is **not** an opposite-charge requirement.
 
-Event‑level: **exactly 2** selected muons, **opposite charge**; number of good primary
-vertices > 0; **≥ 1** muon trigger‑matched (§3).
-
-### 2.2 AN‑19‑124 baseline items NOT in the current implementation  **[Verify]**
-
-S1/S2 baseline also lists impact‑parameter cuts: `|dxy| < 0.05 cm`, `|dz| < 0.10 cm`,
-`SIP3D < 8`. `copperhead_processor.py` (~L950) does **not** apply these — the
-`mu*_dxy` / `dz` / `ip3d` / `sip3d` branches are only written as output columns.
-Confirm whether the analysis deliberately drops the IP cuts or whether this is a
-regression. (This repo's `config/Input_<year>.yml` `Muon:` **does** carry
-`Loosedxycut` / `Loosedzcut` / `Tightdxycut` / `Tightdzcut` = 0.045 / 0.2 →
-`InitializeMucut` — check they reach the worker.)
-
-### 2.3 2l2nu — muons as the Z→µµ leg (AN‑2016/325 §4.3–§4.4)  **[HIG / AN‑2016‑325]**
-
-For the **2l2nu** channel (current focus) reference numbers from AN‑2016/325
-(2016/legacy — **[Verify]** vs the current UL/Run 2+3 note; `references/hzz-2l2nu.md`
-§2):
-
-| Requirement | AN‑2016/325 value | This repo |
-|-------------|-------------------|-----------|
-| `pT` | > **25 GeV** | `HZZ2l2nu.Leading/SubLeading_Lep_pT = 25` ✓ |
-| `\|η\|` | < **2.4** | `HZZ2l2nu.Lep_eta = 2.5` — **[Repo divergence]** (applies 2.5 to muons too) |
-| ID | "tight" muon (PF + global/tracker, tight arbitration, Table 6) | repo uses `mediumId` + `isGlobal\|isTracker` (`Muon.` cuts) — verify vs the HZZ recommendation |
-| Isolation | tight PF iso, Δβ (Eq. 2: `[I_ch + max(I_nh + I_γ − 0.5·I_ch^PU, 0)]/pT`) | `Muon.Isocut = 0.2` (`pfRelIso04_all`) |
-| dilepton | `\|m_{µµ} − 91\| < 15 GeV`, **not** charge‑required, reject if > 2 µ candidates | `M_ll_Window: 0.0` — **not applied** — **[Repo divergence]** |
-| Z `pT` | `p_T^{µµ} > 55 GeV` | `Pt_ll: 10.0` — **[Repo divergence]** |
-| 3rd‑lepton veto | loose muon `I_rel < 0.2`, **or** soft muon `pT > 3 GeV` | verify definitions |
-
-AN‑2016/325 systematics on the µµ leg: trigger 2%, ID+iso 2% per 2µ event, muon
-momentum scale 1% (propagated to MET), soft‑muon‑veto efficiency 96–99%
-(`references/hzz-2l2nu.md` §8).
+AN-2016/325 uncertainties on the &mu;&mu; leg: trigger 2%, ID+iso 2% per 2&mu;
+event, muon momentum scale 1% (propagated to MET), soft-muon-veto efficiency
+96&ndash;99% (`references/hzz-2l2nu.md` &sect;8, `cms-systematics-statistics`).
 
 ---
 
-## 3. Trigger and trigger matching (C1, C2)
+## 3. Trigger (C3)
 
-| Era | HLT paths | Matched‑muon offline pT | Classification |
-|-----|-----------|--------------------------|----------------|
-| 2016preVFP / 2016postVFP | `IsoMu24`, `IsoTkMu24` | > 26 GeV | analysis plateau choice |
-| 2017 | `IsoMu27` | > 29 GeV | analysis plateau choice |
-| 2018 | `IsoMu24` | > 26 GeV | analysis plateau choice |
-| 2022preEE … 2026 | `IsoMu24` | > 26 GeV | analysis plateau choice |
+The 2&ell;2&nu; path fires on a **large OR** of single-muon, double-muon and
+cross-flavour HLT paths listed under `Triggers_HZZ2l2nu*` in
+`config/Input_<year>.yml`, evaluated by `modules/Helper.py:PassTrig`; each trigger
+key also becomes a boolean output branch. Single-lepton paths recover double-lepton
+inefficiency (AN-2016/325 &sect;4.2).
 
-Trigger‑match object requirements (`muon_trigmatch_*`): `tightId`, iso < 0.15, ΔR < 0.4,
-matched trigger‑object pT > 24 GeV (27 GeV for 2017). Applied **after** Rochester and the
-base selection, **before** FSR recovery (AN‑19‑124 L373).
-
----
-
-## 4. Momentum corrections — order and payloads
-
-Order (`copperhead_processor.py`): **beam‑spot constraint → Rochester → (trigger match) →
-FSR recovery**. Data and simulation get different Rochester operations; never apply MC
-smearing to data.
-
-### 4.1 Beam‑spot–constrained pT  **[Analysis‑specific / Implementation]**
-
-- `do_beamConstraint`: use `Muon_bsConstrainedPt`; **revert to the default muon pT if
-  `Muon_bsConstrainedChi2 ≥ 30`** (C6).
-- Overrides `do_geofit` (`src/corrections/geofit.py`) when both are enabled.
-- EBE mass‑resolution / BS calibration JSONs: `BS_res_calib_path` (C3), per year, MC +
-  Data. 2025/2026 reuse the 2024 calibration — **placeholder, [Verify]**.
-- Treat as a resolution improvement, not a generic MUO selection: verify supported
-  track types, data/MC treatment, covariance propagation, Z→µµ validation, and its own
-  scale/resolution uncertainties before relying on it.
-
-### 4.2 Rochester / MUO scale‑smearing (`roccor_file`, C3)  **[MUO official payload]**
-
-| Era | Payload | Kind |
-|-----|---------|------|
-| 2016preVFP / 2016postVFP / 2017 / 2018 (UL) | `data/roch_corr/RoccoR20*UL.txt` | Rochester text |
-| 2016 / 2017 / 2018 RERECO | `data/roch_corr/RoccoR20*.txt` | Rochester text |
-| 2022preEE / 2022postEE / 2023 / 2023BPix | `data/roch_corr/20*_Summer2*.json` | MUO scale‑smearing JSON |
-| 2024 | `data/roch_corr/2024_Summer24.json` (copied from GitLab) | JSON |
-| 2025 | `data/roch_corr/2025_muon_scalesmearing_VXBS.json` | JSON |
-| 2026 | reuses the 2025 VXBS JSON | **placeholder — no 2026 payload on cvmfs, [Verify]** |
-
-`src/corrections/MuonScaRe.py` implements the Run 3 JSON; `src/corrections/rochester.py`
-the Run 2 text.
-
-### 4.3 FSR recovery  **[Analysis‑specific]**
-
-`do_fsr` → `fsr_recoveryV1` (`src/corrections/fsr_recovery.py`), applied **after** trigger
-matching. Recovered photon is added to the muon and its energy folded into
-`pfRelIso04_all` **before** the isolation cut (AN‑19‑124 L360).
-
-### 4.4 L1 prefiring  **[Implementation]**
-
-`do_l1prefiring_wgts` → `L1PreFiringWeight.{Nom,Up,Dn}` as an event weight (Run 2 in
-practice).
+- **[Verify]** against the current HZZ / MUO recommendation for the era: which
+  paths belong in the signal OR, the offline matched-muon pT plateau threshold,
+  and whether explicit trigger-object &Delta;R matching is applied (AN-2016/325
+  uses the double-muon "reference-trigger" efficiency method, &sect;7.1).
 
 ---
 
-## 5. Scale factors (`muSFFileList`, C4)  **[MUO official payload]**
+## 4. Momentum correction (C4)  **[MUO official]**
 
-Payload **`muon_Z.json.gz`** (`jsonpog-integration` `POG/MUO` for Run 2 UL v9;
-CAT `metadata/MUO/*` for Run 3). `src/corrections/muon_sf.py` applies ID·iso·trigger SFs
-as event weights.
-
-| Era | ID key | Iso key | Trigger key |
-|-----|--------|---------|-------------|
-| 2016preVFP / 2016postVFP | `NUM_MediumID_DEN_TrackerMuons` | `NUM_LooseRelIso_DEN_MediumID` | `NUM_IsoMu24_or_IsoTkMu24_DEN_CutBasedIdTight_and_PFIsoTight` |
-| 2017 | `NUM_MediumID_DEN_TrackerMuons` | `NUM_LooseRelIso_DEN_MediumID` | `NUM_IsoMu27_DEN_CutBasedIdTight_and_PFIsoTight` — *config notes an input‑binning FIXME* |
-| 2018 | `NUM_MediumID_DEN_TrackerMuons` | `NUM_LooseRelIso_DEN_MediumID` | `NUM_IsoMu24_DEN_CutBasedIdTight_and_PFIsoTight` |
-| 2022preEE … 2025 | `NUM_MediumID_DEN_TrackerMuons` | `NUM_LoosePFIso_DEN_MediumID` | `NUM_IsoMu24_DEN_CutBasedIdMedium_and_PFIsoMedium` |
-| 2026 | same as 2025 | | **placeholder — MUO 2026 payload dir empty on cvmfs, [Verify]** |
-
-- **Reco/tracking SF**: not applied — **[Verify]** whether the target era's MUO
-  recommendation requires a separate reco SF for `mediumId` tracker muons.
-- Confirm each SF's `DEN`/`NUM` definition matches the analysis selection (medium ID,
-  loose PF iso, `IsoMu24`/`IsoMu27`) for the exact era, and keep stat + syst variations.
+- nanoAOD-tools **`muonScaleRes2016 / 2017 / 2018`** producer writes
+  `Muon_corrected_pt`; added per year in `post_proc.py` (the "muon scale/resolution
+  producer" in the module chain). This is the MUO **Rochester** correction for
+  Run 2 UL.
+- MC and data receive different operations; **never apply MC smearing to data**.
+- **2022 / Run 3**: **[Verify]** which producer / MUO scale-smearing JSON the
+  chain should use — not established here.
 
 ---
 
-## 6. Review checklist
+## 5. FSR recovery (C5)  **[Analysis-specific]**
 
-1. Era / data‑MC / NanoAOD version identified; custom‑v12 BS branches actually present.
-2. pT (20), \|η\| (2.4), `mediumId`, `isGlobal|isTracker`, PF iso (0.25) applied per C1/C5.
-3. IP cuts (dxy/dz/sip3d) — decision recorded (currently **not** applied, §2.2).
-4. Matched‑muon pT threshold correct for the year (26 vs 29 GeV); HLT path matches C2.
-5. Correction order = BS constraint → Rochester → FSR; `bsConstrainedChi2 ≥ 30` fallback.
-6. Rochester / scale‑smearing payload matches era + NanoAOD version; 2025/2026
-   placeholders understood.
-7. FSR applied after trigger match; FSR energy in `pfRelIso04_all` before the iso cut.
-8. SF keys (ID/iso/trigger) match the selection and era; 2026 placeholder understood;
-   reco‑SF need resolved.
-9. Systematics: SF up/down, Rochester/scale‑smearing variations, (Run 2) L1 prefiring,
-   BS‑constraint scale/resolution.
+`H4LTools::MuonFsr` selects a recovered photon from the `FsrPhoton` collection
+(`config/Input_<year>.yml` `FsrPhoton:` — `pTcut`, `Etacut`, `Isocut`, `dRlcut`,
+`dRlOverPtcut`), adds its 4-vector to the muon, and folds its energy into
+`pfRelIso04_all` **before** the isolation cut. Applied after the base muon
+selection.
 
 ---
 
-## 7. Cross‑check vs this repo's config (as of 2026‑08‑31)
+## 6. Scale factors  **[Verify]**
 
-| Observation | Detail |
-|-------------|--------|
-| IP cuts missing | AN‑19‑124 baseline has `|dxy|<0.05`, `|dz|<0.10`, `SIP3D<8`; not applied in `copperhead_processor.py` (~L950) — only stored |
-| pT cut on `pt_raw` | `muon_pt_cut` is compared against pre‑Rochester `pt_raw`; code has `FIXME: Why pt_raw` |
-| 2025 / 2026 placeholders | Rochester JSON, BS/EBE calibration, and `muon_Z.json.gz` for 2026 all reuse earlier years |
-| 2017 trigger SF | `muSFFileList["2017"]` marked `FIXME: input binning error` |
+The **nominal skim applies no muon ID / isolation / trigger scale factor** and no
+L1-prefiring weight. If SFs are added for a systematics production:
+
+- MUO `muon_Z.json.gz` (`jsonpog-integration` `POG/MUO/*_UL` for Run 2 v9; CAT
+  `metadata/MUO/*` for Run 3), with `NUM_/DEN_` keys matching the **exact**
+  selection (tight vs medium ID, PF-iso working point, the HLT path in the OR) for
+  the era, plus stat + syst variations;
+- reco / tracking SF: **[Verify]** whether the target era's MUO recommendation
+  requires a separate one for the ID in use;
+- Run 2: L1-prefiring weight (`L1PreFiringWeight.{Nom,Up,Dn}`) — **[Verify]**
+  whether it is needed for this final state.
+
+---
+
+## 7. Review checklist
+
+1. Era / data-MC / NanoAOD version identified (v9 vs v15 `Muon_*` branch names).
+2. 2&ell;2&nu; leg: `pT > 25`, `\|&eta;\| < 2.4` (**muons**, not 2.5), tight muon ID,
+   tight PF iso, `\|m_{&mu;&mu;} − 91\| < 15`, `p_T^{&mu;&mu;} > 55` all applied
+   (config currently has `Lep_eta 2.5`, `M_ll_Window 0`, `Pt_ll 10` — &sect;2).
+3. Dilepton is **not** charged-required; event rejected on a 3rd lepton candidate.
+4. `Muon_corrected_pt` (`muonScaleRes20XX`) used everywhere the muon pT enters;
+   MC-only smearing; 2022 producer resolved.
+5. FSR photon energy folded into `pfRelIso04_all` before the iso cut.
+6. If a systematics run: SF keys match the selection and era; reco-SF /
+   L1-prefiring decision recorded.
 
 ---
 
 ## 8. Evidence summary
 
-| Item | POG | Eras | Source | Established? |
-|------|-----|------|--------|--------------|
-| Selection (pT/η/ID/iso, track type, dimuon, trigger match) | analysis | all | S1, C1, C5 | yes — analysis choice, not a POG number |
-| IP cuts (dxy/dz/sip3d) | analysis | all | S1, S2 | in note; **not implemented** — [Verify] |
-| Correction order BS→Rochester→FSR | analysis (AN‑19‑124) | all | S1, C5 | yes |
-| Rochester / MUO scale‑smearing payloads | MUO | all | C3 | paths yes; 2025/2026 placeholders |
-| ID/iso/trigger SF keys | MUO | all | C4 | keys yes; correctness vs era **[Verify]** |
-| Reco/tracking SF requirement | MUO | all | — | **Authoritative CMS verification required** |
-| `mediumId` = recommended ID for H→µµ in the target era | MUO | all | — | **Authoritative CMS verification required** |
-| Trigger pT thresholds vs official HLT plateau per era | MUO/HLT | all | C1 | **Authoritative CMS verification required** |
-| Run 3 momentum calibration / correctionlib version | MUO | Run 3 | — | **Authoritative CMS verification required** |
+| Item | POG / source | Eras | Established? |
+|------|--------------|------|--------------|
+| 2&ell;2&nu; muon selection (pT/&eta;/ID/iso, dilepton window, `p_T^{&mu;&mu;}`, 3rd-lepton veto) | HIG / AN-2016/325 &sect;4 | 2016 | method yes; numbers **[Verify]** for UL/Run 3 |
+| Rochester via `muonScaleRes20XX` &rarr; `Muon_corrected_pt` | MUO | Run 2 UL | yes (implementation); 2022 producer **[Verify]** |
+| FSR recovery in `H4LTools::MuonFsr` | analysis | all | yes (implementation) |
+| Muon ID/iso/trigger SF | MUO | all | **not applied** in the nominal skim |
+| Tight vs medium muon ID recommended for HZZ&rarr;2&ell;2&nu; per era | MUO / HIG | all | **Authoritative CMS verification required** |
+| Trigger OR contents + matched-muon plateau per era | MUO / HLT | all | **Authoritative CMS verification required** |
+| Run 3 momentum calibration / correctionlib version | MUO | 2022 | **Authoritative CMS verification required** |
 
 ## Last verified
 
-- Local source review: 2026‑08‑31
-- Current POG recommendation: pending
+- AN-2016/325 &sect;4 / &sect;7 / &sect;8 transcription: skill update.
+- Repo cross-check: `config/Input_2018.yml` + `src/H4LTools.cc` at skill-update time.
+- Current MUO / HZZ recommendation: **not consulted — [Verify]**.

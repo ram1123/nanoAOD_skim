@@ -1,146 +1,118 @@
-# b tagging — Stored CMS Recommendations
+# b tagging — 2&ell;2&nu; b-Veto &amp; BTV Recommendations
 
-> This repo is the **H→ZZ→4l / 2l2q / 2l2nu NanoAOD-tools skim**
-> (`post_proc.py` → `modules/H4LCppModule.py` → C++ `src/H4LTools.cc`; cut values in
-> `config/Input_<year>.yml`). 
-> - Eras here: **Run 2 UL 2016 / 2017 / 2018** and some **2022**; NanoAOD **v9** and
->   **v15**. Run-3-2022/2023/2024/2025/2026-specific rows below do **not** apply.
-> - The CMS-POG recommendation content below is retained as a starting point and
->   **must be re-checked against this analysis's H→ZZ note / HIG group** before it is
->   treated as a requirement.
-> - This-repo pointers: DeepJet (`Jet_btagDeepFlavB`) L/M/T counts feed the 2l2nu b-veto (`HZZ2l2nu_cutbtag`) and are stored as `HZZ2l2qNu_n{Loose,Medium,Tight}BtagJets`; WPs in `config/Input_<year>.yml` `Jet.deepJet_btag.*` → `H4LTools::InitializeEvtCut`. `data/btag/DeepCSV_*.csv` are legacy; no b-tag SF is applied in the nominal skim.
+> For the **X/H&rarr;ZZ&rarr;2&ell;2&nu; NanoAOD-tools skim**
+> (`post_proc.py` &rarr; `modules/H4LCppModule.py` &rarr; C++ `src/H4LTools.cc`;
+> cut values in `config/Input_<year>.yml`).
+>
+> - Eras: **Run 2 UL 2016 / 2017 / 2018** and some **2022**; NanoAOD **v9** and
+>   **v15**. Run-3-2023+ material does not apply.
+> - This repo reads **DeepJet** (`Jet_btagDeepFlavB`). L/M/T jet counts are stored
+>   as `HZZ2l2qNu_n{Loose,Medium,Tight}BtagJets`; the working points come from
+>   `config/Input_<year>.yml` `Jet.deepJet_btag.{Loose,Medium,Tight}` &rarr;
+>   `H4LTools::InitializeEvtCut`. `data/btag/*.csv` are legacy DeepCSV inputs.
+> - No b-tag scale factor is applied in the nominal skim.
+> - Re-check every WP / SF against the current 2&ell;2&nu; note / BTV recommendation.
 
+Responsible POG: **BTV** (B-Tagging &amp; Vertexing POG). Channel strategy:
+`references/hzz-2l2nu.md`.
 
-Responsible POG: **BTV** (B‑Tagging & Vertexing POG).
+## Role in 2&ell;2&nu; (AN-2016/325 &sect;4.4.5, &sect;5.1)  **[HIG / AN-2016-325]**
 
-Role in this analysis: b‑tagged AK4 jets are used for a **b‑jet veto** — it
-suppresses the top (t&#773;t / tW) non‑resonant background. In **2l2nu** the signal
-region rejects any event with a b‑tagged jet (AN‑2016/325 §4.4.5), and the
-non‑resonant `&alpha;`‑method sidebands *require* &ge; 1 b‑tag (§5.1). Not a signal
-object.
+b-tagged AK4 jets drive a **b-jet veto** that suppresses the top
+(t&#773;t / tW) non-resonant background:
 
-- AN‑2016/325 (2016): **CSVv2 loose `> 0.423`**, jets `pT > 30 GeV`, `\|&eta;\| < 2.4`.
-  b‑veto efficiency uncertainty **2–4%** on MC‑driven processes (signal, WZ, ZZ),
-  from a `b/c` downgrade of 2% and a light‑jet upgrade of 11% envelope (§7.3, §8.1).
-- This repo: **DeepJet** (`Jet_btagDeepFlavB`) L/M/T counts
-  (`HZZ2l2qNu_n{Loose,Medium,Tight}BtagJets`); WPs in `config/Input_<year>.yml`
-  `Jet.deepJet_btag.*`. **The b‑veto itself is currently commented out in
-  `src/H4LTools.cc::ZZSelection_2l2nu()`** (`HZZ2l2nu_cutbtag` never incremented) —
-  **[Repo divergence]** from the note; no b‑tag SF is applied in the nominal skim.
+- **signal region**: reject any event containing a b-tagged jet;
+- **non-resonant &alpha;-method sidebands**: *require* &ge; 1 b-tagged jet
+  (`references/hzz-2l2nu.md` &sect;5, `cms-systematics-statistics`).
+
+Not a signal object; not used for tagging a resonance.
+
+- AN-2016/325 (2016): CSVv2 **loose** `> 0.423`, jets `pT > 30 GeV`,
+  `\|&eta;\| < 2.4`. b-veto efficiency uncertainty **2&ndash;4%** on the MC-driven
+  processes (signal, WZ, ZZ), from a `b`/`c` mistag-probability downgrade of 2% and
+  a light-jet upgrade of 11% (envelope; &sect;7.3, &sect;8.1). The CSVv2 tagger and
+  its numeric WP are **superseded** — UL/Run 2+3 use DeepJet.
 
 ## Stored sources
 
 | # | Source | Location | Snapshot / verified |
 |---|--------|----------|---------------------|
-| S0 | **CMS AN‑2016/325** §4.3 (b‑veto: CSVv2 `> 0.423` loose, jets `pT>30`, `\|η\|<2.4`), §4.4.5, §7.3, §8.1 (b‑veto systematic 2–4%) | 2l2nu analysis note → `references/hzz-2l2nu.md` §2, §8 | 2016/legacy — WP superseded by DeepJet |
-| S1 | This analysis's b‑tag statement ("loose and medium DeepCSV") | `docs/Official_recommendation.md` (Jet Selection & Corrections table) | local review 2026‑08‑31 |
-| C1 | Per‑year b‑jet acceptance + tagger working points | `configs/parameters/jet.yaml` (`btag_jet_*`, `btag_*_wp_*`) | 2026‑08‑31 |
-| C2 | Scale‑factor payloads | `configs/parameters/SF_filelist.yaml` (`btag_sf_json`, `btag_sf_csv`) | 2026‑08‑31 |
-| C3 | Implementation | `src/corrections/evaluator.py` (b‑tag weight evaluation) | 2026‑08‑31 |
-| C4 | Working‑point provenance | `btv-wiki` URLs embedded inline in `jet.yaml` | 2026‑08‑31 |
+| S0 | **CMS AN-2016/325** &sect;4.3, &sect;4.4.5 (b-veto), &sect;5.1 (&alpha;-method b-tag requirement), &sect;7.3 / &sect;8.1 (b-veto systematic 2&ndash;4%) | 2&ell;2&nu; analysis note &rarr; `references/hzz-2l2nu.md` &sect;2, &sect;8 | 2016/legacy — tagger + WP superseded |
+| C1 | This repo: DeepJet WPs | `config/Input_<year>.yml` `Jet.deepJet_btag.{Loose,Medium,Tight}` &rarr; `H4LTools::InitializeEvtCut` (`Input_2018.yml`: 0.0494 / 0.2770 / 0.7264 — 2018 UL DeepJet) | repo |
+| C2 | This repo: b-jet counting + veto | `src/H4LTools.cc` (`HZZ2l2qNu_n{Loose,Medium,Tight}BtagJets`; `HZZ2l2nu_cutbtag` in `ZZSelection_2l2nu()`) | repo |
+| C3 | Legacy DeepCSV CSVs | `data/btag/*.csv` (`setup.sh` copies them to `$CMSSW_BASE/src/PhysicsTools/NanoAODTools/data/btagSF/`) | repo |
+| P1 | BTV entry point | `btv-wiki.docs.cern.ch/ScaleFactors/` (per-era DeepJet L/M/T WP pages + `btagging.json.gz`) | reference |
 
-Not covered by stored sources → **Authoritative CMS verification required**: the
-recommended tagger per era, the numeric L/M/T working‑point values, the
-`btagging.json.gz` version, and the SF application method + uncertainty decomposition.
+Not covered by stored sources &rarr; **Authoritative CMS verification required**:
+the DeepJet L/M/T numeric working points for **every era in scope** (only 2018 is
+populated in the config), the `btagging.json.gz` version, and — if SFs are added —
+the application method (fixed-WP `comb`/`mujets` vs shape/`iterativeFit`), the
+per-flavour handling, and the cross-year correlation model.
 
-Classification tags: **[BTV official]**, **[Analysis‑specific]**, **[Implementation]**,
-**[Verify]**, **[Placeholder]** (unset / copied value in the config).
+Classification tags: **[BTV official]**, **[HIG / AN-2016-325]**,
+**[Implementation]** (this repo), **[Verify]**, **[Repo divergence]**.
 
 ---
 
 ## 1. Required context
 
-Run 2 vs Run 3; exact era; the **tagger** the analysis actually reads (DeepCSV / DeepJet
-/ ParticleNet / UParT); the **working point** (loose/medium/tight); whether SFs are
-applied as fixed‑WP or shape.
+Exact era; NanoAOD version (v9 vs v15 `Jet_btagDeepFlavB` — the branch is present
+in both); which b-tag **working point** the veto uses (loose in the 2016 note);
+whether a systematics run needs b-tag SFs.
 
 ---
 
-## 2. b‑jet pre‑selection (C1)  **[Analysis‑specific]**
+## 2. b-jet selection in this repo (C1, C2)
 
-| Requirement | Value | Classification |
-|-------------|-------|----------------|
-| AK4 jet pre‑selection | see `jets.md` | JME + analysis |
-| pT | > **25 GeV** | `btag_jet_pt_cut` |
-| \|η\| | < **2.4** (2016) / < **2.5** (2017 → Run 3) | tracker acceptance (`btag_jet_eta_cut`) |
-| jet ID | **tight** | JME jet ID (`btag_jet_id`) |
-
----
-
-## 3. Taggers and working points (C1, C4)
-
-Values are **as stored in `configs/parameters/jet.yaml`**; discriminant WP = loose /
-medium.
-
-| Tagger | Run 2 UL (L / M) | Run 3 (L / M) | Provenance in config |
-|--------|-----------------|---------------|----------------------|
-| DeepCSV | 2016preVFP 0.2027 / 0.6001 … 2018 0.1208 / 0.4168 | not set (0.000) | btv‑wiki UL pages; S1 names "loose and medium DeepCSV" |
-| DeepJet (`deepJet`) | not set | 2022preEE 0.0583 / 0.3086; 2022postEE 0.0614 / 0.3196; 2023 0.0479 / 0.2431; 2023BPix 0.048 / 0.2435 | btv‑wiki `Run3Summer22` |
-| ParticleNet | not set | 2022preEE 0.047 / 0.245; 2022postEE 0.0499 / 0.2605; 2023 0.0358 / 0.1917; 2023BPix 0.0359 / 0.1919 | btv‑wiki `Run3Summer22` |
-| UParT (`UParTAK4`) | 2016preVFP 0.0387 / 0.1847 … 2018 0.0308 / 0.1610 | 2024 0.0246 / 0.1272 | btv‑wiki `Run3Summer24` (2024) |
-
-### 3.1 Placeholders / gaps — must not be used blind  **[Placeholder]**
-
-- 2024 / 2025 / 2026 DeepJet and ParticleNet WPs are `0.000` (unset).
-- 2025 / 2026 UParT WPs are copied from 2024 (`# PLACEHOLDER … pending BTV POG 2025/2026 WPs`).
-- 2023 / 2023BPix DeepJet and ParticleNet WPs cite the `Run3Summer22` btv‑wiki page —
-  confirm a dedicated 2023 page is not required.
-- `btag_sf_json` for 2026 reuses the 2025 payload (C2).
+| Requirement | Value | Note |
+|-------------|-------|------|
+| AK4 jet pre-selection | see `jets.md` | pT / `\|&eta;\|` / jet ID |
+| tagger | **DeepJet** `Jet_btagDeepFlavB` | v9 and v15 |
+| working point | `Jet.deepJet_btag.{Loose,Medium,Tight}` from the year's config | `Input_2018.yml` = 0.0494 / 0.2770 / 0.7264 (2018 UL); **other eras: [Verify] / not populated** |
+| veto | AN-2016/325: reject the event on a **loose** b-tag | **`HZZ2l2nu_cutbtag` is commented out** in `ZZSelection_2l2nu()` — the veto is not applied — **[Repo divergence]** |
 
 ---
 
-## 4. Scale factors (C2)  **[BTV official payload]**
+## 3. Scale factors  **[Verify]**
 
-- `btag_sf_json` → **`btagging.json.gz`**: `jsonpog-integration` `POG/BTV/*_UL` (Run 2),
-  CAT `metadata/BTV/*` (Run 3; 2026 = 2025 placeholder).
-- `btag_sf_csv` → legacy DeepCSV CSV, Run 2 only; **all Run 3 rows marked
-  `# FIXME: Update SF`** (still pointing at the 2018 UL CSV).
+**No b-tag SF is applied in the nominal skim.** For a systematics production:
 
-The SF application method — fixed‑WP (`comb` / `mujets`) vs shape / `iterativeFit`;
-per‑flavour b / c / light handling; correlation model across years — is **not
-established** from stored material. **[Verify]**
-
----
-
-## 5. Review checklist
-
-1. Era identified; tagger the analysis reads is one with real (non‑zero, non‑placeholder)
-   WPs for that era.
-2. b‑jet acceptance (pT 25, \|η\| 2.4/2.5, tight ID) applied per C1.
-3. WP value provenance checked against a btv‑wiki page **for that exact campaign**
-   (not `Run3Summer22` reused for 2023+).
-4. `btagging.json.gz` payload matches the tagger and era; 2026 placeholder understood.
-5. SF method (fixed‑WP vs shape) and flavour/uncertainty decomposition match the BTV
-   recommendation for that tagger.
-6. Run 3 `btag_sf_csv` `FIXME` rows are not silently used.
+- BTV `btagging.json.gz` (`jsonpog-integration` `POG/BTV/*_UL` for Run 2 v9),
+  matching **DeepJet** and the era;
+- the SF method (fixed-WP vs shape), per-flavour (`b` / `c` / light) treatment,
+  and the systematic decomposition per the BTV recommendation for that tagger;
+- the 2016-note-style envelope (b/c mistag &minus;2%, light +11%) only if
+  reproducing AN-2016/325 directly — otherwise use the current BTV prescription.
 
 ---
 
-## 6. Cross‑check vs this repo's config (as of 2026‑08‑31)
+## 4. Review checklist
 
-| Observation | Detail |
-|-------------|--------|
-| Run 3 DeepJet/ParticleNet WPs for 2024–2026 | all `0.000` — unusable until set |
-| 2025 / 2026 UParT WPs | copied from 2024 (placeholder) |
-| 2023 / 2023BPix DeepJet & ParticleNet | provenance link is the 2022 `Run3Summer22` page |
-| `btag_sf_csv` Run 3 | 2018 UL CSV reused, `# FIXME: Update SF` |
-| `btag_sf_json` 2026 | reuses 2025 `btagging.json.gz` |
+1. Era identified; the config `Jet.deepJet_btag` WPs are populated for that era
+   (not just 2018) and match a current btv-wiki page.
+2. The b-veto is actually applied — `HZZ2l2nu_cutbtag` gates the event in
+   `ZZSelection_2l2nu()` (currently commented out).
+3. Veto working point matches the 2&ell;2&nu; note (loose) and the
+   &alpha;-method sideband uses the same tagger/WP with `&ge; 1` b-tag.
+4. If a systematics run: `btagging.json.gz` matches DeepJet + era; SF method,
+   flavour split and correlation model resolved.
 
 ---
 
-## 7. Evidence summary
+## 5. Evidence summary
 
-| Item | POG | Eras | Source | Established? |
-|------|-----|------|--------|--------------|
-| b‑jet acceptance (pT/η/ID) | analysis | all | C1 | yes — analysis choice |
-| DeepCSV L/M WPs | BTV | Run 2 UL | C1, C4 | values stored; verify vs current btv‑wiki |
-| DeepJet / ParticleNet L/M WPs | BTV | 2022 / 2023 | C1, C4 | values stored (2023 uses a 2022 page); 2024+ unset |
-| UParT L/M WPs | BTV | Run 2 + 2024 | C1, C4 | values stored; 2025/2026 placeholders |
-| `btagging.json.gz` payloads | BTV | all | C2 | paths yes; 2026 placeholder |
-| SF application method + uncertainty split | BTV | all | — | **Authoritative CMS verification required** |
-| Recommended tagger per era | BTV | all | — | **Authoritative CMS verification required** |
+| Item | POG / source | Eras | Established? |
+|------|--------------|------|--------------|
+| b-veto role, loose WP, 2&ndash;4% systematic | HIG / AN-2016/325 | 2016 | method yes; CSVv2 WP superseded |
+| DeepJet as the repo tagger; L/M/T counting | implementation | Run 2 UL / v15 | yes |
+| DeepJet L/M/T WPs per era | BTV | all | only 2018 populated — **[Verify]** the rest |
+| b-veto applied in `ZZSelection_2l2nu()` | implementation | — | **no** — commented out (**[Repo divergence]**) |
+| b-tag SF | BTV | all | **not applied** in the nominal skim |
+| SF method + uncertainty decomposition | BTV | all | **Authoritative CMS verification required** |
 
 ## Last verified
 
-- Local source review: 2026‑08‑31
-- Current POG recommendation: pending
+- AN-2016/325 transcription: skill update.
+- Repo cross-check: `config/Input_2018.yml` + `src/H4LTools.cc::ZZSelection_2l2nu()`
+  at skill-update time.
+- Current BTV recommendation: **not consulted — [Verify]**.

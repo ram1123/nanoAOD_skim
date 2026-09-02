@@ -137,16 +137,21 @@ Applied to the **q&#773;q &rarr; ZZ &rarr; 2&ell;2&nu;** (POWHEG) sample:
   flagged for further study in the note.
 - **WZ** also receives an NLO EWK K-factor (virtual + photon-induced, LUXqed PDF).
 
-EWK-correction uncertainty uses the recoil variable
-`&rho; &equiv; \|&sum; p&#8407;_T^i\| / &sum; \|p&#8407;_T^i\|`: for `&rho; < 0.3`,
-`&delta; = \|(1-K_QCD)(1-K_EWK)\|`; for `&rho; &ge; 0.3` (&asymp; 25% of events),
-`&delta; = \|1-K_EWK\|` (100% of the EWK correction).
+The EWK-correction **uncertainty** (the recoil-&rho; method, `&rho; &lessgtr; 0.3`)
+and the NNLO-QCD-K-factor uncertainty live in
+`cms-systematics-statistics/references/systematics.md` §3.5 — not repeated here.
 
 **[Verify]** whether this repo applies any of these K-factors — they are **not**
 in `src/H4LTools.cc` or `modules/`. If the downstream `higgs_combine/` macros add
 them, record where.
 
 ---
+
+> The M_T shape fit, MELA width/interference reweighting, the Eq. 14 μ-model, the
+> full systematic-uncertainty list (Combine nuisance names + sizes), and the
+> `higgs_combine/` cross-check now live in the **`cms-systematics-statistics`**
+> skill. This section is a summary; use that skill for datacard / nuisance / limit
+> work.
 
 ## 7. Signal model (AN-2016/325 &sect;3, &sect;9.2)  **[HIG / AN-2016-325]**
 

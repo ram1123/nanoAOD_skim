@@ -14,11 +14,16 @@ otherwise). For object-related work, consult the relevant local CMS guideline
 reference under `.claude/skills/cms-object-guidelines/references/`. Do not load
 unrelated object references.
 
-For any 2l2nu selection, categorization, transverse-mass, background-method, or
-systematic-uncertainty question, read `references/hzz-2l2nu.md` first — it is
+For any 2l2nu selection, categorization, transverse-mass, or background-method
+question, read `cms-object-guidelines/references/hzz-2l2nu.md` first — it is
 transcribed from CMS AN-2016/325 (the 2l2nu analysis note; 2016/legacy, so its
 method is authoritative but numeric working points are superseded) and carries a
-cross-check table against the current skim. Treat a divergence between the note
+cross-check table against the current skim.
+
+For **datacard / nuisance-parameter / K-factor / interference-model / upper-limit**
+questions, use the `cms-systematics-statistics` skill
+(`references/systematics.md`, `references/statistics.md`) — the AN §8 / §6 / §9
+systematics list, Combine nuisance names, and the `higgs_combine/` cross-check. Treat a divergence between the note
 and the skim as an "analysis-specific inconsistency", and treat a number whose
 only source is AN-2016/325 as "authoritative verification required" until
 confirmed against a current UL / Run 2+3 2l2nu note.
