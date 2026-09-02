@@ -60,7 +60,7 @@ Ordered selection ("pre-selection" in the note):
 | 5 | 3rd-lepton veto: loose electron `I_rel < 0.15` & `pT > 10`; **or** loose muon `I_rel < 0.2`; **or** soft muon `pT > 3 GeV` | &sect;4.4.4 | `H4LTools` extra-lepton logic | verify the loose/soft definitions match |
 | 6 | b-jet veto: **no** b-tagged jet (2016 note: CSVv2 loose `> 0.423`), jets `pT > 30`, `\|&eta;\| < 2.4` | &sect;4.3, &sect;4.4.5 | `HZZ2l2nu_cutbtag`, `deepJet_btag` WPs | **b-veto is commented out** in `ZZSelection_2l2nu()` — **[Repo divergence]** |
 | 7 | `min \|&Delta;&phi;(jet, MET)\| > 0.5` over jets `pT > 30 GeV` | &sect;4.4.6 | `HZZ2l2nu_dPhi_jetMET`, `HZZ2l2nu_cutdPhiJetMET` | applied |
-| 8 | `\|&Delta;&phi;(Z, MET)\| > 0.5` (removes dilepton recoiling along MET) | &sect;4.4.7 | — | **not applied** — **[Repo divergence]** |
+| 8 | `\|&Delta;&phi;(Z, MET)\| > 0.5` (removes dilepton recoiling along MET) | &sect;4.4.7 | `HZZ2l2nu_dPhi_ZMET` | computed &amp; **stored as an output branch, no cut applied** — **[Repo divergence]** |
 | 9 | final **`MET > 125 GeV`** (optimized, common to all categories, &sect;6.1) | &sect;6 | `HZZ2l2nu_cutMETgT100` | code only **counts** `PuppiMET_pt > 100`; no 125 GeV rejection, event not dropped — **[Repo divergence]** |
 
 The note applies MET filters / sample-cleanup filters upstream (&sect;4.3); this repo
@@ -209,7 +209,7 @@ Data-driven backgrounds:
 | Muon `\|&eta;\|` in 2&ell;2&nu; block | < 2.4 | `Lep_eta: 2.5` (both flavours) — **divergence** |
 | b-jet veto | reject event with a loose b-tag | commented out in `ZZSelection_2l2nu()` — **divergence** |
 | Final MET cut | `> 125 GeV`, drops the event | only counts `PuppiMET_pt > 100`; no rejection — **divergence** |
-| `\|&Delta;&phi;(Z, MET)\| > 0.5` | pre-selection cut | not implemented — **divergence** |
+| `\|&Delta;&phi;(Z, MET)\| > 0.5` | pre-selection cut | computed &amp; stored (`HZZ2l2nu_dPhi_ZMET`), **no cut applied** — **divergence** |
 | MET flavour | PF Type-I MET (+ 2016 &phi; recipe) | PuppiMET + `METPhiCorrector` — **divergence** (documented, see `met.md`) |
 | MT definition | Eq. 6 (Z&rarr;&nu;&nu; leg at `m_Z`) | `(Z1 + massless MET 4-vec).Mt()` — **divergence** |
 | b tagger | CSVv2 loose `0.423` | DeepJet `Jet_btagDeepFlavB` L/M/T — expected UL/Run 3 change |

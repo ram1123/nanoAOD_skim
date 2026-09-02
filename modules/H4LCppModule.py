@@ -140,15 +140,23 @@ class HZZAnalysisCppProducer(Module):
                                                                     'M_ll_Window', 'dPhi_jetMET', ['MZLepcut', 'down'], ['MZLepcut', 'up']]))
 
     def _get_nested_values(self, dictionary, keys):
+        # Raise a clear error for a missing key instead of passing a placeholder
+        # string into a float Initialize* argument (which fails obscurely later).
         values = []
         for key in keys:
             if isinstance(key, list):
                 sub_dict = dictionary
                 for sub_key in key:
-                    sub_dict = sub_dict.get(sub_key, {})
-                values.append(sub_dict if sub_dict else 'N/A')
+                    if not isinstance(sub_dict, dict) or sub_key not in sub_dict:
+                        raise KeyError("Missing config key: {} (in {})".format(
+                            " -> ".join(str(k) for k in key), self.cfgFile))
+                    sub_dict = sub_dict[sub_key]
+                values.append(sub_dict)
             else:
-                values.append(dictionary.get(key, 'N/A'))
+                if key not in dictionary:
+                    raise KeyError("Missing config key: {} (in {})".format(
+                        key, self.cfgFile))
+                values.append(dictionary[key])
         return values
 
     def _initialize_counters(self):
@@ -267,6 +275,7 @@ class HZZAnalysisCppProducer(Module):
         self.out.branch("HZZ2l2nu_VBFIndexJet1",  "I")
         self.out.branch("HZZ2l2nu_VBFIndexJet2",  "I")
         self.out.branch("HZZ2l2nu_minDPhi_METAK4",  "F")
+        self.out.branch("HZZ2l2nu_dPhi_ZMET",  "F")  # |dphi(Z, MET)|; stored only, no cut applied
 
         self.out.branch("HZZ2l2nu_VBFjet1_pT",  "F")
         self.out.branch("HZZ2l2nu_VBFjet1_eta",  "F")
@@ -416,6 +425,7 @@ class HZZAnalysisCppProducer(Module):
         EneZ2_met = -999.
         MT_2l2nu = -999.
         HZZ2l2nu_minDPhi_METAK4 = 999.0
+        HZZ2l2nu_dPhi_ZMET = -999.
 
         HZZ2l2nu_ZZmT = -999.
         HZZ2l2nu_ZZpT = -999.
@@ -523,25 +533,35 @@ class HZZAnalysisCppProducer(Module):
             is_data=not self.isMC,
             is_puppi=True,
             )
-        if self.year == 2017:
+        elif self.year == 2017:
             corrector = METPhiCorrector(
             campaign=Campaign.UL_2017,
             is_data=not self.isMC,
             is_puppi=True,
             )
-        if self.year == 2016:
+        elif self.year == 2016:
             corrector = METPhiCorrector(
             campaign=Campaign.UL_2016,
             is_data=not self.isMC,
             is_puppi=True,
             )
+        else:
+            # No MET-phi correction campaign available for this year (e.g. 2022).
+            corrector = None
+
         #MET correction for v15
-        corr_pt, corr_phi = corrector(
-        puppimet.pt,
-        puppimet.phi,
-        npv=event.PV_npvs,
-        run=event.run
-        )
+        if corrector is not None:
+            corr_pt, corr_phi = corrector(
+            puppimet.pt,
+            puppimet.phi,
+            npv=event.PV_npvs,
+            run=event.run
+            )
+        else:
+            if not getattr(self, "_warned_no_metphi", False):
+                print("WARNING: no MET-phi correction for year {} - using uncorrected PuppiMET".format(self.year))
+                self._warned_no_metphi = True
+            corr_pt, corr_phi = puppimet.pt, puppimet.phi
 
         # for photon in Photons:
         #     # Keep photons if pT > 55, |eta| < 2.5 and skip the transition region of barrel and endcap
@@ -713,6 +733,10 @@ class HZZAnalysisCppProducer(Module):
             EneZ2_met = self.worker.Z2_met.E()
             MT_2l2nu = self.worker.ZZ_metsystem.Mt()
 
+            # |dphi(Z, MET)|: computed and stored as an output branch; NO cut applied
+            # (AN-2016/325 4.4.7 uses |dphi(Z, MET)| > 0.5 - left to a downstream selection).
+            HZZ2l2nu_dPhi_ZMET = abs(ROOT.TVector2.Phi_mpi_pi(self.worker.Z1.Phi() - corr_phi))
+
             HZZ2l2nu_ZZmT = self.worker.ZZ_metsystem.Mt()
             HZZ2l2nu_ZZpT = self.worker.ZZ_metsystem.Pt()
 
@@ -814,6 +838,7 @@ class HZZAnalysisCppProducer(Module):
         self.out.fillBranch("HZZ2l2nu_ZZmT", HZZ2l2nu_ZZmT)
         self.out.fillBranch("HZZ2l2nu_ZZpT", HZZ2l2nu_ZZpT)
         self.out.fillBranch("HZZ2l2nu_minDPhi_METAK4", HZZ2l2nu_minDPhi_METAK4)
+        self.out.fillBranch("HZZ2l2nu_dPhi_ZMET", HZZ2l2nu_dPhi_ZMET)
         #self.out.fillBranch("Pz_neutrino", Pz_neutrino)
 
         self.out.fillBranch("HZZ2l2nu_VBFIndexJet1", HZZ2l2nu_VBFIndexJet1)

@@ -51,12 +51,13 @@ is_puppi=True)` from nanoAOD-tools and corrects `PuppiMET.pt/phi` with
 `npv=event.PV_npvs, run=event.run` &rarr; the `pT_MET` / `phi_MET` branches and the
 worker's `corr_pt` / `corr_phi`.
 
-- **`Campaign` covers UL 2016 / 2017 / 2018 only** — a `year` outside that set
-  leaves the corrector undefined and the job raises.
+- **`Campaign` covers UL 2016 / 2017 / 2018 only.** For any other year (2022)
+  `corrector` is `None` and `analyze()` falls back to **uncorrected** PuppiMET
+  with a one-time warning — the MET-&phi; correction is simply not applied there.
 - **[Verify]** whether the current JME recommendation applies a &phi; correction to
   **PUPPI** MET for the era (often small/absent for PUPPI — confirm, do not
-  assume) and whether the nanoAOD-tools payload matches it. In particular there is
-  no 2022 `Campaign` — resolve before running 2022.
+  assume) and whether the nanoAOD-tools payload matches it. Add a 2022 campaign /
+  resolve the fallback before a 2022 production run.
 
 ---
 
@@ -144,7 +145,10 @@ and the skim: `references/hzz-2l2nu.md` &sect;2&ndash;&sect;3, &sect;9. MET-spec
      (`HZZ2l2nu_cutdPhiJetMET`, `if (minDeltaPhi < HZZ2l2nu_dPhi_jetMET)`) but the
      config threshold `HZZ2l2nu.dPhi_jetMET` is **`0.0`**, so it never fires —
      **[Repo divergence]**.
-  2. `\|&Delta;&phi;(Z, MET)\| > 0.5` — **not implemented** in `ZZSelection_2l2nu()`.
+  2. `\|&Delta;&phi;(Z, MET)\| > 0.5` — the quantity **is now computed and stored**
+     (`H4LCppModule.analyze()` &rarr; branch `HZZ2l2nu_dPhi_ZMET`,
+     `|&Delta;&phi;(Z1, corrected-MET)|`) but **no cut is applied** — left to a
+     downstream selection.
   3. final `MET > 125 GeV` (optimized, common to all categories) — the code only
      **increments** `HZZ2l2nu_cutMETgT100` at `PuppiMET_pt > 100` and does **not**
      reject the event.
@@ -177,11 +181,11 @@ and the skim: `references/hzz-2l2nu.md` &sect;2&ndash;&sect;3, &sect;9. MET-spec
 | Item | POG / source | Eras | Established? |
 |------|--------------|------|--------------|
 | PuppiMET as the MET object | implementation | UL 16/17/18 | yes — repo choice; **divergence** from AN-2016/325 PF Type-I MET |
-| MET-&phi; (XY) correction on PuppiMET | JME | UL 16/17/18 | **applied** (`METPhiCorrector`); no 2022 `Campaign`; payload vs current JME rec **[Verify]** |
+| MET-&phi; (XY) correction on PuppiMET | JME | UL 16/17/18 | **applied** (`METPhiCorrector`); 2022 falls back to uncorrected PuppiMET (warned); payload vs current JME rec **[Verify]** |
 | MET noise / event filter list | JME | Run 2 UL + Run 3 | **yes** (S1, &sect;3); `modules/METFilters.py` matches the tables; 2025-2026 `ecalBadCalibFilter` **[Verify]** |
 | 2022-2023 prompt-reco ECAL special selection | JME | 2022/2023 prompt data | in `modules/METFilters.py`, gated `IS_2022_2023_PROMPT_RECO_DATA` (default off) |
 | Type-I propagation of JEC/JER | JME | all | `--WithSyst` only |
-| 2&ell;2&nu; SR cuts (`&Delta;&phi;` &times; 2, `MET > 125`) | HIG / AN-2016/325 | 2016 | method yes; repo: `&Delta;&phi;(jet,MET)` threshold is `0.0`, no `&Delta;&phi;(Z,MET)`, no `MET>125` rejection — **[Repo divergence]** |
+| 2&ell;2&nu; SR cuts (`&Delta;&phi;` &times; 2, `MET > 125`) | HIG / AN-2016/325 | 2016 | method yes; repo: `&Delta;&phi;(jet,MET)` threshold is `0.0`, `&Delta;&phi;(Z,MET)` computed &amp; stored (`HZZ2l2nu_dPhi_ZMET`) but not cut, no `MET>125` rejection — **[Repo divergence]** |
 | `M_T(&ell;&ell;, MET)` = AN-2016/325 Eq. 6 | HIG / AN-2016/325 | 2016 | note yes; repo uses a massless-MET `TLorentzVector::Mt()` — **divergence** |
 | PuppiMET scale/resolution uncertainty | JME | all | **Authoritative CMS verification required** |
 
