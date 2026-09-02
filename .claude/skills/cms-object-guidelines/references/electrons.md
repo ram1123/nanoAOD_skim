@@ -61,7 +61,7 @@ Electrons form the Z&rarr;ee candidate. Reference values from AN-2016/325
 | `pT` | > **25 GeV** | `HZZ2l2nu.Leading/SubLeading_Lep_pT = 25` &check; |
 | `\|&eta;\|` | < **2.5**, exclude the gap `1.44 < \|&eta;\| < 1.57` | `Electron.Etacut = 2.5`, `HZZ2l2nu.Lep_eta = 2.5` — gap handling: verify in `src/H4LTools.cc` |
 | ID | cut-based **tight** (&sect;4.3 Table 5); &sect;4.4 pre-selection text says "medium" — an internal inconsistency in the note | worker gets the EGM **MVA-iso WP90** flag (`SetElectrons`); config also carries `Electron.BDTWP` (per-&eta;/per-pT HZZ BDT points) + `ttH.WP = 0.8` &rarr; `InitializeElecut`. Confirm which is the applied ID |
-| Isolation | tight, `I_rel` (Eq. 1: `[I_ch + max(I_nh + I_γ − A_eff·&rho;, 0)] / pT`) | `Electron.Isocut = 0.15` |
+| Isolation | tight, **cone R = 0.3** (Eq. 1: `[I_ch + max(I_nh + I_γ − A_eff·&rho;, 0)] / pT`) | `Electron_pfRelIso03_all` (R = 0.3 — matches the note), FSR-subtracted, cut **hard-coded `< 0.15`** in `H4LTools::LeptonSelection()` — the config `Electron.Isocut` (0.15) is passed to `InitializeElecut` but **not used** |
 | impact parameter | none layered on the tight WP in the 2016 note | config `Electron.Loosedxycut = 0.045`, `Loosedzcut = 0.2` |
 | dilepton | `\|m_{ee} − 91\| < 15 GeV`; leptons **not** charge-required; **reject the event if > 2 lepton candidates** | `HZZ2l2nu.M_ll_Window = 0.0` — window **not applied** — **[Repo divergence]** |
 | Z `pT` | `p_T^{ee} > 55 GeV` | `HZZ2l2nu.Pt_ll = 10.0` — **[Repo divergence]** |

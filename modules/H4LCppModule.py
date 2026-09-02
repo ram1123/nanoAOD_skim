@@ -503,7 +503,7 @@ class HZZAnalysisCppProducer(Module):
         self.passtrigEvts += 1
         self.CutFlowTable.Fill(1)
 
-        if passFilters(event, int(self.year)):
+        if passFilters(event, int(self.year), isMC=self.isMC):
             self.passMETFilters += 1
             self.CutFlowTable.Fill(2)
         else:

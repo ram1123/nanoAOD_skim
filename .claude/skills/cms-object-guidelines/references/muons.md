@@ -58,7 +58,7 @@ Muons form the Z&rarr;&mu;&mu; candidate. Reference values from AN-2016/325
 | `pT` | > **25 GeV** | `HZZ2l2nu.Leading/SubLeading_Lep_pT = 25` &check; |
 | `\|&eta;\|` | < **2.4** | `HZZ2l2nu.Lep_eta = 2.5` (applied to muons too) — **[Repo divergence]** |
 | ID | **tight** muon: PF muon, `isGlobal` **or** `isTracker`, tight arbitration, track-fit quality (Table 6) | config `Muon:` `TightTrackerLayercut = 5`, `TightpTErrorcut = 0.3`, `Tight dxy/dz = 0.045 / 0.2`, `HighPtBound = 200` &rarr; `InitializeMucut`; verify the ID logic in `src/H4LTools.cc` matches tight, not medium |
-| Isolation | tight PF iso, &Delta;&beta; (Eq. 2: `[I_ch + max(I_nh + I_γ − 0.5·I_ch^PU, 0)] / pT`) | `Muon.Isocut = 0.2` on `pfRelIso04_all` |
+| Isolation | tight PF iso, &Delta;&beta;, **cone R = 0.3** (Eq. 2: `[I_ch + max(I_nh + I_γ − 0.5·I_ch^PU, 0)] / pT`) | `Muon_pfRelIso03_all` (R = 0.3, &Delta;&beta; — matches the note), FSR-subtracted, cut **hard-coded `< 0.2`** in `H4LTools::LeptonSelection()` — the config `Muon.Isocut` (0.2) is passed to `InitializeMucut` but **not used** |
 | dilepton | `\|m_{&mu;&mu;} − 91\| < 15 GeV`; leptons **not** required opposite charge; **reject the event if > 2 lepton candidates** | `HZZ2l2nu.M_ll_Window = 0.0` — window **not applied** — **[Repo divergence]** |
 | Z `pT` | `p_T^{&mu;&mu;} > 55 GeV` | `HZZ2l2nu.Pt_ll = 10.0` — **[Repo divergence]** |
 | 3rd-lepton veto | loose muon `I_rel < 0.2`, **or** soft muon `pT > 3 GeV` (+ loose electron, see `electrons.md`) | verify the loose/soft definitions in `src/H4LTools.cc` |
