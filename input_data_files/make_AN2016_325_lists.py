@@ -13,8 +13,8 @@ DAS dataset name(s) with `dasgoclient`, per year:
     2018        -> RunIISummer20UL18NanoAODv9    / UL2018_MiniAODv2_NanoAODv9
 
 Writes (into this directory):
-    sample_list_AN2016_325_<year>.dat        - MC, grouped by AN category
-    sample_list_AN2016_325_<year>_data.dat   - Data primary datasets
+    sample_list_AN2016_325_<v9|v15>_<year>.dat        - MC, grouped by AN category
+    sample_list_AN2016_325_<v9|v15>_<year>_data.dat   - Data primary datasets
 
 Format: one DAS dataset per line; '#' in column 0 = comment / section header
 (compatible with scripts/condor/condor_setup_lxplus.py and
@@ -29,6 +29,7 @@ Requires: a valid VOMS proxy (`voms-proxy-init -voms cms`) and `dasgoclient`
     python3 input_data_files/make_AN2016_325_lists.py --years 2018
 """
 import argparse
+import re
 import os
 import shutil
 import subprocess
@@ -40,25 +41,25 @@ DASGOCLIENT = shutil.which("dasgoclient") or "/cvmfs/cms.cern.ch/common/dasgocli
 YEARS = {
     "2016preVFP": dict(
         mc="RunIISummer20UL16NanoAODAPV{NV}-*",
-        data_run="Run2016", data_camp="UL2016_MiniAODv2_NanoAOD{NV}",
+        data_run="Run2016", data_yy="2016",
         data_keep="HIPM",          # eras B(ver1,ver2),C,D,E,F  (HIPM / APV)
         tier_note="UL16 pre-VFP (APV / HIPM)",
     ),
     "2016postVFP": dict(
         mc="RunIISummer20UL16NanoAOD{NV}-*",
-        data_run="Run2016", data_camp="UL2016_MiniAODv2_NanoAOD{NV}",
+        data_run="Run2016", data_yy="2016",
         data_keep="NOT_HIPM",      # eras F,G,H
         tier_note="UL16 post-VFP",
     ),
     "2017": dict(
         mc="RunIISummer20UL17NanoAOD{NV}-*",
-        data_run="Run2017", data_camp="UL2017_MiniAODv2_NanoAOD{NV}",
+        data_run="Run2017", data_yy="2017",
         data_keep="ALL",           # eras B..F
         tier_note="UL17",
     ),
     "2018": dict(
         mc="RunIISummer20UL18NanoAOD{NV}-*",
-        data_run="Run2018", data_camp="UL2018_MiniAODv2_NanoAOD{NV}",
+        data_run="Run2018", data_yy="2018",
         data_keep="ALL",           # eras A..D
         tier_note="UL18",
     ),
@@ -66,7 +67,7 @@ YEARS = {
 
 # conditions / re-processing substrings we never want
 BAD_SUBSTR = (
-    "JMENano", "PUForMUOVal", "PUForTRK", "PUForNanoMuon", "PUFor", "Pilot",
+    "JMENano", "BTVNano", "PUForMUOVal", "PUForTRK", "PUForNanoMuon", "PUFor", "Pilot",
     "FlatPU", "PU35", "PU25", "LowPU", "LensingPU", "_BS20", "PrivateMC",
     "EpsilonPU", "forPOG", "NanoMuon",
 )
@@ -188,7 +189,7 @@ MC = [
     ("QCD HT-binned (madgraphMLM)",
      _bins("QCD_HT", ("100to200", "200to300", "300to500", "500to700",
                       "700to1000", "1000to1500", "1500to2000", "2000toInf"),
-           "_TuneCP5*_13TeV-madgraphMLM-pythia8"), "all"),
+           "_TuneCP5*_13TeV-madgraph*-pythia8"), "all"),
 
     ("### QCD EMEnriched  (AN Table 52)", None, None),
     ("QCD Pt EMEnriched (pythia8)",
@@ -280,14 +281,26 @@ def build_mc(year, nv):
             else:
                 L.append("# UNRESOLVED: dataset=%s/%s/NANOAODSIM" % (patterns[-1], campaign))
                 bad += 1
-    path = os.path.join(OUTDIR, "sample_list_AN2016_325_%s.dat" % year)
+    path = os.path.join(OUTDIR, "sample_list_AN2016_325_%s_%s.dat" % (nv, year))
     open(path, "w").write("\n".join(L) + "\n")
     return path, ok, bad
 
 
+def _latest_version(dsets):
+    # per era (dataset name up to the trailing -vN), keep the highest N
+    best = {}
+    for d in dsets:
+        m = re.match(r'(.*)-v(\d+)/NANOAOD$', d)
+        key, ver = (m.group(1), int(m.group(2))) if m else (d, -1)
+        if key not in best or ver > best[key][0]:
+            best[key] = (ver, d)
+    return [v[1] for v in sorted(best.values(), key=lambda t: t[1])]
+
+
 def build_data(year, nv):
     cfg = YEARS[year]
-    camp = cfg["data_camp"].format(NV=nv)
+    yy = cfg["data_yy"]
+    mid = "MiniAODv2_NanoAODv9" if nv == "v9" else "NanoAODv15"
     keep = cfg["data_keep"]
     pds = DATA_PD_2018 if year == "2018" else DATA_PD_RUN2
     L = ["# X/H->ZZ->2l2nu  DATA sample list  -  %s  (%s, NanoAOD %s)" % (
@@ -297,8 +310,10 @@ def build_data(year, nv):
         "#"]
     ok = bad = 0
     for pd in pds:
-        q = "dataset=/%s/%s*%s-*/NANOAOD" % (pd, cfg["data_run"], camp)
-        hits = sorted(set(das(q)))
+        q = "dataset=/%s/%s*UL%s_%s*/NANOAOD" % (pd, cfg["data_run"], yy, mid)
+        hits = [h for h in sorted(set(das(q)))
+                if "BTVNano" not in h and "JMENano" not in h]
+        hits = _latest_version(hits)
         if keep == "HIPM":
             hits = [h for h in hits if "HIPM" in h]
         elif keep == "NOT_HIPM":
@@ -311,7 +326,7 @@ def build_data(year, nv):
             L.append("# UNRESOLVED: %s%s" % (
                 q, "  (%s filter)" % keep if keep != "ALL" else ""))
             bad += 1
-    path = os.path.join(OUTDIR, "sample_list_AN2016_325_%s_data.dat" % year)
+    path = os.path.join(OUTDIR, "sample_list_AN2016_325_%s_%s_data.dat" % (nv, year))
     open(path, "w").write("\n".join(L) + "\n")
     return path, ok, bad
 
