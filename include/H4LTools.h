@@ -13,7 +13,10 @@
 class H4LTools
 {
 public:
-    H4LTools(int year, bool DEBUG_Main);
+    // doMELA=false skips constructing Mela and loading the g-constant splines
+    // (only the 4l channel needs them); MELA init is very slow / hangs on some
+    // batch nodes, so 2l2q / 2l2nu jobs should pass false.
+    H4LTools(int year, bool DEBUG_Main, bool doMELA = true);
     float elePtcut, MuPtcut, eleEtacut, MuEtacut, elesip3dCut, Musip3dCut, Zmass, MZ1cut, MZcutup, MZcutdown, MZZcut, HiggscutUp, HiggscutDown;
     float btag_deepJet_Loose, btag_deepJet_Medium, btag_deepJet_Tight;
     float eleLoosedxycut, eleLoosedzcut, MuLoosedxycut, MuLoosedzcut, MuTightdxycut, MuTightdzcut, MuTightTrackerLayercut, MuTightpTErrorcut, MuHighPtBound, eleIsocut, MuIsocut;
@@ -22,6 +25,7 @@ public:
     float HZZ2l2q_Leading_Lep_pT, HZZ2l2q_SubLeading_Lep_pT, HZZ2l2q_Lep_eta, HZZ2l2q_MZLepcutdown, HZZ2l2q_MZLepcutup;
     float HZZ2l2nu_Leading_Lep_pT, HZZ2l2nu_SubLeading_Lep_pT, HZZ2l2nu_Lep_eta, HZZ2l2nu_Pt_ll, HZZ2l2nu_M_ll_Window, HZZ2l2nu_dPhi_jetMET, HZZ2l2nu_MZLepcutdown, HZZ2l2nu_MZLepcutup;
     bool DEBUG;
+    H4LTools(bool isMC_);
 
     void InitializeElecut(float elePtcut_, float eleEtacut_, float eleLoosedxycut_, float eleLoosedzcut_, float eleIsocut_, float eleBDTWPLELP_, float eleBDTWPMELP_, float eleBDTWPHELP_, float eleBDTWPLEHP_, float eleBDTWPMEHP_, float eleBDTWPHEHP_)
     {
@@ -101,7 +105,8 @@ public:
         btag_deepJet_Tight = btag_deepJet_Tight_;
     }
 
-    void SetElectrons(float Electron_pt_, float Electron_eta_, float Electron_phi_, float Electron_mass_, float Electron_dxy_, float Electron_dz_,
+    //for v9
+    /*void SetElectrons(float Electron_pt_, float Electron_eta_, float Electron_phi_, float Electron_mass_, float Electron_dxy_, float Electron_dz_,
                       float Electron_mvaFall17V2Iso_WP90_, int Electron_pdgId_, float Electron_pfRelIso03_all_)
     {
         Electron_pt.push_back(Electron_pt_);
@@ -111,13 +116,30 @@ public:
         Electron_dxy.push_back(Electron_dxy_);
         Electron_dz.push_back(Electron_dz_);
         //Electron_sip3d.push_back(Electron_sip3d_);
-        //Electron_mvaFall17V2Iso.push_back(Electron_mvaFall17V2Iso_);
+        //Electron_mvaFall17V2Iso.push_back(Electron_mvaFall17V2Iso_); // no need
         Electron_mvaFall17V2Iso_WP90.push_back(Electron_mvaFall17V2Iso_WP90_);
         Electron_pdgId.push_back(Electron_pdgId_);
         Electron_pfRelIso03_all.push_back(Electron_pfRelIso03_all_);
+    }*/
+
+    //for v15
+    void SetElectrons(float Electron_pt_, float Electron_eta_, float Electron_phi_, float Electron_mass_, float Electron_dxy_, float Electron_dz_,
+        float Electron_mvaIso_WP90_, int Electron_pdgId_, float Electron_pfRelIso03_all_)
+    {
+    Electron_pt.push_back(Electron_pt_);
+    Electron_phi.push_back(Electron_phi_);
+    Electron_eta.push_back(Electron_eta_);
+    Electron_mass.push_back(Electron_mass_);
+    Electron_dxy.push_back(Electron_dxy_);
+    Electron_dz.push_back(Electron_dz_);
+    //Electron_sip3d.push_back(Electron_sip3d_);
+    Electron_mvaIso_WP90.push_back(Electron_mvaIso_WP90_);
+    Electron_pdgId.push_back(Electron_pdgId_);
+    Electron_pfRelIso03_all.push_back(Electron_pfRelIso03_all_);
     }
 
-    void SetJets(float Jet_pt_, float Jet_eta_, float Jet_phi_, float Jet_mass_, int Jet_jetId_, float Jet_btagDeepFlavB_,
+    // for v9
+    /*void SetJets(float Jet_pt_, float Jet_eta_, float Jet_phi_, float Jet_mass_, int Jet_jetId_, float Jet_btagDeepFlavB_,
                  int Jet_puId_)
     {
         Jet_pt.push_back(Jet_pt_);
@@ -127,26 +149,64 @@ public:
         Jet_btagDeepFlavB.push_back(Jet_btagDeepFlavB_);
         Jet_jetId.push_back(Jet_jetId_);
         Jet_puId.push_back(Jet_puId_); // 1 or 0?
+    }*/
+
+    //for v15
+    void SetJets(float Jet_pt_, float Jet_eta_, float Jet_phi_, float Jet_mass_, float Jet_btagDeepFlavB_,
+        float Jet_chEmEF_, float Jet_chHEF_, float Jet_neEmEF_, float Jet_neHEF_, float Jet_muEF_, int Jet_nConstituents_, int Jet_neMultiplicity_, int Jet_chMultiplicity_)
+   {
+
+
+    Jet_pt.push_back(Jet_pt_);
+    Jet_phi.push_back(Jet_phi_);
+    Jet_eta.push_back(Jet_eta_);
+    Jet_mass.push_back(Jet_mass_);
+    Jet_btagDeepFlavB.push_back(Jet_btagDeepFlavB_);
+    Jet_chEmEF.push_back(Jet_chEmEF_);
+    Jet_chHEF.push_back(Jet_chHEF_);
+    Jet_neEmEF.push_back(Jet_neEmEF_);
+    Jet_neHEF.push_back(Jet_neHEF_);
+    Jet_muEF.push_back(Jet_muEF_);
+    Jet_nConstituents.push_back(Jet_nConstituents_);
+    Jet_neMultiplicity.push_back(Jet_neMultiplicity_);
+    Jet_chMultiplicity.push_back(Jet_chMultiplicity_);
     }
 
     void SetFatJets(float Jet_pt_, float Jet_eta_, float Jet_phi_, float Jet_mass_, int Jet_jetId_, float Jet_btagDeepB_,
                     float Jet_PNZvsQCD_)
+    //void SetFatJets(float Jet_pt_, float Jet_eta_, float Jet_phi_, float Jet_mass_)
+    
     {
         FatJet_pt.push_back(Jet_pt_);
         FatJet_eta.push_back(Jet_eta_);
         FatJet_phi.push_back(Jet_phi_);
         FatJet_SDmass.push_back(Jet_mass_);
-        FatJet_jetId.push_back(Jet_jetId_);
-        FatJet_btagDeepB.push_back(Jet_btagDeepB_);
-        FatJet_PNZvsQCD.push_back(Jet_PNZvsQCD_); // 1 or 0?
+        FatJet_jetId.push_back(Jet_jetId_); //commented out for v15
+        //FatJet_btagDeepB.push_back(Jet_btagDeepB_);
+        FatJet_PNZvsQCD.push_back(Jet_PNZvsQCD_); // 1 or 0? //commented out for v15
     }
+
+    void SetGenJets(float GenJet_pt_, float GenJet_eta_, float GenJet_phi_, float GenJet_mass_)
+    {
+        GenJet_pt.push_back(GenJet_pt_);
+        GenJet_eta.push_back(GenJet_eta_);
+        GenJet_phi.push_back(GenJet_phi_);
+        GenJet_mass.push_back(GenJet_mass_);
+    }   
 
     void SetMET(float MET_pt_, float MET_phi_, float MET_sumEt_)
     {
         MET_pt = MET_pt_;
         MET_phi = MET_phi_;
         MET_sumEt = MET_sumEt_;
-        //	std::cout<<"Inside header file: MET_sumEt = " << MET_sumEt_ << "\t" << MET_sumEt << std::endl;
+    }
+
+    void SetPuppiMET(float PuppiMET_pt_, float PuppiMET_phi_, float PuppiMET_sumEt_)
+    {
+
+        PuppiMET_pt = PuppiMET_pt_;
+        PuppiMET_phi = PuppiMET_phi_;
+        PuppiMET_sumEt = PuppiMET_sumEt_;
     }
 
     void SetMuons(float Muon_pt_, float Muon_eta_, float Muon_phi_, float Muon_mass_, bool Muon_isGlobal_, bool Muon_isTracker_,
@@ -222,6 +282,9 @@ public:
     std::vector<float> MuonFsrPhi();
     std::vector<unsigned int> SelectedJets(std::vector<unsigned int> ele, std::vector<unsigned int> mu);
     std::vector<unsigned int> SelectedFatJets(std::vector<unsigned int> ele, std::vector<unsigned int> mu);
+    bool PassJetIDv15(unsigned int i, bool isPUPPI);
+    //std::vector<unsigned int> SelectedJets(std::vector<unsigned int> ele, std::vector<unsigned int> mu, std::vector<unsigned int>& genuineJets, std::vector<unsigned int>& puJets);
+
 
     std::vector<TLorentzVector> Zlist;
     std::vector<TLorentzVector> Zlistnofsr;
@@ -264,6 +327,7 @@ public:
     bool flag4e;
     bool flag4mu;
     bool flag2e2mu;
+    bool muonpt;
 
     bool isBoosted2l2q;
     bool flag2e;
@@ -338,6 +402,7 @@ public:
         Electron_dz.clear();
         Electron_sip3d.clear();
         Electron_mvaFall17V2Iso_WP90.clear();
+        Electron_mvaIso_WP90.clear();
         Electron_pdgId.clear();
         Electron_pfRelIso03_all.clear();
         Elechg.clear();
@@ -382,20 +447,38 @@ public:
         Jet_btagDeepFlavB.clear();
         Jet_jetId.clear();
         Jet_puId.clear();
+        Jet_chEmEF.clear();
+        Jet_chHEF.clear();
+        Jet_neEmEF.clear();
+        Jet_neHEF.clear();
+        Jet_muEF.clear();
+        Jet_nConstituents.clear();
+        Jet_neMultiplicity.clear();
+        Jet_chMultiplicity.clear();
         FatJet_pt.clear();
         FatJet_phi.clear();
         FatJet_eta.clear();
         FatJet_SDmass.clear();
-        FatJet_btagDeepB.clear();
+        //FatJet_btagDeepB.clear();
         FatJet_PNZvsQCD.clear();
         FatJet_jetId.clear();
+        GenJet_pt.clear();
+        GenJet_eta.clear();
+        GenJet_phi.clear();
+        GenJet_mass.clear();
         jetidx.clear();
         FatJetidx.clear();
+        
 
         // MET related variables
         MET_pt = -999.0;
         MET_phi = -999.0; ////new
         MET_sumEt = -999.0;
+
+        // Puppi MET related variables
+        PuppiMET_pt = -999.0;
+        PuppiMET_phi = -999.0; 
+        PuppiMET_sumEt = -999.0;
 
         // FsrPhoton related variables
         nFsrPhoton = 0;
@@ -408,6 +491,7 @@ public:
         // Generator  related variables
         nGenPart = 0;
         GenPart_pt.clear();
+        
 
         // Reconstructed variables
         Zlist.clear();
@@ -467,6 +551,7 @@ public:
         etaL2_emu = -999.0;
         phiL2_emu = -999.0;
         massL2_emu = -999.0;
+	    DeltaRl1l2 = -999.0;
 
         pTj1 = -999.0;
         etaj1 = -999.0;
@@ -502,6 +587,7 @@ public:
         flag2l = false;
         HZZ2l2qNu_isELE = false;
         HZZ2l2qNu_cutOppositeChargeFlag = false;
+	    muonpt = false;
 
         HZZ2l2nu_flag2e_met = false;
         HZZ2l2nu_flag2l_met = false;
@@ -522,6 +608,10 @@ public:
         ZZ_metsystemnofsr.SetPtEtaPhiM(0.0, 0.0, 0.0, 0.0);
         ZZ_emuCRsystemnofsr.SetPtEtaPhiM(0.0, 0.0, 0.0, 0.0);
         ZZ_emuCRsystem.SetPtEtaPhiM(0.0, 0.0, 0.0, 0.0);
+
+        //type 1 met correction
+        t1_px_offset = 0.0;
+        t1_py_offset = 0.0;
     }
 
     bool isFSR = true;
@@ -569,10 +659,11 @@ public:
     int cutMETlt150;
     int HZZ2l2nu_cutMETgT100;
     int HZZ2l2nu_cut2l_met_m40_180, HZZ2l2nu_cut2e_met_m40_180, HZZ2l2nu_cut2mu_met_m40_180;
-    int cut2e, cut2mu, cut2l, cut2l1J, cut2l2j, cut2l1Jor2j;
+    int cut2e, cut2mu, cut2l, cut2l1J, cut2l2j, cut2l1Jor2j, cut_mu_pt, cut_mu_eta, cut_mu_mediumid, cut_mu_isglobal_istracker, cut_mu_iso;
+    int cut_2mu_cutOppositeCharge;
     int HZZ2l2nu_cut2e_met, HZZ2l2nu_cut2mu_met, HZZ2l2qNu_cut2l;
     int cut4e, cut4mu, cut2e2mu, cutZZ4e, cutZZ4mu, cutZZ2e2mu, cutm4l4e, cutm4l4mu, cutm4l2e2mu, cutghost2e2mu, cutQCD2e2mu, cutLepPt2e2mu, cutghost4e, cutQCD4e, cutLepPt4e, cutghost4mu, cutQCD4mu, cutLepPt4mu;
-    float pTL1, etaL1, phiL1, massL1, pTL2, etaL2, phiL2, massL2, pTL3, etaL3, phiL3, massL3, pTL4, etaL4, phiL4, massL4;
+    float pTL1, etaL1, phiL1, massL1, pTL2, etaL2, phiL2, massL2, pTL3, etaL3, phiL3, massL3, pTL4, etaL4, phiL4, massL4, DeltaRl1l2;
     float pTL1_emu, etaL1_emu, phiL1_emu, massL1_emu, pTL2_emu, etaL2_emu, phiL2_emu, massL2_emu;
     float pTj1, etaj1, phij1, mj1, pTj2, etaj2, phij2, mj2;
     int HZZ2l2qNu_cutOppositeCharge;
@@ -592,18 +683,28 @@ public:
     int HZZ_emuCR_cutdPhiJetMET;
     int HZZ_emuCR_cutMETgT100;
 
+
 private:
     std::vector<float> Electron_pt, Electron_phi, Electron_eta, Electron_mass, Electron_dxy, Electron_dz, Electron_sip3d;
-    std::vector<float> Electron_mvaFall17V2Iso_WP90, Electron_pfRelIso03_all;
+    std::vector<float> Electron_mvaFall17V2Iso_WP90, Electron_pfRelIso03_all, Electron_mvaIso_WP90;
     std::vector<int> Electron_pdgId;
+    bool isMC;
 
     std::vector<float> Jet_pt, Jet_phi, Jet_eta, Jet_mass, Jet_btagDeepFlavB;
     std::vector<int> Jet_jetId, Jet_puId;
+    std::vector<float> Jet_chEmEF, Jet_chHEF, Jet_neEmEF, Jet_neHEF, Jet_muEF;
+    std::vector<int> Jet_nConstituents, Jet_neMultiplicity, Jet_chMultiplicity;
     float MET_pt, MET_phi;
     float MET_sumEt, MT_2l2nu;
+    float PuppiMET_pt, PuppiMET_phi;
+    float PuppiMET_sumEt;
+    float t1_px_offset;
+    float t1_py_offset;
 
-    std::vector<float> FatJet_pt, FatJet_phi, FatJet_eta, FatJet_SDmass, FatJet_btagDeepB, FatJet_PNZvsQCD;
+    std::vector<float> FatJet_pt, FatJet_phi, FatJet_eta, FatJet_SDmass, FatJet_PNZvsQCD;
+    //std::vector<float> FatJet_btagDeepB;
     std::vector<int> FatJet_jetId;
+    std::vector<float> GenJet_pt, GenJet_eta, GenJet_phi, GenJet_mass;
 
     std::vector<float> Muon_pt, Muon_phi, Muon_eta, Muon_mass, Muon_dxy, Muon_dz, Muon_sip3d, Muon_ptErr, Muon_pfRelIso03_all;
     std::vector<int> Muon_nTrackerLayers, Muon_genPartIdx, Muon_pdgId, Muon_charge;
@@ -616,10 +717,13 @@ private:
     unsigned nElectron, nMuon, nJet, nGenPart, nFsrPhoton;
 };
 
-H4LTools::H4LTools(int year, bool DEBUG_Main)
+H4LTools::H4LTools(int year, bool DEBUG_Main, bool doMELA)
 {
     DEBUG = DEBUG_Main;
     std::cout << "year" << " " << year << std::endl;
+    mela = nullptr;
+    spline_g4 = nullptr; spline_g2 = nullptr; spline_L1 = nullptr; spline_L1Zgs = nullptr;
+    if (doMELA) {
     mela = new Mela(13.0, 125.0, TVar::SILENT);
     mela->setCandidateDecayMode(TVar::CandidateDecay_ZZ);
     TFile *gConstant_g4 = TFile::Open("external/CoupleConstantsForMELA/gConstant_HZZ2e2mu_g4.root");
@@ -638,6 +742,9 @@ H4LTools::H4LTools(int year, bool DEBUG_Main)
     spline_L1Zgs = (TSpline *)gConstant_L1Zgs->Get("sp_tgfinal_HZZ2e2mu_SM_photoncut_over_tgfinal_HZZ2e2mu_L1Zgs");
     gConstant_L1Zgs->Close();
     delete gConstant_L1Zgs;
+    } else {
+        std::cout << "H4LTools: MELA disabled (doMELA=false) -- 4l discriminants will be -999" << std::endl;
+    }
 
     cut2e2mu = 0;
     cut4e = 0;
@@ -676,6 +783,12 @@ H4LTools::H4LTools(int year, bool DEBUG_Main)
     cut2e_m40_180 = 0;
     cut2mu_m40_180 = 0;
     cut2l_m40_180 = 0;
+    cut_mu_pt = 0;
+    cut_mu_eta = 0;
+    cut_mu_mediumid = 0;
+    cut_mu_isglobal_istracker = 0;
+    cut_mu_iso = 0;
+    cut_2mu_cutOppositeCharge = 0;
 
     HZZ2l2nu_cut2e_met = 0;
     HZZ2l2nu_cut2mu_met = 0;
@@ -692,5 +805,6 @@ H4LTools::H4LTools(int year, bool DEBUG_Main)
     HZZ_emuCR_cutbtag = 0;
     HZZ_emuCR_cutdPhiJetMET = 0;
     HZZ_emuCR_cutMETgT100 = 0;
+    
 }
 #endif

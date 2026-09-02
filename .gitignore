@@ -16,7 +16,6 @@ summary.dat
 CMSSW_10*.*
 condor_logs/
 *.jdl
-*.sh
 *.root
 *.0
 __init__.py
@@ -173,3 +172,4 @@ cutFlow.json
 yaml-cpp/
 nanoAOD_skim.wiki/
 *.bak
+!sample*.dat

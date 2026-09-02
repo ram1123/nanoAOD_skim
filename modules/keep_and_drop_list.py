@@ -65,6 +65,11 @@ keep_drop_rules_Data_MC = [
     "#keep nLowPtElectron*",
     "#keep Muon*",
     "#keep nMuon",
+    # NOTE: muonScaleRes20XX already produces Muon_correctedUp_pt / _correctedDown_pt
+    # (combined MUO scale+resolution). They are NOT kept because the rest of the Muon
+    # collection is dropped, so a downstream re-selection is impossible. Propagating
+    # the Rochester systematic needs a design decision (keep the full Muon/Electron/Jet
+    # collections for downstream re-selection, or a per-variation loop in H4LTools).
     "# keep Photon*",
     "# keep nPhoton",
     "#keep Tau*",
@@ -127,5 +132,9 @@ keep_drop_rules_Data_MC = [
     "keep Triggers_HZZ*",
     "keep *Weight",
     "keep *Weight*",
-    "keep Pz_neutrino"
+    "keep DeltaRl1l2",
+    "keep Pz_neutrino",
+    "keep pT_MET",
+    "keep Jet*",
+    "keep phi_MET"
 ]

@@ -1,0 +1,20 @@
+# HZZ->2l2nu  DATA sample list  -  2017  (NanoAOD v15, SingleMuon)
+# generated from /work/users/shar1172/copperheadV2_develop/configs/datasets/dataset_nanoAODv15_run2.yaml
+# by input_data_files/make_run2_lists_from_yaml.py
+#
+# total_lumi_pb (YAML): 41480.0
+#
+# data_B
+/SingleMuon/Run2017B-UL2017_NanoAODv15-v1/NANOAOD
+# data_C
+/SingleMuon/Run2017C-UL2017_NanoAODv15-v1/NANOAOD
+# data_D
+/SingleMuon/Run2017D-UL2017_NanoAODv15-v1/NANOAOD
+# data_E
+/SingleMuon/Run2017E-UL2017_NanoAODv15-v1/NANOAOD
+# data_F
+/SingleMuon/Run2017F-UL2017_NanoAODv15-v1/NANOAOD
+# data_G
+/SingleMuon/Run2017G-UL2017_NanoAODv15-v1/NANOAOD
+# data_H
+/SingleMuon/Run2017H-UL2017_NanoAODv15-v1/NANOAOD
