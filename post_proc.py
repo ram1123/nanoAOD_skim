@@ -153,24 +153,43 @@ def main():
     print("isFSR: {}".format(isFSR))
 
     if isMC:
+        # PU reweighting must run BEFORE H4LCppModule so that puWeight / puWeightUp /
+        # puWeightDown exist when H4LCppModule builds overallEventWeight.
+        # Use the UltraLegacy payloads (puWeight_UL20XX): they reweight to the UL
+        # data pileup profile with a *fixed* MC profile (mcPileupUL20XX.root).
+        # Do NOT use puAutoWeight_20XX here - those target the pre-UL (ReReco) data
+        # profile and rebuild the MC profile from each input file, so the weight
+        # depends on how files are split across jobs (non-reproducible).
+        # NOTE: puWeight_UL2016 has no preVFP/postVFP split (nanoAOD-tools ships one
+        # UL2016 file); a per-APV split needs the LUM correctionlib puWeights.json.gz.
+        # FIXME: No PU weight for 2022 (needs the LUM Run-3 puWeights.json.gz) -
+        # H4LCppModule then warns once and leaves puWeight out of overallEventWeight.
+        if year == 2018: modulesToRun.extend([puWeight_UL2018()])
+        if year == 2017: modulesToRun.extend([puWeight_UL2017()])
+        if year == 2016: modulesToRun.extend([puWeight_UL2016()])
+
         GenVarModule = lambda : GenVarsProducer() # FIXME: Gen variable producer module is not working
         modulesToRun.extend([H4LCppModule(), GenVarModule()])
         #modulesToRun.extend([H4LCppModule()])
         if (args.WithSyst):
-            jetmetCorrector = createJMECorrector(isMC=isMC, dataYear=year, jesUncert="All", jetType = "AK4PFchs")
+            # WARNING: this path only *stores* JES/JER-shifted jet/MET branches; it does
+            # NOT re-run the C++ selection per variation, and createJMECorrector shifts
+            # PF Type-I MET, not the PuppiMET the analysis uses. So JES/JER/unclustered-MET
+            # shape systematics are NOT propagated to M_T end-to-end yet (needs an
+            # H4LTools per-variation selection loop + PuppiMET shift branches).
+            # jetType must be AK4PFchs for NanoAODv9 and AK4PFPuppi for the v15 re-nano.
+            _ak4type = "AK4PFPuppi" if "NanoAODv15" in first_file else "AK4PFchs"
+            jetmetCorrector = createJMECorrector(isMC=isMC, dataYear=year, jesUncert="All", jetType = _ak4type)
             fatJetCorrector = createJMECorrector(isMC=isMC, dataYear=year, jesUncert="All", jetType = "AK8PFPuppi")
-            # btagSF = lambda: btagSFProducer("UL"+str(year), algo="deepjet",selectedWPs=['L','M','T','shape_corr'], sfFileName=sfFileName)
-            btagSF = lambda: btagSFProducer(era = "UL"+str(year), algo = "deepcsv")
+            # btag SF: the skim b-tags on DeepJet (Jet_btagDeepFlavB), so algo must be
+            # "deepjet"; kept off until the b-veto in ZZSelection_2l2nu() is re-enabled.
+            btagSF = lambda: btagSFProducer(era = "UL"+str(year), algo = "deepjet")
+            # PU-jet-ID SF: Run 2 CHS (v9) only - reads Jet_puId, which the v15 re-nano
+            # does not store. Do not enable for v15.
             puidSF = lambda: JetSFMaker("%s" % year)
-            #modulesToRun.extend([jetmetCorrector(), fatJetCorrector(), puidSF()])
-            modulesToRun.extend([jetmetCorrector(), fatJetCorrector(), puidSF(), muonScaleRes(), gammaSF()])
-            #modulesToRun.extend([jetmetCorrector()])
-            # modulesToRun.extend([jetmetCorrector(), fatJetCorrector(), btagSF(), puidSF()])
-
-        # FIXME: No PU weight for 2022
-        if year == 2018: modulesToRun.extend([puAutoWeight_2018()])
-        if year == 2017: modulesToRun.extend([puAutoWeight_2017()])
-        if year == 2016: modulesToRun.extend([puAutoWeight_2016()])
+            modulesToRun.extend([jetmetCorrector(), fatJetCorrector()])
+            #modulesToRun.extend([jetmetCorrector(), fatJetCorrector(), puidSF()])   # v9 only
+            #modulesToRun.extend([jetmetCorrector(), fatJetCorrector(), btagSF(), puidSF()])
 
         # INFO: Keep the `fwkJobReport=False` to trigger `haddnano.py`
         #            otherwise the output file will have larger size then expected. Reference: https://github.com/cms-nanoAOD/nanoAOD-tools/issues/249
@@ -185,7 +204,8 @@ def main():
     else:
         modulesToRun.extend([H4LCppModule()])
         if (args.WithSyst):
-            jetmetCorrector = createJMECorrector(isMC=isMC, dataYear=year, jesUncert="All", jetType = "AK4PFchs")
+            _ak4type = "AK4PFPuppi" if "NanoAODv15" in first_file else "AK4PFchs"
+            jetmetCorrector = createJMECorrector(isMC=isMC, dataYear=year, jesUncert="All", jetType = _ak4type)
             fatJetCorrector = createJMECorrector(isMC=isMC, dataYear=year, jesUncert="All", jetType = "AK8PFPuppi")
             modulesToRun.extend([jetmetCorrector(), fatJetCorrector()])
             #modulesToRun.extend([jetmetCorrector()])

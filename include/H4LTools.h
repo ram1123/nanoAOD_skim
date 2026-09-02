@@ -13,7 +13,10 @@
 class H4LTools
 {
 public:
-    H4LTools(int year, bool DEBUG_Main);
+    // doMELA=false skips constructing Mela and loading the g-constant splines
+    // (only the 4l channel needs them); MELA init is very slow / hangs on some
+    // batch nodes, so 2l2q / 2l2nu jobs should pass false.
+    H4LTools(int year, bool DEBUG_Main, bool doMELA = true);
     float elePtcut, MuPtcut, eleEtacut, MuEtacut, elesip3dCut, Musip3dCut, Zmass, MZ1cut, MZcutup, MZcutdown, MZZcut, HiggscutUp, HiggscutDown;
     float btag_deepJet_Loose, btag_deepJet_Medium, btag_deepJet_Tight;
     float eleLoosedxycut, eleLoosedzcut, MuLoosedxycut, MuLoosedzcut, MuTightdxycut, MuTightdzcut, MuTightTrackerLayercut, MuTightpTErrorcut, MuHighPtBound, eleIsocut, MuIsocut;
@@ -714,10 +717,13 @@ private:
     unsigned nElectron, nMuon, nJet, nGenPart, nFsrPhoton;
 };
 
-H4LTools::H4LTools(int year, bool DEBUG_Main)
+H4LTools::H4LTools(int year, bool DEBUG_Main, bool doMELA)
 {
     DEBUG = DEBUG_Main;
     std::cout << "year" << " " << year << std::endl;
+    mela = nullptr;
+    spline_g4 = nullptr; spline_g2 = nullptr; spline_L1 = nullptr; spline_L1Zgs = nullptr;
+    if (doMELA) {
     mela = new Mela(13.0, 125.0, TVar::SILENT);
     mela->setCandidateDecayMode(TVar::CandidateDecay_ZZ);
     TFile *gConstant_g4 = TFile::Open("external/CoupleConstantsForMELA/gConstant_HZZ2e2mu_g4.root");
@@ -736,6 +742,9 @@ H4LTools::H4LTools(int year, bool DEBUG_Main)
     spline_L1Zgs = (TSpline *)gConstant_L1Zgs->Get("sp_tgfinal_HZZ2e2mu_SM_photoncut_over_tgfinal_HZZ2e2mu_L1Zgs");
     gConstant_L1Zgs->Close();
     delete gConstant_L1Zgs;
+    } else {
+        std::cout << "H4LTools: MELA disabled (doMELA=false) -- 4l discriminants will be -999" << std::endl;
+    }
 
     cut2e2mu = 0;
     cut4e = 0;

@@ -38,16 +38,46 @@ export X509_USER_PROXY=${HZZ_PROXY:?}
 export LD_LIBRARY_PATH="$PKG/external/el8compat_lib:${LD_LIBRARY_PATH:-}"
 eval "$(external/JHUGenMELA/MELA/setup.sh env)"
 
+# XRootD: fail over to the next redirector quickly on a connection error
+# (Purdue XCache has been unreachable), but allow a slow bulk transfer to finish
+export XRD_REQUESTTIMEOUT=2400 XRD_STREAMTIMEOUT=600 XRD_TIMEOUTRESOLUTION=20 \
+       XRD_CONNECTIONWINDOW=20  XRD_CONNECTIONRETRY=1 XRD_REDIRECTLIMIT=8
+
 OUT="${HZZ_SAMPLE}_${HZZ_TAG}_Skim.root"
 CF="cutFlow_${HZZ_SAMPLE}_${HZZ_TAG}.json"
 ENTRIES=${HZZ_ENTRIES:-0}
 CHANNELS=${HZZ_CHANNELS:-2l2v}
 SYST=""; [ -n "${HZZ_SYST:-}" ] && SYST="--WithSyst"
 
-echo "    in : $HZZ_LFN"
+# --- fetch input to node-local disk, preserving the /store/... path so
+#     post_proc.py's year / isMC auto-detection (substring match) still works ---
+sleep $(( RANDOM % 45 ))                              # stagger concurrent XCache reads
+STOREREL="store/${HZZ_LFN##*/store/}"                 # store/mc/RunIISummer20UL17.../file.root
+LOCAL="$JOBTMP/$STOREREL"
+mkdir -p "$(dirname "$LOCAL")"
+LFN_NOPFX="/${HZZ_LFN##*://}"; LFN_NOPFX="/store/${LFN_NOPFX##*/store/}"   # /store/mc/.../file.root
+fetched=0
+for src in "$HZZ_LFN" \
+           "root://cms-xrd-global.cern.ch/$LFN_NOPFX" \
+           "root://cmsxrootd.fnal.gov/$LFN_NOPFX" \
+           "root://xrootd-cms.infn.it/$LFN_NOPFX" \
+           "root://xcache.cms.rcac.purdue.edu/$LFN_NOPFX"; do
+    for att in 1 2 3; do
+        echo "    xrdcp [$att] $src"
+        if timeout 2700 xrdcp --force --nopbar --retry 2 --retry-policy continue "$src" "$LOCAL"; then
+            fetched=1; break
+        fi
+        rm -f "$LOCAL"
+        sleep $((att * 20))
+    done
+    [ $fetched -eq 1 ] && break
+done
+[ $fetched -eq 1 ] && [ -s "$LOCAL" ] || { echo "ERROR: could not fetch $HZZ_LFN"; exit 3; }
+echo "    fetched $(du -h "$LOCAL" | cut -f1) -> $LOCAL"
+
 echo "    out: $HZZ_OUTDIR/$OUT"
 set -x
-python3 "$PKG/post_proc.py" -i "$HZZ_LFN" -outDir "$PKG" -o "$OUT" -c "$CF" \
+python3 "$PKG/post_proc.py" -i "$LOCAL" -outDir "$PKG" -o "$OUT" -c "$CF" \
         --entriesToRun "$ENTRIES" --channels "$CHANNELS" $SYST
 rc=$?
 set +x

@@ -75,14 +75,18 @@ def main():
                     default="/depot/cms/users/shar1172/HZZ2l2nu_skim/CMSSW_14_0_2")
     ap.add_argument("--depot_bind", default="/depot/cms/users/shar1172",
                     help="writable /depot subtree to bind into the cmssw-el9 container")
-    ap.add_argument("--redirector", default="root://xcache.cms.rcac.purdue.edu/")
+    # global redirector by default; the Purdue XCache
+    # (root://xcache.cms.rcac.purdue.edu/) is faster when up but has been
+    # unreachable -- job_inner.sh falls back through several redirectors anyway.
+    ap.add_argument("--redirector", default="root://cms-xrd-global.cern.ch/")
     ap.add_argument("--account", default="cms")
     ap.add_argument("--partition", default="hammer-nodes")
     ap.add_argument("--time", default="04:00:00")
     ap.add_argument("--mem", default="4G")
     ap.add_argument("--cpus", type=int, default=1)
-    ap.add_argument("--max_parallel", type=int, default=200,
-                    help="array throttle (%N)")
+    ap.add_argument("--max_parallel", type=int, default=50,
+                    help="array throttle (%N) -- keep modest so the Purdue XCache "
+                         "is not saturated by concurrent cold reads")
     ap.add_argument("--entries", type=int, default=0, help="post_proc --entriesToRun")
     ap.add_argument("--channels", default="2l2v", choices=["all", "4l", "2l2q", "2l2v"])
     ap.add_argument("--with_syst", action="store_true")

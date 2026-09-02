@@ -25,7 +25,10 @@ class HZZAnalysisCppProducer(Module):
         self.DEBUG = DEBUG
         self.cfgFile = cfgFile
         self.cfg = self._load_config(cfgFile)
-        self.worker = ROOT.H4LTools(self.year, self.DEBUG)
+        # MELA is only used by the 4l channel; constructing it is very slow and
+        # hangs on some batch nodes, so build it only when 4l is actually run.
+        doMELA = self.channels in ("all", "4l")
+        self.worker = ROOT.H4LTools(self.year, self.DEBUG, doMELA)
         self._initialize_worker(self.cfg)
         self.worker.isFSR = isFSR
         #self.corrector = corrector
@@ -159,6 +162,23 @@ class HZZAnalysisCppProducer(Module):
                 values.append(dictionary[key])
         return values
 
+    def _get_weight_branch(self, event, name, default, warn=None):
+        # nanoAOD-tools raises RuntimeError("Unknown branch ...") for an absent
+        # branch, which getattr(event, name, default) does NOT catch. Use this so a
+        # missing weight producer (e.g. no PU weight for 2022, or a broken re-nano
+        # without L1PreFiringWeight_*) degrades to `default` with a one-time warning
+        # instead of crashing the job.
+        try:
+            return getattr(event, name)
+        except Exception:
+            if warn is not None:
+                flag = "_warned_missing_" + name
+                if not getattr(self, flag, False):
+                    print("WARNING: branch '{}' absent for year {} MC - {} NOT "
+                          "applied (using {})".format(name, self.year, warn, default))
+                    setattr(self, flag, True)
+            return default
+
     def _initialize_counters(self):
         self.passAllEvts = 0
         self.passtrigEvts = 0
@@ -248,6 +268,34 @@ class HZZAnalysisCppProducer(Module):
 
         self.out.branch("pT_MET",  "F")
         self.out.branch("phi_MET",  "F")
+
+        # --- MC event weights (all = 1.0 for data) -------------------------------
+        # overallEventWeight        = genWeight * puWeight     * L1PreFiringWeight_Nom
+        # overallEventWeight_puUp   = genWeight * puWeightUp   * L1PreFiringWeight_Nom
+        # overallEventWeight_puDown = genWeight * puWeightDown * L1PreFiringWeight_Nom
+        # overallEventWeight_prefire{Up,Down} = genWeight * puWeight * L1PreFiringWeight_{Up,Dn}
+        # Each variation shifts exactly ONE factor. Only weight-based systematics
+        # that do NOT change the event selection are here (PU, L1 prefiring);
+        # JES/JER/unclustered-MET/lepton-scale need a per-variation re-run of the
+        # C++ selection and are NOT included.
+        #
+        # DOWNSTREAM CONTRACT (higgs_combine/make_shapes*.cpp must follow this):
+        #   yield = sum(overallEventWeight) * xsec * lumi / genEventSumw
+        #   - genEventSumw is the sum of genWeight over ALL generated events, from
+        #     the merged Runs tree (preserved by haddnano.py). Do NOT normalise by
+        #     the event count or by (nPos - nNeg): those differ from genEventSumw
+        #     for samples whose genWeight is not +/-1 (POWHEG MiNLO, aMC@NLO).
+        #   - Do NOT multiply by genWeight or puWeight again: they are folded in
+        #     here. The standalone genWeight / puWeight / L1PreFiringWeight_* branches
+        #     are kept for provenance/debugging only.
+        #   - LHEScaleWeight / LHEPdfWeight / PSWeight are deliberately NOT folded
+        #     in; apply them downstream as ratios renormalised to LHEScaleSumw /
+        #     LHEPdfSumw (scale/PDF) or genEventSumw (PS).
+        self.out.branch("overallEventWeight",            "F")
+        self.out.branch("overallEventWeight_puUp",        "F")
+        self.out.branch("overallEventWeight_puDown",      "F")
+        self.out.branch("overallEventWeight_prefireUp",   "F")
+        self.out.branch("overallEventWeight_prefireDown", "F")
 
         # Branches for 2l2q channel
         self.out.branch("massZ2_2j",  "F")
@@ -402,6 +450,29 @@ class HZZAnalysisCppProducer(Module):
             self.worker.SetObjectNumGen(event.nGenPart)
 
         keepIt = False
+
+        # --- MC event weights (see beginFile for the definition) ---
+        if isMC:
+            _is_run2 = int(self.year) in (2016, 2017, 2018)
+            _gen = self._get_weight_branch(event, "genWeight", 1.0)
+            _puN = self._get_weight_branch(event, "puWeight", 1.0,
+                                           warn="PU reweighting")           # puWeight_UL20XX
+            _puU = self._get_weight_branch(event, "puWeightUp", _puN)
+            _puD = self._get_weight_branch(event, "puWeightDown", _puN)
+            # L1PreFiringWeight_Nom = combined ECAL (2016-17) x muon (2016-18);
+            # for 2018 it is driven by the muon term and is NOT ~1.
+            _prN = self._get_weight_branch(event, "L1PreFiringWeight_Nom", 1.0,
+                                           warn="L1 prefiring" if _is_run2 else None)
+            _prU = self._get_weight_branch(event, "L1PreFiringWeight_Up", _prN)
+            _prD = self._get_weight_branch(event, "L1PreFiringWeight_Dn", _prN)
+            overallEventWeight             = _gen * _puN * _prN
+            overallEventWeight_puUp        = _gen * _puU * _prN
+            overallEventWeight_puDown      = _gen * _puD * _prN
+            overallEventWeight_prefireUp   = _gen * _puN * _prU
+            overallEventWeight_prefireDown = _gen * _puN * _prD
+        else:
+            overallEventWeight = overallEventWeight_puUp = overallEventWeight_puDown = \
+                overallEventWeight_prefireUp = overallEventWeight_prefireDown = 1.0
 
         passedTrig=False
         passedFullSelection=False
@@ -888,6 +959,12 @@ class HZZAnalysisCppProducer(Module):
         self.out.fillBranch("pT_MET",corr_pt) #for v15
         self.out.fillBranch("phi_MET",corr_phi) #for v15
 
+        self.out.fillBranch("overallEventWeight",             overallEventWeight)
+        self.out.fillBranch("overallEventWeight_puUp",        overallEventWeight_puUp)
+        self.out.fillBranch("overallEventWeight_puDown",      overallEventWeight_puDown)
+        self.out.fillBranch("overallEventWeight_prefireUp",   overallEventWeight_prefireUp)
+        self.out.fillBranch("overallEventWeight_prefireDown", overallEventWeight_prefireDown)
+
         self.out.fillBranch("mass4l",mass4l)
         self.out.fillBranch("pT4l",pT4l)
         self.out.fillBranch("eta4l",eta4l)
@@ -938,8 +1015,12 @@ class HZZAnalysisCppProducer(Module):
         self.out.fillBranch("HZZ2l2qNu_nMediumBtagJets",HZZ2l2qNu_nMediumBtagJets)
         self.out.fillBranch("HZZ2l2qNu_nLooseBtagJets",HZZ2l2qNu_nLooseBtagJets)
 
-        # FIXME: Add weight branch having following:
-        # puWeight*btagWeight_DeepCSVB*L1PreFiringWeight_ECAL_Nom*L1PreFiringWeight_Muon_Nom*L1PreFiringWeight_Nom
+        # NOTE: overallEventWeight (= genWeight * puWeight * L1PreFiringWeight_Nom)
+        # and its PU / prefiring up-down variations are filled above.
+        # STILL MISSING (need a POG payload + verified WP key, or a per-variation
+        # re-run of the C++ selection): lepton reco/ID/iso/trigger SFs, b-tag SF,
+        # electron energy scale/smearing, JES/JER/unclustered-MET shape variations,
+        # Rochester muon-scale propagation.
 
         return keepIt
 

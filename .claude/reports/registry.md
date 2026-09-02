@@ -6,6 +6,7 @@ conversation log. One row per report; newest first.
 
 | Date | Type | Topic | Outcome | Report |
 |---|---|---|---|---|
+| 2026-09-02 | Implementation | Systematic uncertainties review + weight branches | Partial — `overallEventWeight` (+PU/prefire up-down) implemented & smoke-tested; PU producer fixed to `puWeight_UL20XX`; lepton/b-tag SF + JES/JER/MET-shape deferred | implementations/2026-09-02_systematics.md |
 
 <!--
 Add a row when a report is written under reports/{decisions,investigations,implementations}/.
