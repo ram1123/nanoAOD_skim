@@ -4,10 +4,6 @@ Responsible: **analysis-specific matrix-element discriminants — no CMS POG
 recommendation applies.** This file documents how MELA is wired into the skim so a
 review can check internal consistency, not compliance.
 
-> This replaces the H→μμ `ggh-bdt.md` / `vbf-dnn.md` files, which do not apply to
-> this analysis. There is no BDT or DNN here; the 4l channel uses JHUGenMELA
-> matrix-element kinematic discriminants. The 2l2q / 2l2nu channels currently
-> compute no MELA discriminant.
 
 ## Stored sources
 

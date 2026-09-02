@@ -1,17 +1,10 @@
 # Luminosity — Stored CMS Recommendations
 
-> ## ⚠ Ported from the H→μμ (copperhead) analysis — re-verify before use
->
 > This repo is the **H→ZZ→4l / 2l2q / 2l2nu NanoAOD-tools skim**
 > (`post_proc.py` → `modules/H4LCppModule.py` → C++ `src/H4LTools.cc`; cut values in
-> `config/Input_<year>.yml`). It is **not** the coffea `src/copperhead_processor.py` /
-> `configs/parameters/*.yaml` / stage-1/stage-2 pipeline this file was written for —
-> ignore every reference to those paths, `src/corrections/*`, `run_stage*.py`, etc.
-> - Eras here: **Run 2 UL 2016 / 2017 / 2018** and some **2022**; NanoAOD **v9** and
->   **v15**. Run-3-2023/2024/2025-specific rows below do **not** apply.
-> - The CMS-POG recommendation content below is retained as a starting point and
->   **must be re-checked against this analysis's H→ZZ note / HIG group** before it is
->   treated as a requirement.
+> `config/Input_<year>.yml`). 
+> - Eras here: **Run 2 UL 2016 / 2017 / 2018**; NanoAOD **v9** and
+>   **v15**. Run-3-2022/2023/2024/2025/2026-specific rows below do **not** apply.
 > - This-repo pointers: golden-JSON lumimask applied to **data** by `PostProcessor(jsonInput=...)` — file picked per year in `post_proc.py` from `data/golden_json/`. Per-year integrated lumi is `config/Input_<year>.yml` `lumi:`. `scripts/analysis/dump_lumi.py` + `LumiDumper.py` dump processed run→LS. Use the **Run 2 13 TeV** LUM recommendation; the Run 3 sections below are largely out of scope.
 
 
