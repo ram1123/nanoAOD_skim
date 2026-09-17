@@ -136,10 +136,10 @@ def main():
         modulesToRun.extend([muonScaleRes2018()])
 
 
-    #if cfgFile is None:
-        #year = 2018   
-        #cfgFile = "config/Input_2018.yml"
-        #modulesToRun.extend([muonScaleRes2018()])
+    if cfgFile is None:
+        year = 2018   
+        cfgFile = "config/Input_2018.yml"
+        modulesToRun.extend([muonScaleRes2018()])
 
     H4LCppModule = lambda: HZZAnalysisCppProducer(year=year, cfgFile=cfgFile,
                                                   isMC=isMC, isFSR=isFSR,
@@ -154,6 +154,20 @@ def main():
     print("isFSR: {}".format(isFSR))
 
     if isMC:
+        # PU reweighting must run BEFORE H4LCppModule so that puWeight / puWeightUp /
+        # puWeightDown exist when H4LCppModule builds overallEventWeight.
+        # Use the UltraLegacy payloads (puWeight_UL20XX): they reweight to the UL
+        # data pileup profile with a *fixed* MC profile (mcPileupUL20XX.root).
+        # Do NOT use puAutoWeight_20XX here - those target the pre-UL (ReReco) data
+        # profile and rebuild the MC profile from each input file, so the weight
+        # depends on how files are split across jobs (non-reproducible).
+        # NOTE: puWeight_UL2016 has no preVFP/postVFP split (nanoAOD-tools ships one
+        # UL2016 file); a per-APV split needs the LUM correctionlib puWeights.json.gz.
+        # FIXME: No PU weight for 2022 (needs the LUM Run-3 puWeights.json.gz) -
+        # H4LCppModule then warns once and leaves puWeight out of overallEventWeight.
+        if year == 2018: modulesToRun.extend([puWeight_UL2018()])
+        if year == 2017: modulesToRun.extend([puWeight_UL2017()])
+        if year == 2016: modulesToRun.extend([puWeight_UL2016()])
         GenVarModule = lambda : GenVarsProducer() # FIXME: Gen variable producer module is not working
         modulesToRun.extend([H4LCppModule(), GenVarModule()])
         #modulesToRun.extend([H4LCppModule()])
@@ -169,9 +183,9 @@ def main():
             # modulesToRun.extend([jetmetCorrector(), fatJetCorrector(), btagSF(), puidSF()])
 
         # FIXME: No PU weight for 2022
-        if year == 2018: modulesToRun.extend([puAutoWeight_2018()])
-        if year == 2017: modulesToRun.extend([puAutoWeight_2017()])
-        if year == 2016: modulesToRun.extend([puAutoWeight_2016()])
+        #if year == 2018: modulesToRun.extend([puAutoWeight_2018()])
+        #if year == 2017: modulesToRun.extend([puAutoWeight_2017()])
+        #if year == 2016: modulesToRun.extend([puAutoWeight_2016()])
 
         # INFO: Keep the `fwkJobReport=False` to trigger `haddnano.py`
         #            otherwise the output file will have larger size then expected. Reference: https://github.com/cms-nanoAOD/nanoAOD-tools/issues/249

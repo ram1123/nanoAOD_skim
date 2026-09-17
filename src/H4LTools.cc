@@ -1107,8 +1107,7 @@ bool H4LTools::GetZ1_2l2qOR2l2nu()
         std::cout << "nTightEleChgSum: " << nTightEleChgSum << "\tnTightMuChgSum: " << nTightMuChgSum << std::endl;
 
     // Check if the absolute values of nTightEleChgSum and nTightMuChgSum are not zero
-    //if (std::abs(nTightEleChgSum) == 0 || std::abs(nTightMuChgSum) == 0)
-    if ((nTightEle == 2 && std::abs(nTightEleChgSum == 0)) || (nTightMu == 2 && std::abs(nTightMuChgSum == 0)))
+    if ((nTightEle == 2 && std::abs(nTightEleChgSum) == 0) || (nTightMu == 2 && std::abs(nTightMuChgSum) == 0))
     {
         HZZ2l2qNu_cutOppositeCharge++;
         HZZ2l2qNu_cutOppositeChargeFlag = true;
