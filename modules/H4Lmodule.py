@@ -78,7 +78,8 @@ class HZZAnalysisProducer(Module):
         nZXCRFailedLeptons=0;
         
         HLTs = Collection(event, "HLT")
-        if (Helper.PassTrig(HLTs)): passedTrig = True
+        #if (Helper.PassTrig(HLTs)): passedTrig = True
+        if (Helper.PassTrig(event, cfg, TriggerCh)): passedTrig = True
         else: return keepIt
             
         electrons = Collection(event, "Electron")
