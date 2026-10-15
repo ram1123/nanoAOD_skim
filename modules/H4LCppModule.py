@@ -125,12 +125,12 @@ class HZZAnalysisCppProducer(Module):
             'pTcut', 'Etacut', 'Isocut', 'dRlcut', 'dRlOverPtcut'
         ]))
 
-        self.worker.InitializeJetcut(*self._get_nested_values(cfg['Jet'], ['pTcut', 'Etacut']))
+        self.worker.InitializeJetcut(*self._get_nested_values(cfg['Jet'], ['pTcut', 'Etacut', ['UParTAK4_btag', 'Etacut']]))
 
         self.worker.InitializeEvtCut(*self._get_nested_values(cfg, ['MZ1cut', 'MZZcut',
                                                                     ['Higgscut', 'down'], ['Higgscut', 'up'],
                                                                     'Zmass', ['MZcut', 'down'], ['MZcut', 'up'],
-                                                                    ['Jet','deepJet_btag','Loose'], ['Jet','deepJet_btag','Medium'], ['Jet','deepJet_btag','Tight']]))
+                                                                    ['Jet','UParTAK4_btag','Loose'], ['Jet','UParTAK4_btag','Medium'], ['Jet','UParTAK4_btag','Tight']]))
 
         if self.channels == "all" or self.channels == "2l2q":
             self.worker.InitializeHZZ2l2qCut(*self._get_nested_values(cfg['HZZ2l2q'],
@@ -141,6 +141,11 @@ class HZZAnalysisCppProducer(Module):
             self.worker.InitializeHZZ2l2nuCut(*self._get_nested_values(cfg['HZZ2l2nu'],
                                                                    ['Leading_Lep_pT', 'SubLeading_Lep_pT', 'Lep_eta', 'Pt_ll',
                                                                     'M_ll_Window', 'dPhi_jetMET', ['MZLepcut', 'down'], ['MZLepcut', 'up']]))
+            self.worker.InitializeVetoLepCut(*self._get_nested_values(cfg['HZZ2l2nu'],
+                                                                   [['VetoLep', 'Ele_pT'], ['VetoLep', 'Ele_Iso'],
+                                                                    ['VetoLep', 'Mu_pT'], ['VetoLep', 'Mu_Iso']]))
+            self.worker.InitializeEmuCRCut(*self._get_nested_values(cfg['HZZ2l2nu'],
+                                                                   [['emuCR', 'M_ll_Window'], ['emuCR', 'Pt_ll']]))
 
     def _get_nested_values(self, dictionary, keys):
         # Raise a clear error for a missing key instead of passing a placeholder
@@ -315,6 +320,7 @@ class HZZAnalysisCppProducer(Module):
 
         # Branches for 2l2nu channel: VBF jets and dijet kinematics
         self.out.branch("HZZ2l2qNu_nJets", "I")
+        self.out.branch("HZZ2l2nu_nExtraLep", "I")
 
         self.out.branch("HZZ2l2qNu_nTightBtagJets", "I")
         self.out.branch("HZZ2l2qNu_nMediumBtagJets", "I")
@@ -596,7 +602,6 @@ class HZZAnalysisCppProducer(Module):
         # Photons = Collection(event, "Photon")
         jets = Collection(event, "Jet")
         FatJets = Collection(event, "FatJet")
-        met = Object(event, "MET", None)
         puppimet = Object(event, "PuppiMET", None)
         if self.year == 2018:
             corrector = METPhiCorrector(
@@ -652,7 +657,7 @@ class HZZAnalysisCppProducer(Module):
         for xe in electrons:
             #self.worker.SetElectrons(xe.pt, xe.eta, xe.phi, xe.mass, xe.dxy,
                                       #xe.dz, xe.mvaFall17V2Iso_WP90, xe.pdgId, xe.pfRelIso03_all) #for v9
-            self.worker.SetElectrons(xe.pt, xe.eta, xe.phi, xe.mass, xe.dxy, xe.dz, xe.mvaIso_WP90, xe.pfRelIso03_all, xe.pdgId) # for v15
+            self.worker.SetElectrons(xe.pt, xe.eta, xe.phi, xe.mass, xe.dxy, xe.dz, xe.mvaIso_WP90, xe.pfRelIso03_all, xe.pdgId, xe.deltaEtaSC) # for v15
             if self.DEBUG:
                 print("Electrons: pT, eta: {}, {}".format(xe.pt, xe.eta))
 
@@ -672,13 +677,12 @@ class HZZAnalysisCppProducer(Module):
         # for v15
         for xj in jets:
             # argument order must match H4LTools.h SetJets: chEmEF, chHEF, neEmEF, neHEF, muEF, nConstituents, neMultiplicity, chMultiplicity
-            self.worker.SetJets(xj.pt,xj.eta,xj.phi,xj.mass,xj.btagDeepFlavB, xj.chEmEF, xj.chHEF, xj.neEmEF, xj.neHEF, xj.muEF, xj.nConstituents, xj.neMultiplicity, xj.chMultiplicity)
+            self.worker.SetJets(xj.pt,xj.eta,xj.phi,xj.mass,xj.btagUParTAK4B, xj.chEmEF, xj.chHEF, xj.neEmEF, xj.neHEF, xj.muEF, xj.nConstituents, xj.neMultiplicity, xj.chMultiplicity)
 
         #for xj in FatJets:
             #self.worker.SetFatJets(xj.pt, xj.eta, xj.phi, xj.msoftdrop, xj.jetId, xj.btagDeepB, xj.particleNet_ZvsQCD)
             #self.worker.SetFatJets(xj.pt, xj.eta, xj.phi, xj.msoftdrop)
 
-        #self.worker.SetMET(corr_pt, corr_phi, met.sumEt) #for v9
         #self.worker.SetPuppiMET(puppimet.pt, puppimet.phi, puppimet.sumEt) # for v15
         self.worker.SetPuppiMET(corr_pt, corr_phi, puppimet.sumEt)
         if self.DEBUG:
@@ -697,6 +701,7 @@ class HZZAnalysisCppProducer(Module):
         passZZ2l2nu_emuCR_Selection = False    # for 2l2nu emu control region
         HZZ2l2nu_ifVBF = False
         HZZ2l2qNu_isELE = False
+        HZZ2l2nu_nExtraLep = -1
         HZZ2l2nu_isEMuCR = False
         HZZ2l2qNu_cutOppositeChargeFlag = False
         isBoosted2l2q = False
@@ -727,6 +732,7 @@ class HZZAnalysisCppProducer(Module):
         HZZ2l2nu_isEMuCR = self.worker.HZZ2l2nu_isEMuCR
         HZZ2l2qNu_cutOppositeChargeFlag = self.worker.HZZ2l2qNu_cutOppositeChargeFlag
         HZZ2l2qNu_nJets = self.worker.HZZ2l2qNu_nJets
+        HZZ2l2nu_nExtraLep = self.worker.HZZ2l2nu_nExtraLep
         HZZ2l2qNu_nTightBtagJets = self.worker.HZZ2l2qNu_nTightBtagJets
         HZZ2l2qNu_nMediumBtagJets = self.worker.HZZ2l2qNu_nMediumBtagJets
         HZZ2l2qNu_nLooseBtagJets = self.worker.HZZ2l2qNu_nLooseBtagJets
@@ -803,16 +809,13 @@ class HZZAnalysisCppProducer(Module):
             phiZ2_met = self.worker.Z2_met.Phi()
             pTZ2_met = self.worker.Z2_met.Pt()
             EneZ2_met = self.worker.Z2_met.E()
-            MT_2l2nu = self.worker.ZZ_metsystem.Mt()
+            MT_2l2nu = self.worker.MT_2l2nu
 
             # |dphi(Z, MET)|: computed and stored as an output branch; NO cut applied
             # (AN-2016/325 4.4.7 uses |dphi(Z, MET)| > 0.5 - left to a downstream selection).
             HZZ2l2nu_dPhi_ZMET = abs(ROOT.TVector2.Phi_mpi_pi(self.worker.Z1.Phi() - corr_phi))
 
-            HZZ2l2nu_ZZmT = self.worker.ZZ_metsystem.Mt()
-            HZZ2l2nu_ZZpT = self.worker.ZZ_metsystem.Pt()
-
-            HZZ2l2nu_ZZmT = self.worker.ZZ_metsystem.Mt()
+            HZZ2l2nu_ZZmT = self.worker.MT_2l2nu  # AN-2016/325 Eq. 6 (same as MT_2l2nu)
             HZZ2l2nu_ZZpT = self.worker.ZZ_metsystem.Pt()
             
 
@@ -1012,6 +1015,7 @@ class HZZAnalysisCppProducer(Module):
         self.out.fillBranch("HZZ2l2nu_isEMuCR",HZZ2l2nu_isEMuCR)
         self.out.fillBranch("HZZ2l2qNu_cutOppositeChargeFlag",HZZ2l2qNu_cutOppositeChargeFlag)
         self.out.fillBranch("HZZ2l2qNu_nJets",HZZ2l2qNu_nJets)
+        self.out.fillBranch("HZZ2l2nu_nExtraLep",HZZ2l2nu_nExtraLep)
         self.out.fillBranch("HZZ2l2qNu_nTightBtagJets",HZZ2l2qNu_nTightBtagJets)
         self.out.fillBranch("HZZ2l2qNu_nMediumBtagJets",HZZ2l2qNu_nMediumBtagJets)
         self.out.fillBranch("HZZ2l2qNu_nLooseBtagJets",HZZ2l2qNu_nLooseBtagJets)

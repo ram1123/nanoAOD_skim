@@ -63,8 +63,8 @@ Triggers_HZZ2l2nu:
 
 Triggers_HZZ2l2nu_SingleLep:
     # Single Mu
-    - event.HLT_IsoMu20
-    - event.HLT_IsoMu24
+    #- event.HLT_IsoMu20   # prescaled in 2017
+    #- event.HLT_IsoMu24   # prescaled in part of 2017; IsoMu27 is the unprescaled path
     - event.HLT_IsoMu27
     # Single Electron
     #- event.HLT_Ele32_WPTight_Gsf
@@ -153,10 +153,14 @@ FsrPhoton:
 Jet:
     pTcut: 30
     Etacut: 4.7
-    deepJet_btag:
-        Loose: 0.0494
-        Medium: 0.2770
-        Tight: 0.7264
+    # UParTAK4 (Jet_btagUParTAK4B) WPs for UL NanoAODv15.
+    # https://btv-wiki.docs.cern.ch/ScaleFactors/Run2UL2017NanoAODv15/#ak4-b-tagging
+    # = UParTAK4_wp_values in /cvmfs/cms-griddata.cern.ch/cat/metadata/BTV/Run2-2017-UL-NanoAODv15/latest/btagging.json.gz
+    UParTAK4_btag:
+        Loose: 0.0331
+        Medium: 0.1776
+        Tight: 0.5755
+        Etacut: 2.4   # b-tagging acceptance
 
 HZZ2l2q:
     Leading_Lep_pT: 40
@@ -171,8 +175,20 @@ HZZ2l2nu:
     SubLeading_Lep_pT: 25.0
     Lep_eta: 2.5
     Pt_ll: 10.0
-    M_ll_Window: 0.0
+    M_ll_Window: 80.0   # |m_ll - mZ| < M_ll_Window (loose skim; tighten downstream)
     dPhi_jetMET: 0.0
     MZLepcut:
         down: 60.0
         up: 120.0
+    # Extra-lepton veto: events with a loose lepton beyond the Z1 / emu pair are rejected
+    # in ZZSelection_2l2nu (count stored as HZZ2l2nu_nExtraLep).
+    # AN-2016/325 4.4.4 values -- unverified for UL / NanoAOD v15.
+    VetoLep:
+        Ele_pT: 10.0
+        Ele_Iso: 0.15
+        Mu_pT: 10.0
+        Mu_Iso: 0.2
+    # emu control region: |m_emu - mZ| < M_ll_Window and pT_emu > Pt_ll
+    emuCR:
+        M_ll_Window: 160.0
+        Pt_ll: 25.0

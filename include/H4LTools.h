@@ -18,7 +18,7 @@ public:
     // batch nodes, so 2l2q / 2l2nu jobs should pass false.
     H4LTools(int year, bool DEBUG_Main, bool doMELA = true);
     float elePtcut, MuPtcut, eleEtacut, MuEtacut, elesip3dCut, Musip3dCut, Zmass, MZ1cut, MZcutup, MZcutdown, MZZcut, HiggscutUp, HiggscutDown;
-    float btag_deepJet_Loose, btag_deepJet_Medium, btag_deepJet_Tight;
+    float btag_UParTAK4_Loose, btag_UParTAK4_Medium, btag_UParTAK4_Tight, btag_Etacut;
     float eleLoosedxycut, eleLoosedzcut, MuLoosedxycut, MuLoosedzcut, MuTightdxycut, MuTightdzcut, MuTightTrackerLayercut, MuTightpTErrorcut, MuHighPtBound, eleIsocut, MuIsocut;
     float fsrphotonPtcut, fsrphotonEtacut, fsrphotonIsocut, fsrphotondRlcut, fsrphotondRlOverPtcut, JetPtcut, JetEtacut;
     float eleBDTWPLELP, eleBDTWPMELP, eleBDTWPHELP, eleBDTWPLEHP, eleBDTWPMEHP, eleBDTWPHEHP;
@@ -64,6 +64,25 @@ public:
         HZZ2l2nu_MZLepcutup = HZZ2l2nu_MZLepcutup_;
     }
 
+    // emu control region: |m_emu - mZ| window and pT_emu threshold (defaults = previous hard-coded values)
+    float HZZemuCR_M_ll_Window = 160.0, HZZemuCR_Pt_ll = 25.0;
+    void InitializeEmuCRCut(float HZZemuCR_M_ll_Window_, float HZZemuCR_Pt_ll_)
+    {
+        HZZemuCR_M_ll_Window = HZZemuCR_M_ll_Window_;
+        HZZemuCR_Pt_ll = HZZemuCR_Pt_ll_;
+    }
+
+    // Extra-lepton veto. Defaults are AN-2016/325 4.4.4 values (unverified for UL / v15);
+    // they are used when InitializeVetoLepCut is not called (e.g. --channels 2l2q).
+    float vetoElePtcut = 10.0, vetoEleIsocut = 0.15, vetoMuPtcut = 10.0, vetoMuIsocut = 0.2;
+    void InitializeVetoLepCut(float vetoElePtcut_, float vetoEleIsocut_, float vetoMuPtcut_, float vetoMuIsocut_)
+    {
+        vetoElePtcut = vetoElePtcut_;
+        vetoEleIsocut = vetoEleIsocut_;
+        vetoMuPtcut = vetoMuPtcut_;
+        vetoMuIsocut = vetoMuIsocut_;
+    }
+
     void InitializeMucut(float MuPtcut_, float MuEtacut_, float MuLoosedxycut_, float MuLoosedzcut_, float MuIsocut_, float MuTightdxycut_, float MuTightdzcut_, float MuTightTrackerLayercut_, float MuTightpTErrorcut_, float MuHighPtBound_)
     {
         MuPtcut = MuPtcut_;
@@ -86,12 +105,13 @@ public:
         fsrphotondRlcut = fsrphotondRlcut_;
         fsrphotondRlOverPtcut = fsrphotondRlOverPtcut_;
     }
-    void InitializeJetcut(float JetPtcut_, float JetEtacut_)
+    void InitializeJetcut(float JetPtcut_, float JetEtacut_, float btag_Etacut_)
     {
         JetPtcut = JetPtcut_;
         JetEtacut = JetEtacut_;
+        btag_Etacut = btag_Etacut_;
     }
-    void InitializeEvtCut(float MZ1cut_, float MZZcut_, float HiggscutDown_, float HiggscutUp_, float Zmass_, float MZcutdown_, float MZcutup_, float btag_deepJet_Loose_, float btag_deepJet_Medium_, float btag_deepJet_Tight_)
+    void InitializeEvtCut(float MZ1cut_, float MZZcut_, float HiggscutDown_, float HiggscutUp_, float Zmass_, float MZcutdown_, float MZcutup_, float btag_UParTAK4_Loose_, float btag_UParTAK4_Medium_, float btag_UParTAK4_Tight_)
     {
         MZ1cut = MZ1cut_;
         MZZcut = MZZcut_;
@@ -100,9 +120,9 @@ public:
         Zmass = Zmass_;
         MZcutdown = MZcutdown_;
         MZcutup = MZcutup_;
-        btag_deepJet_Loose = btag_deepJet_Loose_;
-        btag_deepJet_Medium = btag_deepJet_Medium_;
-        btag_deepJet_Tight = btag_deepJet_Tight_;
+        btag_UParTAK4_Loose = btag_UParTAK4_Loose_;
+        btag_UParTAK4_Medium = btag_UParTAK4_Medium_;
+        btag_UParTAK4_Tight = btag_UParTAK4_Tight_;
     }
 
     //for v9
@@ -124,7 +144,7 @@ public:
 
     //for v15
     void SetElectrons(float Electron_pt_, float Electron_eta_, float Electron_phi_, float Electron_mass_, float Electron_dxy_, float Electron_dz_,
-        float Electron_mvaIso_WP90_, float Electron_pfRelIso03_all_, int Electron_pdgId_)
+        float Electron_mvaIso_WP90_, float Electron_pfRelIso03_all_, int Electron_pdgId_, float Electron_deltaEtaSC_)
     {
     Electron_pt.push_back(Electron_pt_);
     Electron_phi.push_back(Electron_phi_);
@@ -136,6 +156,7 @@ public:
     Electron_mvaIso_WP90.push_back(Electron_mvaIso_WP90_);
     Electron_pdgId.push_back(Electron_pdgId_);
     Electron_pfRelIso03_all.push_back(Electron_pfRelIso03_all_);
+    Electron_deltaEtaSC.push_back(Electron_deltaEtaSC_);
     }
 
     // for v9
@@ -152,7 +173,7 @@ public:
     }*/
 
     //for v15
-    void SetJets(float Jet_pt_, float Jet_eta_, float Jet_phi_, float Jet_mass_, float Jet_btagDeepFlavB_,
+    void SetJets(float Jet_pt_, float Jet_eta_, float Jet_phi_, float Jet_mass_, float Jet_btagUParTAK4B_,
         float Jet_chEmEF_, float Jet_chHEF_, float Jet_neEmEF_, float Jet_neHEF_, float Jet_muEF_, int Jet_nConstituents_, int Jet_neMultiplicity_, int Jet_chMultiplicity_)
    {
 
@@ -161,7 +182,7 @@ public:
     Jet_phi.push_back(Jet_phi_);
     Jet_eta.push_back(Jet_eta_);
     Jet_mass.push_back(Jet_mass_);
-    Jet_btagDeepFlavB.push_back(Jet_btagDeepFlavB_);
+    Jet_btagUParTAK4B.push_back(Jet_btagUParTAK4B_);
     Jet_chEmEF.push_back(Jet_chEmEF_);
     Jet_chHEF.push_back(Jet_chHEF_);
     Jet_neEmEF.push_back(Jet_neEmEF_);
@@ -193,13 +214,6 @@ public:
         GenJet_phi.push_back(GenJet_phi_);
         GenJet_mass.push_back(GenJet_mass_);
     }   
-
-    void SetMET(float MET_pt_, float MET_phi_, float MET_sumEt_)
-    {
-        MET_pt = MET_pt_;
-        MET_phi = MET_phi_;
-        MET_sumEt = MET_sumEt_;
-    }
 
     void SetPuppiMET(float PuppiMET_pt_, float PuppiMET_phi_, float PuppiMET_sumEt_)
     {
@@ -343,12 +357,12 @@ public:
     // FIXME: For now these b-tag numbers are only for 2l2nu case
     bool HZZ2l2nu_ifVBF;
     bool HZZ2l2nu_isEMuCR;
+    int HZZ2l2nu_nExtraLep; // leptons beyond the Z1 / emu pair passing the veto definition (-1 = not computed)
     int HZZ2l2qNu_nJets;
     int HZZ2l2qNu_nTightBtagJets;
     int HZZ2l2qNu_nMediumBtagJets;
     int HZZ2l2qNu_nLooseBtagJets;
     float minDeltaPhi;
-    float Pz_neutrino;
 
     float boostedJet_PNScore;
     int boostedJet_Index;   // Contains the inded of 2l2q case; the boosted jet index that satisfies the P/N score and pT cut>200 GeV; No mass cut
@@ -405,6 +419,7 @@ public:
         Electron_mvaIso_WP90.clear();
         Electron_pdgId.clear();
         Electron_pfRelIso03_all.clear();
+        Electron_deltaEtaSC.clear();
         Elechg.clear();
         Eiso.clear();
         Eid.clear();
@@ -444,7 +459,7 @@ public:
         Jet_phi.clear();
         Jet_eta.clear();
         Jet_mass.clear();
-        Jet_btagDeepFlavB.clear();
+        Jet_btagUParTAK4B.clear();
         Jet_jetId.clear();
         Jet_puId.clear();
         Jet_chEmEF.clear();
@@ -469,11 +484,6 @@ public:
         jetidx.clear();
         FatJetidx.clear();
         
-
-        // MET related variables
-        MET_pt = -999.0;
-        MET_phi = -999.0; ////new
-        MET_sumEt = -999.0;
 
         // Puppi MET related variables
         PuppiMET_pt = -999.0;
@@ -563,12 +573,12 @@ public:
         mj2 = -999.0;
 
         HZZ2l2nu_ifVBF = false;
+        HZZ2l2nu_isEMuCR = false;
         HZZ2l2qNu_nJets = 0;
         HZZ2l2qNu_nTightBtagJets = 0;
         HZZ2l2qNu_nMediumBtagJets = 0;
         HZZ2l2qNu_nLooseBtagJets = 0;
         minDeltaPhi = 999.0;
-        Pz_neutrino = -999.0;
 
         boostedJet_PNScore = -999.0;
         boostedJet_Index = -999;
@@ -587,6 +597,7 @@ public:
         flag2l = false;
         HZZ2l2qNu_isELE = false;
         HZZ2l2qNu_cutOppositeChargeFlag = false;
+        HZZ2l2nu_nExtraLep = -1;
 	    muonpt = false;
 
         HZZ2l2nu_flag2e_met = false;
@@ -624,6 +635,8 @@ public:
     bool ZZSelection_4l();
     bool GetZ1_2l2qOR2l2nu();
     bool GetZ1_emuCR();
+    void CountJetsAndBtags();
+    int CountExtraLeptons(int ele1, int ele2, int mu1, int mu2);
     bool ZZSelection_2l2q();
     bool ZZSelection_2l2nu();
     bool ZZSelection_2l2nu_EMu_CR();
@@ -639,6 +652,7 @@ public:
     TLorentzVector ZZsystemnofsr;
     TLorentzVector ZZ_2jsystem;
     TLorentzVector ZZ_metsystem;
+    float MT_2l2nu; // 2l2nu transverse mass, AN-2016/325 Eq. 6 (set in ZZSelection_2l2nu)
     TLorentzVector ZZ_2jsystemnofsr;
     TLorentzVector ZZ_metsystemnofsr;
     TLorentzVector ZZ_emuCRsystem;
@@ -686,16 +700,14 @@ public:
 
 private:
     std::vector<float> Electron_pt, Electron_phi, Electron_eta, Electron_mass, Electron_dxy, Electron_dz, Electron_sip3d;
-    std::vector<float> Electron_mvaFall17V2Iso_WP90, Electron_pfRelIso03_all, Electron_mvaIso_WP90;
+    std::vector<float> Electron_mvaFall17V2Iso_WP90, Electron_pfRelIso03_all, Electron_mvaIso_WP90, Electron_deltaEtaSC;
     std::vector<int> Electron_pdgId;
     bool isMC;
 
-    std::vector<float> Jet_pt, Jet_phi, Jet_eta, Jet_mass, Jet_btagDeepFlavB;
+    std::vector<float> Jet_pt, Jet_phi, Jet_eta, Jet_mass, Jet_btagUParTAK4B;
     std::vector<int> Jet_jetId, Jet_puId;
     std::vector<float> Jet_chEmEF, Jet_chHEF, Jet_neEmEF, Jet_neHEF, Jet_muEF;
     std::vector<int> Jet_nConstituents, Jet_neMultiplicity, Jet_chMultiplicity;
-    float MET_pt, MET_phi;
-    float MET_sumEt, MT_2l2nu;
     float PuppiMET_pt, PuppiMET_phi;
     float PuppiMET_sumEt;
     float t1_px_offset;
