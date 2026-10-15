@@ -4,6 +4,7 @@ import sys
 import argparse
 import glob
 import tempfile
+import yaml
 
 from PhysicsTools.NanoAODTools.postprocessing.framework.postprocessor import PostProcessor
 from PhysicsTools.NanoAODTools.postprocessing.modules.common.met_phi_correction import METPhiCorrector, Campaign
@@ -38,6 +39,8 @@ def parse_arguments():
     parser.add_argument("-d", "--DownloadFileToLocalThenRun", default=True, type=bool, help="Download file to local then run")
     parser.add_argument("--WithSyst", default=False, action="store_true", help="Do not run systematics")
     parser.add_argument("--DEBUG", default=False, action="store_true", help="Print debug information")
+    parser.add_argument("--noPreselection", default=False, action="store_true",
+                        help="Do not drop events with < 2 leptons before the analysis modules (slower)")
     parser.add_argument("--channels",  choices=["all", "4l", "2l2q", "2l2v"],  default="2l2v",
                         help="Channels to run: all, 4l, 2l2q, or 2l2v")
     return parser.parse_args()
@@ -141,11 +144,25 @@ def main():
         #cfgFile = "config/Input_2018.yml"
         #modulesToRun.extend([muonScaleRes2018()])
 
+    # Preselection, applied by PostProcessor (as a ROOT entry list) before any module runs:
+    # every channel needs >= 2 leptons, so events without them never reach Python. The pT
+    # threshold is the YAML lepton pT cut minus 5 GeV, because the Rochester muon
+    # correction is applied after this cut.
+    preselCut = None
+    if not args.noPreselection:
+        with open(cfgFile) as f:
+            _cfg = yaml.safe_load(f)
+        _ptmin = max(0.0, min(_cfg['Electron']['pTcut'], _cfg['Muon']['pTcut']) - 5.0)
+        preselCut = "Sum$(Muon_pt > {0}) + Sum$(Electron_pt > {0}) >= 2".format(_ptmin)
+    print("Preselection: {}".format(preselCut))
+
     H4LCppModule = lambda: HZZAnalysisCppProducer(year=year, cfgFile=cfgFile,
                                                   isMC=isMC, isFSR=isFSR,
                                                   cutFlowJSONFile=args.cutFlowFile,
                                                   channels=args.channels,
-                                                  DEBUG=args.DEBUG
+                                                  DEBUG=args.DEBUG,
+                                                  preselection=preselCut,
+                                                  maxEntries=entriesToRun
                                                   )
     print("systematic info: {}".format(args.WithSyst))
     print("Input json file: {}".format(jsonFileName))
@@ -197,7 +214,7 @@ def main():
         #            otherwise the output file will have larger size then expected. Reference: https://github.com/cms-nanoAOD/nanoAOD-tools/issues/249
         temp_keep_drop_file = create_temp_keep_drop_file(keep_drop_rules_GEN + keep_drop_rules_Data_MC)
         print("DEBUG: Keep and drop file: {}".format(temp_keep_drop_file))
-        p=PostProcessor(args.outputDir,testfilelist, None, None,modules = modulesToRun,
+        p=PostProcessor(args.outputDir,testfilelist, preselCut, None,modules = modulesToRun,
                         provenance=True,fwkJobReport=True,
                         haddFileName=args.outputFile,
                         maxEntries=entriesToRun,
@@ -214,7 +231,7 @@ def main():
 
         temp_keep_drop_file = create_temp_keep_drop_file(keep_drop_rules_Data_MC)
         print("DEBUG: Keep and drop file: {}".format(temp_keep_drop_file))
-        p=PostProcessor(args.outputDir,testfilelist, None, None, modules = modulesToRun,
+        p=PostProcessor(args.outputDir,testfilelist, preselCut, None, modules = modulesToRun,
                         provenance=True, fwkJobReport=True,
                         haddFileName=args.outputFile,
                         jsonInput=jsonFileName,

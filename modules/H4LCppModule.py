@@ -5,6 +5,7 @@ import ROOT
 import yaml
 import json
 import os
+import re
 from collections import OrderedDict
 
 from modules.Helper import *
@@ -16,7 +17,8 @@ ROOT.PyConfig.IgnoreCommandLineOptions = True
 class HZZAnalysisCppProducer(Module):
 
     #def __init__(self, year, cfgFile, isMC, isFSR, cutFlowJSONFile, channels, DEBUG=False, corrector=None):
-    def __init__(self, year, cfgFile, isMC, isFSR, cutFlowJSONFile, channels, DEBUG=False):
+    def __init__(self, year, cfgFile, isMC, isFSR, cutFlowJSONFile, channels, DEBUG=False,
+                 preselection=None, maxEntries=None):
         self.loadLibraries()
         self.year = year
         self.isMC = isMC
@@ -25,6 +27,32 @@ class HZZAnalysisCppProducer(Module):
         self.DEBUG = DEBUG
         self.cfgFile = cfgFile
         self.cfg = self._load_config(cfgFile)
+        # Event preselection applied by PostProcessor before this module (None = none),
+        # and the -n limit; both are only used to label / count the cut flow.
+        self.preselection = preselection
+        self.maxEntries = maxEntries if maxEntries else None
+        self.nInputEntries = 0
+
+        # Trigger lists resolved once to branch names: evaluating every "event.HLT_x"
+        # string with eval() on every event was ~40% of analyze(). Each distinct path
+        # is read once per event and the per-list OR is built from those values.
+        self.triggerLists = OrderedDict()
+        for channel in self.cfg['TriggerChannels']:
+            paths = []
+            for expr in (self.cfg[channel] or []):
+                m = re.match(r"^\s*event\.(\w+)\s*$", expr)
+                if not m:
+                    raise ValueError("Trigger entry '{}' in {} ({}) must be of the form event.HLT_xxx".format(
+                        expr, channel, cfgFile))
+                paths.append(m.group(1))
+            self.triggerLists[channel] = paths
+        self.triggerPaths = sorted({p for paths in self.triggerLists.values() for p in paths})
+
+        # MET-phi corrector built once per job (its lookup table was rebuilt every event,
+        # ~20% of analyze()). No UL campaign for other years -> uncorrected PuppiMET.
+        campaign = {2016: Campaign.UL_2016, 2017: Campaign.UL_2017, 2018: Campaign.UL_2018}.get(int(year))
+        self.metPhiCorrector = (METPhiCorrector(campaign=campaign, is_data=not isMC, is_puppi=True)
+                                if campaign is not None else None)
         # MELA is only used by the 4l channel; constructing it is very slow and
         # hangs on some batch nodes, so build it only when 4l is actually run.
         doMELA = self.channels in ("all", "4l")
@@ -87,7 +115,11 @@ class HZZAnalysisCppProducer(Module):
         ]
         # "General" rows: (key, printed label, kind, channels it is printed for)
         self.cutFlowGeneral = [
-            ("Total",                       "Total",                       "start", None),
+            ("Total",                       "Total (input entries)",       "start", None),
+            ("PassPresel",                  ("Pass preselection" if self.isMC else "Pass golden JSON + preselection")
+                                            if self.preselection else
+                                            ("Analysed" if self.isMC else "Pass golden JSON"),
+                                                                           "cut",   None),
             ("PassTrig",                    "Pass trigger",                "cut",   None),
             ("PassMETFilters",              "Pass MET filters",            "cut",   None),
             ("PassZZ2l2nuSelection",        "Selected: 2l2nu SR",          "info",  ("2l2v", "all")),
@@ -239,6 +271,10 @@ class HZZAnalysisCppProducer(Module):
 
     def beginFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
         self.initReaders(inputTree)  # initReaders must be called in beginFile
+        # Cut-flow "Total": all entries of the input file (within -n), counted before the
+        # golden JSON and the preselection that PostProcessor applies ahead of analyze()
+        nFile = inputFile.Get("Events").GetEntries()
+        self.nInputEntries += min(nFile, self.maxEntries) if self.maxEntries else nFile
         self.out = wrappedOutputTree
 
         # Boolean branches for Trigger channels
@@ -405,7 +441,8 @@ class HZZAnalysisCppProducer(Module):
 
     def endFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
         generalCounts = {
-            "Total": self.passAllEvts,
+            "Total": self.nInputEntries,
+            "PassPresel": self.passAllEvts,
             "PassTrig": self.passtrigEvts,
             "PassMETFilters": self.passMETFilters,
             "PassZZSelection": self.passZZ4lEvts,
@@ -433,7 +470,8 @@ class HZZAnalysisCppProducer(Module):
 
         print("\n==================== Cut flow ({} channel{}) ====================".format(
             self.channels, "s" if self.channels == "all" else ""))
-        print("% = fraction of the previous selection step; indented rows are counts that remove no events\n")
+        print("% = fraction of the previous selection step; indented rows are counts that remove no events")
+        print("Preselection: {}\n".format(self.preselection if self.preselection else "none"))
         print("General")
         printRows([(label, generalCounts[key], kind)
                    for key, label, kind, channels in self.cutFlowGeneral if printed(channels)])
@@ -611,10 +649,10 @@ class HZZAnalysisCppProducer(Module):
         phi4l = -999.
         mass4l = -999.
         DeltaRl1l2 = -999.
-        TriggerMap = {}
         passedTrig = False
-        for TriggerChannel in self.cfg['TriggerChannels']:
-            TriggerMap[TriggerChannel] = PassTrig(event, self.cfg, TriggerChannel)
+        fired = {path: bool(getattr(event, path)) for path in self.triggerPaths}
+        TriggerMap = {channel: any(fired[path] for path in paths)
+                      for channel, paths in self.triggerLists.items()}
 
         # If any of the trigger channel from TriggerMap passes, then the event is kept else return keepIt
         for value in TriggerMap.values():
@@ -640,27 +678,7 @@ class HZZAnalysisCppProducer(Module):
         jets = Collection(event, "Jet")
         FatJets = Collection(event, "FatJet")
         puppimet = Object(event, "PuppiMET", None)
-        if self.year == 2018:
-            corrector = METPhiCorrector(
-            campaign=Campaign.UL_2018,
-            is_data=not self.isMC,
-            is_puppi=True,
-            )
-        elif self.year == 2017:
-            corrector = METPhiCorrector(
-            campaign=Campaign.UL_2017,
-            is_data=not self.isMC,
-            is_puppi=True,
-            )
-        elif self.year == 2016:
-            corrector = METPhiCorrector(
-            campaign=Campaign.UL_2016,
-            is_data=not self.isMC,
-            is_puppi=True,
-            )
-        else:
-            # No MET-phi correction campaign available for this year (e.g. 2022).
-            corrector = None
+        corrector = self.metPhiCorrector
 
         #MET correction for v15
         if corrector is not None:
