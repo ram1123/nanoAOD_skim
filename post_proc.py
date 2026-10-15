@@ -46,6 +46,7 @@ def getListFromFile(filename):
     """Read file list from a text file."""
     with open(filename, "r") as file:
         return ["root://cms-xrd-global.cern.ch/" + line.strip() for line in file]
+        # return ["root://xcache.cms.rcac.purdue.edu/" + line.strip() for line in file]
 
 def create_temp_keep_drop_file(rules):
     """Create a temporary keep and drop file from a list of rules."""
@@ -181,8 +182,9 @@ def main():
             _ak4type = "AK4PFPuppi" if "NanoAODv15" in first_file else "AK4PFchs"
             jetmetCorrector = createJMECorrector(isMC=isMC, dataYear=year, jesUncert="All", jetType = _ak4type)
             fatJetCorrector = createJMECorrector(isMC=isMC, dataYear=year, jesUncert="All", jetType = "AK8PFPuppi")
-            # btag SF: the skim b-tags on DeepJet (Jet_btagDeepFlavB), so algo must be
-            # "deepjet"; kept off until the b-veto in ZZSelection_2l2nu() is re-enabled.
+            # btag SF: the skim b-tags on UParTAK4 (Jet_btagUParTAK4B). btagSFProducer below
+            # only knows DeepJet/DeepCSV, so it does NOT match; UParTAK4 SFs must come from the
+            # BTV correctionlib json (Run2-20XX-UL-NanoAODv15/btagging.json.gz). Kept off.
             btagSF = lambda: btagSFProducer(era = "UL"+str(year), algo = "deepjet")
             # PU-jet-ID SF: Run 2 CHS (v9) only - reads Jet_puId, which the v15 re-nano
             # does not store. Do not enable for v15.

@@ -5,6 +5,8 @@ TriggerChannels:
     - Triggers_HZZ2l2nu_SingleLep
     - Triggers_HZZ2l2nu_DiLep
     - Triggers_HZZ2l2nu_HighPt
+    - Triggers_HZZ2l2nu_SR      # use this for the 2l2nu signal region
+    - Triggers_HZZ2l2nu_EMuCR   # use this for the emu control region
 
 Triggers_HZZ4l:
   - event.HLT_Ele35_WPTight_Gsf
@@ -98,6 +100,32 @@ Triggers_HZZ2l2nu_HighPt:
   - event.HLT_Mu8_DiEle12_CaloIdL_TrackIdL
   - event.HLT_Mu8_DiEle12_CaloIdL_TrackIdL_DZ
 
+
+Triggers_HZZ2l2nu_SR:
+    # 2l2nu signal region (ee / mumu). Unprescaled for all of 2017 (display_TriggerPreScale).
+    # Single muon
+    - event.HLT_IsoMu27
+    - event.HLT_Mu50
+    # Single electron (+ Photon200 for high-pT electrons)
+    - event.HLT_Ele35_WPTight_Gsf
+    - event.HLT_Photon200
+    # Double muon
+    - event.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass8
+    # Double electron
+    - event.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL
+    - event.HLT_DoubleEle33_CaloIdL_MW
+
+Triggers_HZZ2l2nu_EMuCR:
+    # 2l2nu emu control region. Unprescaled for all of 2017.
+    # Muon-electron
+    - event.HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_DZ
+    - event.HLT_Mu12_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ
+    - event.HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ
+    # Single muon / single electron
+    - event.HLT_IsoMu27
+    - event.HLT_Mu50
+    - event.HLT_Ele35_WPTight_Gsf
+    - event.HLT_Photon200
 
 Zmass: 91.1876
 MZ1cut: 40
