@@ -1,25 +1,14 @@
-Triggers:
- - event.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL
- - event.HLT_DoubleEle33_CaloIdL_MW
- - event.HLT_Ele16_Ele12_Ele8_CaloIdL_TrackIdL
- - event.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass8
- - event.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass3p8
- - event.HLT_TripleMu_12_10_5
- - event.HLT_TripleMu_10_5_5_DZ
- - event.HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_DZ
- - event.HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL
- - event.HLT_Mu12_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ
- - event.HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ
- - event.HLT_DiMu9_Ele9_CaloIdL_TrackIdL_DZ
- - event.HLT_Mu8_DiEle12_CaloIdL_TrackIdL_DZ
- - event.HLT_Mu8_DiEle12_CaloIdL_TrackIdL
- - event.HLT_Ele35_WPTight_Gsf
- - event.HLT_Ele38_WPTight_Gsf
- - event.HLT_Ele40_WPTight_Gsf
- - event.HLT_IsoMu27
+TriggerChannels:
+    - Triggers_HZZ4l
+    - Triggers_HZZ2l2q
+    - Triggers_HZZ2l2nu
+    - Triggers_HZZ2l2nu_SingleLep
+    - Triggers_HZZ2l2nu_DiLep
+    - Triggers_HZZ2l2nu_HighPt
+    - Triggers_HZZ2l2nu_SR      # use this for the 2l2nu signal region
+    - Triggers_HZZ2l2nu_EMuCR   # use this for the emu control region
 
-
-Triggers_2l2q:
+Triggers_HZZ4l:
   - event.HLT_Ele35_WPTight_Gsf
   - event.HLT_Ele38_WPTight_Gsf
   - event.HLT_Ele40_WPTight_Gsf
@@ -27,99 +16,212 @@ Triggers_2l2q:
   # Dilepton
   - event.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL
   - event.HLT_DoubleEle33_CaloIdL_MW
-  - event.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass3p8
+  #- event.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass3p8
   - event.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass8
-  - event.HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL
+  #- event.HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL
   - event.HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ
   - event.HLT_Mu12_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ
   - event.HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_DZ
   - event.HLT_DiMu9_Ele9_CaloIdL_TrackIdL_DZ
   - event.HLT_Mu8_DiEle12_CaloIdL_TrackIdL
   - event.HLT_Mu8_DiEle12_CaloIdL_TrackIdL_DZ
-Zmass:
-  91.1876
-MZ1cut:
-  40
+
+Triggers_HZZ2l2q:
+  - event.HLT_Ele35_WPTight_Gsf
+  - event.HLT_Ele38_WPTight_Gsf
+  - event.HLT_Ele40_WPTight_Gsf
+  - event.HLT_IsoMu27
+  # Dilepton
+  - event.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL
+  - event.HLT_DoubleEle33_CaloIdL_MW
+  #- event.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass3p8
+  - event.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass8
+  #- event.HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL
+  - event.HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ
+  - event.HLT_Mu12_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ
+  - event.HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_DZ
+  - event.HLT_DiMu9_Ele9_CaloIdL_TrackIdL_DZ
+  - event.HLT_Mu8_DiEle12_CaloIdL_TrackIdL
+  - event.HLT_Mu8_DiEle12_CaloIdL_TrackIdL_DZ
+
+Triggers_HZZ2l2nu:
+  - event.HLT_Ele35_WPTight_Gsf
+  - event.HLT_Ele38_WPTight_Gsf
+  - event.HLT_Ele40_WPTight_Gsf
+  - event.HLT_IsoMu27
+  # Dilepton
+  - event.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL
+  - event.HLT_DoubleEle33_CaloIdL_MW
+  #- event.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass3p8
+  - event.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass8
+  #- event.HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL
+  - event.HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ
+  - event.HLT_Mu12_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ
+  - event.HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_DZ
+  - event.HLT_DiMu9_Ele9_CaloIdL_TrackIdL_DZ
+  - event.HLT_Mu8_DiEle12_CaloIdL_TrackIdL
+  - event.HLT_Mu8_DiEle12_CaloIdL_TrackIdL_DZ
+
+
+Triggers_HZZ2l2nu_SingleLep:
+    # Single Mu
+    #- event.HLT_IsoMu20   # prescaled in 2017
+    #- event.HLT_IsoMu24   # prescaled in part of 2017; IsoMu27 is the unprescaled path
+    - event.HLT_IsoMu27
+    # Single Electron
+    #- event.HLT_Ele32_WPTight_Gsf
+    - event.HLT_Ele35_WPTight_Gsf
+    - event.HLT_Ele38_WPTight_Gsf
+    - event.HLT_Ele40_WPTight_Gsf
+
+Triggers_HZZ2l2nu_DiLep:
+    # DoubleMu
+    #- event.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass3p8
+    # Double Electron
+    #- event.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL
+    #- event.HLT_DoubleEle25_CaloIdL_MW
+    - event.HLT_Ele40_WPTight_Gsf
+
+Triggers_HZZ2l2nu_HighPt:
+  - event.HLT_Ele35_WPTight_Gsf
+  - event.HLT_Ele38_WPTight_Gsf
+  - event.HLT_Ele40_WPTight_Gsf
+  - event.HLT_IsoMu27
+  # Dilepton
+  - event.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL
+  - event.HLT_DoubleEle33_CaloIdL_MW
+  #- event.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass3p8
+  - event.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass8
+  #- event.HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL
+  - event.HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ
+  - event.HLT_Mu12_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ
+  - event.HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_DZ
+  - event.HLT_DiMu9_Ele9_CaloIdL_TrackIdL_DZ
+  - event.HLT_Mu8_DiEle12_CaloIdL_TrackIdL
+  - event.HLT_Mu8_DiEle12_CaloIdL_TrackIdL_DZ
+
+
+Triggers_HZZ2l2nu_SR:
+    # 2l2nu signal region (ee / mumu). Unprescaled for all of 2017 (display_TriggerPreScale).
+    # Single muon
+    - event.HLT_IsoMu27
+    - event.HLT_Mu50
+    # Single electron (+ Photon200 for high-pT electrons)
+    - event.HLT_Ele35_WPTight_Gsf
+    - event.HLT_Photon200
+    # Double muon
+    - event.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass8
+    # Double electron
+    - event.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL
+    - event.HLT_DoubleEle33_CaloIdL_MW
+
+Triggers_HZZ2l2nu_EMuCR:
+    # 2l2nu emu control region. Unprescaled for all of 2017.
+    # Muon-electron
+    - event.HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_DZ
+    - event.HLT_Mu12_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ
+    - event.HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ
+    # Single muon / single electron
+    - event.HLT_IsoMu27
+    - event.HLT_Mu50
+    - event.HLT_Ele35_WPTight_Gsf
+    - event.HLT_Photon200
+
+Zmass: 91.1876
+MZ1cut: 40
 MZcut:
-  down:
-    12
-  up:
-    120
-MZZcut:
-  70
+    down:   12
+    up: 120
+MZZcut: 70
 Higgscut:
-  up:
-    160
-  down:
-    105
+    up: 160
+    down: 105
 
 Electron:
-  pTcut:
-    7
-  Etacut:
-    2.5
-  Sip3dcut:
-    4
-  Loosedxycut:
-    0.5
-  Loosedzcut:
-    1
-  BDTWP:
-    LowEta:
-      LowPT:
-        0.9128577458
-      HighPT:
-        0.1559788054
-    MedEta:
-      LowPT:
-        0.9056792368
-      HighPT:
-        0.0273863727
-    HighEta:
-      LowPT:
-        0.9439440575
-      HighPT:
-        -0.5532483665
-  Isocut:
-    0.35
+    pTcut: 25  #7
+    Etacut: 2.5 #2.5
+    #Sip3dcut: 4
+    Loosedxycut: 0.045 #0.5 
+    Loosedzcut: 0.2 #1 #0.2
+    ttH:
+        WP: 0.8
+    BDTWP:
+        LowEta:
+            LowPT: 0.9044286167
+            HighPT: 0.1968600840
+        MedEta:
+            LowPT: 0.9094166886
+            HighPT: 0.0759172100
+        HighEta:
+            LowPT: 0.9443653660
+            HighPT: -0.5169136775
+    Isocut: 0.15 #0.35
+    # Electron-muon cross-cleaning: drop electrons within dR < dR of a POG-loose muon
+    # (PF candidate, global or tracker) with pT > MuPt. 0.05 = CMS H->ZZ->4l convention.
+    MuonCleaning:
+        dR: 0.05
+        MuPt: 5.0
+
 Muon:
-  pTcut:
-    5
-  Etacut:
-    2.4
-  Sip3dcut:
-    4
-  Loosedxycut:
-    0.5
-  Loosedzcut:
-    1
-  Tightdxycut:
-    0.2
-  Tightdzcut:
-    0.5
-  TightTrackerLayercut:
-    5
-  TightpTErrorcut:
-    0.3
-  HighPtBound:
-    200
-  Isocut:
-    0.35
+    pTcut: 25 #5
+
+    Etacut: 2.4
+    #Sip3dcut: 4
+    Loosedxycut: 0.045 #0.5 #0.045
+    Loosedzcut: 0.2 #1 #0.2
+    Tightdxycut: 0.045 #0.2
+    Tightdzcut: 0.2 #0.5
+    TightTrackerLayercut: 5
+    TightpTErrorcut: 0.3
+    HighPtBound: 200
+    Isocut: 0.2 #0.35
 
 FsrPhoton:
-  pTcut:
-    2
-  Etacut:
-    2.4
-  Isocut:
-    0.8
-  dRlcut:
-    0.5
-  dRlOverPtcut:
-    0.012
+    pTcut: 2
+    Etacut: 2.4
+    Isocut: 0.8
+    dRlcut: 0.5
+    dRlOverPtcut: 0.012
 
 Jet:
-  pTcut:
-    30
-  Etacut:
-    4.7
+    pTcut: 30
+    Etacut: 4.7
+    # UParTAK4 (Jet_btagUParTAK4B) WPs for UL NanoAODv15.
+    # https://btv-wiki.docs.cern.ch/ScaleFactors/Run2UL2017NanoAODv15/#ak4-b-tagging
+    # = UParTAK4_wp_values in /cvmfs/cms-griddata.cern.ch/cat/metadata/BTV/Run2-2017-UL-NanoAODv15/latest/btagging.json.gz
+    UParTAK4_btag:
+        Loose: 0.0331
+        Medium: 0.1776
+        Tight: 0.5755
+        Etacut: 2.4   # b-tagging acceptance
+
+HZZ2l2q:
+    Leading_Lep_pT: 40
+    SubLeading_Lep_pT: 24
+    Lep_eta: 2.4
+    MZLepcut:
+        down: 60
+        up: 120
+
+HZZ2l2nu:
+    Leading_Lep_pT: 25.0
+    SubLeading_Lep_pT: 25.0
+    Lep_eta: 2.5
+    Pt_ll: 10.0
+    M_ll_Window: 80.0   # |m_ll - mZ| < M_ll_Window (loose skim; tighten downstream)
+    dPhi_jetMET: 0.0
+    MZLepcut:
+        down: 60.0
+        up: 120.0
+    # Extra-lepton veto: events with a loose lepton beyond the Z1 / emu pair are rejected
+    # in ZZSelection_2l2nu (count stored as HZZ2l2nu_nExtraLep).
+    # AN-2016/325 4.4.4 values -- unverified for UL / NanoAOD v15.
+    VetoLep:
+        Ele_pT: 10.0
+        Ele_Iso: 0.15
+        Mu_pT: 10.0
+        Mu_Iso: 0.2
+    # emu control region: |m_emu - mZ| < M_ll_Window and pT_emu > Pt_ll
+    emuCR:
+        M_ll_Window: 160.0
+        Pt_ll: 25.0

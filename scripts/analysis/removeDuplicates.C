@@ -1,71 +1,107 @@
-#include <iostream>
-#include <set>
-#include <TString.h>
+// Remove duplicate data events after skimming, when combining several primary datasets
+// (e.g. DoubleMuon, SingleMuon, EGamma, MuonEG): the same collision can be stored in more
+// than one of them. An event is identified by (run, luminosityBlock, event), and the FIRST
+// occurrence is kept, so list the input files in dataset-priority order.
+//
+// Usage:
+//   root -l -b -q 'scripts/analysis/removeDuplicates.C+("inputs.txt", "Data_noDuplicates.root")'
+//
+// inputs.txt: one ROOT file (or a pattern accepted by TChain::Add, e.g. dir/*.root) per line;
+// empty lines and lines starting with '#' are ignored.
+// Only the Events tree is written; MC needs no duplicate removal.
+
+#include <TChain.h>
 #include <TFile.h>
+#include <TString.h>
 #include <TTree.h>
 
-void removeDuplicates()
+#include <fstream>
+#include <iostream>
+#include <set>
+#include <string>
+#include <tuple>
+#include <vector>
+
+void removeDuplicates(const char *inputList, const char *outputFile, const char *treeName = "Events")
 {
-
-    TString prefix = "Muon";
-    TString outputFile = "/eos/user/r/rasharma/nanoAOD_ntuples/SkimNanoAOD_2022_ZXCRv2/Data_noDuplicates.root";
-
-        TString infiles[] = {"/eos/user/r/rasharma/nanoAOD_ntuples/SkimNanoAOD_2022_ZXCRv2/DoubleMuon.root",
-                             "/eos/user/r/rasharma/nanoAOD_ntuples/SkimNanoAOD_2022_ZXCRv2/SingleMuon.root",
-                             "/eos/user/r/rasharma/nanoAOD_ntuples/SkimNanoAOD_2022_ZXCRv2/MuonEG.root",
-                             "/eos/user/r/rasharma/nanoAOD_ntuples/SkimNanoAOD_2022_ZXCRv2/Muon.root",
-                             "/eos/user/r/rasharma/nanoAOD_ntuples/SkimNanoAOD_2022_ZXCRv2/EGamma.root"};
-
-    TChain *oldtree = new TChain("Events");
-    for (TString infile : infiles)
-    {
-        oldtree->Add(infile);
+    std::vector<TString> inputs;
+    std::ifstream list(inputList);
+    if (!list) {
+        std::cerr << "ERROR: cannot open input list " << inputList << std::endl;
+        return;
+    }
+    std::string line;
+    while (std::getline(list, line)) {
+        TString entry(line);
+        entry = entry.Strip(TString::kBoth);
+        if (entry.IsNull() || entry.BeginsWith("#"))
+            continue;
+        inputs.push_back(entry);
+    }
+    if (inputs.empty()) {
+        std::cerr << "ERROR: no input files in " << inputList << std::endl;
+        return;
     }
 
-    // Run from Runs tree
+    TChain chain(treeName);
+    std::vector<int> firstTreeOfInput;  // chain tree number where each input line starts
+    for (const auto &in : inputs) {
+        firstTreeOfInput.push_back(chain.GetNtrees());
+        if (chain.Add(in) == 0)
+            std::cerr << "WARNING: no files added for " << in << std::endl;
+    }
 
-    Long64_t nentries = oldtree->GetEntries();
-    std::cout << nentries << " total entries." << std::endl;
-    ULong64_t Run, LumiSect, Event;
-    bool passedZ4lSelection;
-    oldtree->SetBranchAddress("run", &Run);
-    oldtree->SetBranchAddress("luminosityBlock", &LumiSect);
-    oldtree->SetBranchAddress("event", &Event);
+    // NanoAOD types: run and luminosityBlock are UInt_t, event is ULong64_t
+    UInt_t run = 0, lumi = 0;
+    ULong64_t event = 0;
+    chain.SetBranchAddress("run", &run);
+    chain.SetBranchAddress("luminosityBlock", &lumi);
+    chain.SetBranchAddress("event", &event);
 
-    // Create a new file + a clone of old tree in new file
-    // TFile *newfile = new TFile(
-    //     prefix + "_noDuplicates.root", "recreate");
-    TFile *newfile = new TFile(outputFile, "recreate");
-    TTree *newtree = oldtree->CloneTree(0);
+    TFile out(outputFile, "RECREATE");
+    if (out.IsZombie()) {
+        std::cerr << "ERROR: cannot create " << outputFile << std::endl;
+        return;
+    }
+    TTree *outTree = chain.CloneTree(0);
+    if (!outTree) {
+        std::cerr << "ERROR: no clonable tree named " << treeName << " in the input files" << std::endl;
+        return;
+    }
 
-    std::set<TString> runlumieventSet;
-    int nremoved = 0;
-    for (Long64_t i = 0; i < nentries; i++)
-    {
-        if (i % 100000 == 0)
-            std::cout << i << "/" << nentries << std::endl;
-        oldtree->GetEntry(i);
+    std::set<std::tuple<UInt_t, UInt_t, ULong64_t>> seen;
+    std::vector<Long64_t> nRead(inputs.size(), 0), nDup(inputs.size(), 0);
+    const Long64_t nEntries = chain.GetEntries();
+    std::cout << nEntries << " entries in " << chain.GetNtrees() << " files" << std::endl;
 
-        TString s_Run = std::to_string(Run);
-        TString s_Lumi = std::to_string(LumiSect);
-        TString s_Event = std::to_string(Event);
-        TString runlumievent = s_Run + ":" + s_Lumi + ":" + s_Event;
+    for (Long64_t i = 0; i < nEntries; i++) {
+        if (chain.GetEntry(i) <= 0)
+            continue;
+        if (i % 1000000 == 0)
+            std::cout << "  " << i << " / " << nEntries << std::endl;
 
-        if (runlumieventSet.find(runlumievent) == runlumieventSet.end())
-        {
-            runlumieventSet.insert(runlumievent);
-            newtree->Fill();
-        }
+        // which input line this entry came from (for the per-input summary)
+        size_t idx = 0;
+        while (idx + 1 < firstTreeOfInput.size() && chain.GetTreeNumber() >= firstTreeOfInput[idx + 1])
+            idx++;
+        nRead[idx]++;
+
+        if (seen.insert(std::make_tuple(run, lumi, event)).second)
+            outTree->Fill();
         else
-        {
-            nremoved++;
-        }
-        // if (passedZ4lSelection) newtree->Fill();
+            nDup[idx]++;
     }
 
-    std::cout << nremoved << " duplicates." << std::endl;
-    newtree->Print();
-    newtree->AutoSave();
-    // delete oldfile;
-    delete newfile;
+    out.cd();
+    outTree->Write();
+    const Long64_t nKept = outTree->GetEntries();
+    out.Close();
+
+    std::cout << "\nPer input (first occurrence kept; order = priority):" << std::endl;
+    Long64_t totDup = 0;
+    for (size_t k = 0; k < inputs.size(); k++) {
+        std::cout << "  " << inputs[k] << ": read " << nRead[k] << ", duplicates removed " << nDup[k] << std::endl;
+        totDup += nDup[k];
+    }
+    std::cout << "Kept " << nKept << " events, removed " << totDup << " duplicates -> " << outputFile << std::endl;
 }

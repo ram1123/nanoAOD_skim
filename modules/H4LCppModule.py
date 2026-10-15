@@ -1,9 +1,11 @@
 from PhysicsTools.NanoAODTools.postprocessing.framework.eventloop import Module
 from PhysicsTools.NanoAODTools.postprocessing.framework.datamodel import Collection,Object
+from PhysicsTools.NanoAODTools.postprocessing.modules.common.met_phi_correction import METPhiCorrector, Campaign
 import ROOT
 import yaml
 import json
 import os
+import re
 from collections import OrderedDict
 
 from modules.Helper import *
@@ -14,7 +16,9 @@ ROOT.PyConfig.IgnoreCommandLineOptions = True
 
 class HZZAnalysisCppProducer(Module):
 
-    def __init__(self, year, cfgFile, isMC, isFSR, cutFlowJSONFile, channels, DEBUG=False):
+    #def __init__(self, year, cfgFile, isMC, isFSR, cutFlowJSONFile, channels, DEBUG=False, corrector=None):
+    def __init__(self, year, cfgFile, isMC, isFSR, cutFlowJSONFile, channels, DEBUG=False,
+                 preselection=None, maxEntries=None):
         self.loadLibraries()
         self.year = year
         self.isMC = isMC
@@ -23,46 +27,114 @@ class HZZAnalysisCppProducer(Module):
         self.DEBUG = DEBUG
         self.cfgFile = cfgFile
         self.cfg = self._load_config(cfgFile)
-        self.worker = ROOT.H4LTools(self.year, self.DEBUG)
+        # Event preselection applied by PostProcessor before this module (None = none),
+        # and the -n limit; both are only used to label / count the cut flow.
+        self.preselection = preselection
+        self.maxEntries = maxEntries if maxEntries else None
+        self.nInputEntries = 0
+
+        # Trigger lists resolved once to branch names: evaluating every "event.HLT_x"
+        # string with eval() on every event was ~40% of analyze(). Each distinct path
+        # is read once per event and the per-list OR is built from those values.
+        self.triggerLists = OrderedDict()
+        for channel in self.cfg['TriggerChannels']:
+            paths = []
+            for expr in (self.cfg[channel] or []):
+                m = re.match(r"^\s*event\.(\w+)\s*$", expr)
+                if not m:
+                    raise ValueError("Trigger entry '{}' in {} ({}) must be of the form event.HLT_xxx".format(
+                        expr, channel, cfgFile))
+                paths.append(m.group(1))
+            self.triggerLists[channel] = paths
+        self.triggerPaths = sorted({p for paths in self.triggerLists.values() for p in paths})
+
+        # MET-phi corrector built once per job (its lookup table was rebuilt every event,
+        # ~20% of analyze()). No UL campaign for other years -> uncorrected PuppiMET.
+        campaign = {2016: Campaign.UL_2016, 2017: Campaign.UL_2017, 2018: Campaign.UL_2018}.get(int(year))
+        self.metPhiCorrector = (METPhiCorrector(campaign=campaign, is_data=not isMC, is_puppi=True)
+                                if campaign is not None else None)
+        # MELA is only used by the 4l channel; constructing it is very slow and
+        # hangs on some batch nodes, so build it only when 4l is actually run.
+        doMELA = self.channels in ("all", "4l")
+        self.worker = ROOT.H4LTools(self.year, self.DEBUG, doMELA)
         self._initialize_worker(self.cfg)
         self.worker.isFSR = isFSR
+        #self.corrector = corrector
         self._initialize_counters()
 
-        # Alternatively, for dynamic worker attributes
-        self.dynamicCuts_4l = ["cut4e", "cutghost4e", "cutLepPt4e", "cutQCD4e", "cutZZ4e", "cutm4l4e",
-                          "cut4mu", "cutghost4mu", "cutLepPt4mu", "cutQCD4mu", "cutZZ4mu", "cutm4l4mu",
-                          "cut2e2mu", "cutghost2e2mu", "cutLepPt2e2mu", "cutQCD2e2mu", "cutZZ2e2mu",
-                          "cutm4l2e2mu"]
-        self.dynamicCuts_2l2q = ["HZZ2l2qNu_cut2l", "HZZ2l2qNu_cutOppositeCharge", "HZZ2l2qNu_cutpTl1l2",
-                             "HZZ2l2qNu_cutETAl1l2", "HZZ2l2qNu_cutmZ1Window", "HZZ2l2qNu_cutZ1Pt",
-                             "cut2l1J", "cut2l2j", "cut2l1Jor2j"]
-        self.dynamicCuts_2l2nu = ["HZZ2l2qNu_cut2l", "HZZ2l2qNu_cutOppositeCharge", "HZZ2l2qNu_cutpTl1l2",
-                             "HZZ2l2qNu_cutETAl1l2", "HZZ2l2qNu_cutmZ1Window", "HZZ2l2qNu_cutZ1Pt",
-                             "HZZ2l2nu_cutbtag", "HZZ2l2nu_cutdPhiJetMET", "HZZ2l2nu_cutMETgT100"]
-        self.dynamicCuts_2l2nu_emu_CR = ["HZZemuCR_cut2l", "HZZemuCR_cutpTl1l2",
-                             "HZZemuCR_cutETAl1l2", "HZZemuCR_cutmZ1Window",
-                             "HZZemuCR_cutZ1Pt", "HZZ2l2nu_cutdPhiJetMET", "HZZ2l2nu_cutMETgT100"]
+        # Cut-flow layout, in the order the selection applies the cuts.
+        # Section: (JSON key, printed title, channels it is printed for, rows).
+        # Row: (worker counter, printed label, kind) with kind
+        #   "start" - first row of a chain (no percentage)
+        #   "cut"   - selection step, printed with % of the previous cut/start row
+        #   "info"  - count that removes no events (flag, sub-count, MET > 100, ...)
+        # Each counter is an int attribute on the C++ worker (declared and reset in
+        # H4LTools.h, incremented in H4LTools.cc).
+        _z1_rows = [
+            ("HZZ2l2qNu_cut2l",           "OS same-flavour Z candidate",    "start"),
+            ("cut_2mu_cutOppositeCharge", "  of which mumu",                "info"),
+            ("HZZ2l2qNu_cutpTl1l2",       "lepton pT",                      "cut"),
+            ("HZZ2l2qNu_cutETAl1l2",      "lepton |eta|",                   "cut"),
+            ("HZZ2l2qNu_cutmZ1Window",    "|m_ll - mZ| window",             "cut"),
+            ("HZZ2l2qNu_cutZ1Pt",         "pT(ll)",                         "cut"),
+        ]
+        self.cutFlowSections = [
+            ("2l2nu_Channel", "2l2nu signal region (ee / mumu)", ("2l2v", "all"), _z1_rows + [
+                ("HZZ2l2qNu_cutDeltaRl1l2",   "  DeltaR(l1,l2) > 0.3 (flag)",   "info"),
+                ("HZZ2l2nu_cutExtraLepVeto",  "extra-lepton veto",              "cut"),
+                ("HZZ2l2nu_cutdPhiJetMET",    "min dPhi(jet, MET) = selected",  "cut"),
+                ("HZZ2l2nu_cutMETgT100",      "  MET > 100 GeV",                "info"),
+            ]),
+            ("2l2nu_Channel_emu_CR", "2l2nu emu control region", ("2l2v", "all"), [
+                ("HZZemuCR_cut2l",            "exactly 1 tight e + 1 tight mu", "start"),
+                ("HZZemuCR_cutpTl1l2",        "lepton pT",                      "cut"),
+                ("HZZemuCR_cutETAl1l2",       "lepton |eta|",                   "cut"),
+                ("HZZemuCR_cutmZ1Window",     "|m_emu - mZ| window",            "cut"),
+                ("HZZemuCR_cutZ1Pt",          "pT(emu)",                        "cut"),
+                ("HZZemuCR_cutDeltaRl1l2",    "  DeltaR(e,mu) > 0.3 (flag)",    "info"),
+                ("HZZemuCR_cutExtraLepVeto",  "extra-lepton veto",              "cut"),
+                ("HZZemuCR_cutdPhiJetMET",    "min dPhi(jet, MET) = selected",  "cut"),
+                ("HZZemuCR_cutMETgT100",      "  MET > 100 GeV",                "info"),
+            ]),
+            ("2l2nu_MuonObjects", "Muons: events with >= 2 muons passing (cumulative)", ("2l2v", "all"), [
+                ("cut_mu_pt",                 "pT",                             "start"),
+                ("cut_mu_eta",                "+ |eta|",                        "cut"),
+                ("cut_mu_mediumid",           "+ mediumId",                     "cut"),
+                ("cut_mu_isglobal_istracker", "+ global or tracker",            "cut"),
+                ("cut_mu_iso",                "+ dxy/dz + isolation",           "cut"),
+            ]),
+            ("2l2q_Channel", "2l2q", ("2l2q", "all"), _z1_rows + [
+                ("cut2l1J",                   "boosted: >= 1 Z->qq fat jet",    "info"),
+                ("cut2l2j",                   "resolved: >= 2 jets",            "info"),
+                ("cut2l1Jor2j",               "boosted or resolved",            "info"),
+            ]),
+            ("4l_Channel", "4l", ("4l", "all"),
+                [(c + f, c + f, "start" if c == "cut" else "cut")
+                 for f in ("4e", "4mu", "2e2mu")
+                 for c in ("cut", "cutghost", "cutLepPt", "cutQCD", "cutZZ", "cutm4l")]),
+        ]
+        # "General" rows: (key, printed label, kind, channels it is printed for)
+        self.cutFlowGeneral = [
+            ("Total",                       "Total (input entries)",       "start", None),
+            ("PassPresel",                  ("Pass preselection" if self.isMC else "Pass golden JSON + preselection")
+                                            if self.preselection else
+                                            ("Analysed" if self.isMC else "Pass golden JSON"),
+                                                                           "cut",   None),
+            ("PassTrig",                    "Pass trigger",                "cut",   None),
+            ("PassMETFilters",              "Pass MET filters",            "cut",   None),
+            ("PassZZ2l2nuSelection",        "Selected: 2l2nu SR",          "info",  ("2l2v", "all")),
+            ("PassZZ2l2nu_emuCR_Selection", "Selected: 2l2nu emu CR",      "info",  ("2l2v", "all")),
+            ("PassZZ2l2qSelection",         "Selected: 2l2q",              "info",  ("2l2q", "all")),
+            ("PassZZSelection",             "Selected: 4l",                "info",  ("4l", "all")),
+        ]
 
-
-        hist_nBins = 7 + len(self.dynamicCuts_4l) + len(self.dynamicCuts_2l2q) + len(self.dynamicCuts_2l2nu) + len(self.dynamicCuts_2l2nu_emu_CR)
-        print("hist_nBins: ", hist_nBins)
-        self.CutFlowTable =  ROOT.TH1F('cutFlow','cutFlow',hist_nBins, 0, hist_nBins)
-        self.CutFlowTable.GetXaxis().SetBinLabel(1, "Total")
-        self.CutFlowTable.GetXaxis().SetBinLabel(2, "PassTrig")
-        self.CutFlowTable.GetXaxis().SetBinLabel(3, "PassMETFilters")
-        self.CutFlowTable.GetXaxis().SetBinLabel(4, "PassZZSelection")
-        self.CutFlowTable.GetXaxis().SetBinLabel(5, "PassZZ2l2qSelection")
-        self.CutFlowTable.GetXaxis().SetBinLabel(6, "PassZZ2l2nuSelection")
-        self.CutFlowTable.GetXaxis().SetBinLabel(7, "PassZZ2l2nu_emuCR_Selection")
-
-        for idx, cut in enumerate(self.dynamicCuts_4l):
-            self.CutFlowTable.GetXaxis().SetBinLabel(8 + idx, cut)
-        for idx, cut in enumerate(self.dynamicCuts_2l2q):
-            self.CutFlowTable.GetXaxis().SetBinLabel(8 + len(self.dynamicCuts_4l) + idx, cut)
-        for idx, cut in enumerate(self.dynamicCuts_2l2nu):
-            self.CutFlowTable.GetXaxis().SetBinLabel(8 + len(self.dynamicCuts_4l) + len(self.dynamicCuts_2l2q) + idx, cut)
-        for idx, cut in enumerate(self.dynamicCuts_2l2nu_emu_CR):
-            self.CutFlowTable.GetXaxis().SetBinLabel(8 + len(self.dynamicCuts_4l) + len(self.dynamicCuts_2l2q) + len(self.dynamicCuts_2l2nu) + idx, cut)
+        # Histogram: one bin per General row, then one per section row (bin label = key)
+        self.cutFlowBinLabels = [g[0] for g in self.cutFlowGeneral] + \
+                                [row[0] for sec in self.cutFlowSections for row in sec[3]]
+        hist_nBins = len(self.cutFlowBinLabels)
+        self.CutFlowTable = ROOT.TH1F('cutFlow', 'cutFlow', hist_nBins, 0, hist_nBins)
+        for idx, label in enumerate(self.cutFlowBinLabels):
+            self.CutFlowTable.GetXaxis().SetBinLabel(idx + 1, label)
 
 
     def loadLibraries(self):
@@ -109,6 +181,10 @@ class HZZAnalysisCppProducer(Module):
             ['BDTWP', 'MedEta', 'HighPT'], ['BDTWP', 'HighEta', 'HighPT']
         ]))
 
+        self.worker.InitializeEleMuCleaning(*self._get_nested_values(cfg['Electron'], [
+            ['MuonCleaning', 'dR'], ['MuonCleaning', 'MuPt']
+        ]))
+
         self.worker.InitializeMucut(*self._get_nested_values(cfg['Muon'], [
             'pTcut', 'Etacut', 'Loosedxycut', 'Loosedzcut', 'Isocut',
             'Tightdxycut', 'Tightdzcut', 'TightTrackerLayercut', 'TightpTErrorcut',
@@ -119,12 +195,12 @@ class HZZAnalysisCppProducer(Module):
             'pTcut', 'Etacut', 'Isocut', 'dRlcut', 'dRlOverPtcut'
         ]))
 
-        self.worker.InitializeJetcut(*self._get_nested_values(cfg['Jet'], ['pTcut', 'Etacut']))
+        self.worker.InitializeJetcut(*self._get_nested_values(cfg['Jet'], ['pTcut', 'Etacut', ['UParTAK4_btag', 'Etacut']]))
 
         self.worker.InitializeEvtCut(*self._get_nested_values(cfg, ['MZ1cut', 'MZZcut',
                                                                     ['Higgscut', 'down'], ['Higgscut', 'up'],
                                                                     'Zmass', ['MZcut', 'down'], ['MZcut', 'up'],
-                                                                    ['Jet','deepJet_btag','Loose'], ['Jet','deepJet_btag','Medium'], ['Jet','deepJet_btag','Tight']]))
+                                                                    ['Jet','UParTAK4_btag','Loose'], ['Jet','UParTAK4_btag','Medium'], ['Jet','UParTAK4_btag','Tight']]))
 
         if self.channels == "all" or self.channels == "2l2q":
             self.worker.InitializeHZZ2l2qCut(*self._get_nested_values(cfg['HZZ2l2q'],
@@ -135,18 +211,48 @@ class HZZAnalysisCppProducer(Module):
             self.worker.InitializeHZZ2l2nuCut(*self._get_nested_values(cfg['HZZ2l2nu'],
                                                                    ['Leading_Lep_pT', 'SubLeading_Lep_pT', 'Lep_eta', 'Pt_ll',
                                                                     'M_ll_Window', 'dPhi_jetMET', ['MZLepcut', 'down'], ['MZLepcut', 'up']]))
+            self.worker.InitializeVetoLepCut(*self._get_nested_values(cfg['HZZ2l2nu'],
+                                                                   [['VetoLep', 'Ele_pT'], ['VetoLep', 'Ele_Iso'],
+                                                                    ['VetoLep', 'Mu_pT'], ['VetoLep', 'Mu_Iso']]))
+            self.worker.InitializeEmuCRCut(*self._get_nested_values(cfg['HZZ2l2nu'],
+                                                                   [['emuCR', 'M_ll_Window'], ['emuCR', 'Pt_ll']]))
 
     def _get_nested_values(self, dictionary, keys):
+        # Raise a clear error for a missing key instead of passing a placeholder
+        # string into a float Initialize* argument (which fails obscurely later).
         values = []
         for key in keys:
             if isinstance(key, list):
                 sub_dict = dictionary
                 for sub_key in key:
-                    sub_dict = sub_dict.get(sub_key, {})
-                values.append(sub_dict if sub_dict else 'N/A')
+                    if not isinstance(sub_dict, dict) or sub_key not in sub_dict:
+                        raise KeyError("Missing config key: {} (in {})".format(
+                            " -> ".join(str(k) for k in key), self.cfgFile))
+                    sub_dict = sub_dict[sub_key]
+                values.append(sub_dict)
             else:
-                values.append(dictionary.get(key, 'N/A'))
+                if key not in dictionary:
+                    raise KeyError("Missing config key: {} (in {})".format(
+                        key, self.cfgFile))
+                values.append(dictionary[key])
         return values
+
+    def _get_weight_branch(self, event, name, default, warn=None):
+        # nanoAOD-tools raises RuntimeError("Unknown branch ...") for an absent
+        # branch, which getattr(event, name, default) does NOT catch. Use this so a
+        # missing weight producer (e.g. no PU weight for 2022, or a broken re-nano
+        # without L1PreFiringWeight_*) degrades to `default` with a one-time warning
+        # instead of crashing the job.
+        try:
+            return getattr(event, name)
+        except Exception:
+            if warn is not None:
+                flag = "_warned_missing_" + name
+                if not getattr(self, flag, False):
+                    print("WARNING: branch '{}' absent for year {} MC - {} NOT "
+                          "applied (using {})".format(name, self.year, warn, default))
+                    setattr(self, flag, True)
+            return default
 
     def _initialize_counters(self):
         self.passAllEvts = 0
@@ -165,6 +271,10 @@ class HZZAnalysisCppProducer(Module):
 
     def beginFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
         self.initReaders(inputTree)  # initReaders must be called in beginFile
+        # Cut-flow "Total": all entries of the input file (within -n), counted before the
+        # golden JSON and the preselection that PostProcessor applies ahead of analyze()
+        nFile = inputFile.Get("Events").GetEntries()
+        self.nInputEntries += min(nFile, self.maxEntries) if self.maxEntries else nFile
         self.out = wrappedOutputTree
 
         # Boolean branches for Trigger channels
@@ -198,7 +308,8 @@ class HZZAnalysisCppProducer(Module):
         self.out.branch("pTL4",  "F")
         self.out.branch("etaL4",  "F")
         self.out.branch("phiL4",  "F")
-
+        self.out.branch("DeltaRl1l2",  "F")
+        self.out.branch("HZZ2l2nu_passDeltaRl1l2", "O")
         # Branches for 4l channel: ZZ kinematics
         self.out.branch("mass4l",  "F")
         self.out.branch("pT4l",  "F")
@@ -235,6 +346,37 @@ class HZZAnalysisCppProducer(Module):
         self.out.branch("etaZ2",  "F")
         self.out.branch("phiZ2",  "F")
 
+        self.out.branch("pT_MET",  "F")
+        self.out.branch("phi_MET",  "F")
+
+        # --- MC event weights (all = 1.0 for data) -------------------------------
+        # overallEventWeight        = genWeight * puWeight     * L1PreFiringWeight_Nom
+        # overallEventWeight_puUp   = genWeight * puWeightUp   * L1PreFiringWeight_Nom
+        # overallEventWeight_puDown = genWeight * puWeightDown * L1PreFiringWeight_Nom
+        # overallEventWeight_prefire{Up,Down} = genWeight * puWeight * L1PreFiringWeight_{Up,Dn}
+        # Each variation shifts exactly ONE factor. Only weight-based systematics
+        # that do NOT change the event selection are here (PU, L1 prefiring);
+        # JES/JER/unclustered-MET/lepton-scale need a per-variation re-run of the
+        # C++ selection and are NOT included.
+        #
+        # DOWNSTREAM CONTRACT (higgs_combine/make_shapes*.cpp must follow this):
+        #   yield = sum(overallEventWeight) * xsec * lumi / genEventSumw
+        #   - genEventSumw is the sum of genWeight over ALL generated events, from
+        #     the merged Runs tree (preserved by haddnano.py). Do NOT normalise by
+        #     the event count or by (nPos - nNeg): those differ from genEventSumw
+        #     for samples whose genWeight is not +/-1 (POWHEG MiNLO, aMC@NLO).
+        #   - Do NOT multiply by genWeight or puWeight again: they are folded in
+        #     here. The standalone genWeight / puWeight / L1PreFiringWeight_* branches
+        #     are kept for provenance/debugging only.
+        #   - LHEScaleWeight / LHEPdfWeight / PSWeight are deliberately NOT folded
+        #     in; apply them downstream as ratios renormalised to LHEScaleSumw /
+        #     LHEPdfSumw (scale/PDF) or genEventSumw (PS).
+        self.out.branch("overallEventWeight",            "F")
+        self.out.branch("overallEventWeight_puUp",        "F")
+        self.out.branch("overallEventWeight_puDown",      "F")
+        self.out.branch("overallEventWeight_prefireUp",   "F")
+        self.out.branch("overallEventWeight_prefireDown", "F")
+
         # Branches for 2l2q channel
         self.out.branch("massZ2_2j",  "F")
         self.out.branch("phiZ2_2j",  "F")
@@ -244,7 +386,6 @@ class HZZAnalysisCppProducer(Module):
         self.out.branch("phiZ2_met",  "F")
         self.out.branch("pTZ2_met",  "F")
         self.out.branch("EneZ2_met",  "F")
-        self.out.branch("MT_2l2nu",  "F")
 
         # Branches for 2l2nu channel: ZZ kinematics
         self.out.branch("HZZ2l2nu_ZZmT",  "F")
@@ -253,6 +394,7 @@ class HZZAnalysisCppProducer(Module):
 
         # Branches for 2l2nu channel: VBF jets and dijet kinematics
         self.out.branch("HZZ2l2qNu_nJets", "I")
+        self.out.branch("HZZ2l2nu_nExtraLep", "I")
 
         self.out.branch("HZZ2l2qNu_nTightBtagJets", "I")
         self.out.branch("HZZ2l2qNu_nMediumBtagJets", "I")
@@ -261,6 +403,7 @@ class HZZAnalysisCppProducer(Module):
         self.out.branch("HZZ2l2nu_VBFIndexJet1",  "I")
         self.out.branch("HZZ2l2nu_VBFIndexJet2",  "I")
         self.out.branch("HZZ2l2nu_minDPhi_METAK4",  "F")
+        self.out.branch("HZZ2l2nu_dPhi_ZMET",  "F")  # |dphi(Z, MET)|; stored only, no cut applied
 
         self.out.branch("HZZ2l2nu_VBFjet1_pT",  "F")
         self.out.branch("HZZ2l2nu_VBFjet1_eta",  "F")
@@ -297,54 +440,56 @@ class HZZAnalysisCppProducer(Module):
             f.write("Sync data list:"+"\n")
 
     def endFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
-        print("\n========== Print Cut flow table  ====================\n")
-        self.cutFlowCounts = {
-            "Total": self.passAllEvts,
+        generalCounts = {
+            "Total": self.nInputEntries,
+            "PassPresel": self.passAllEvts,
             "PassTrig": self.passtrigEvts,
             "PassMETFilters": self.passMETFilters,
             "PassZZSelection": self.passZZ4lEvts,
             "PassZZ2l2qSelection": self.passZZ2l2qEvts,
             "PassZZ2l2nuSelection": self.passZZ2l2nuEvts,
-            "PassZZ2l2nu_emuCR_Selection": self.passZZ2l2nu_emuCR_Evts
+            "PassZZ2l2nu_emuCR_Selection": self.passZZ2l2nu_emuCR_Evts,
         }
+        cutFlowData = {"General": generalCounts}
+        for key, _, _, rows in self.cutFlowSections:
+            cutFlowData[key] = {row[0]: int(getattr(self.worker, row[0])) for row in rows}
 
-        # Cut flow data for 4l, 2l2q, 2l2nu channels for json output
-        cutFlowData = {
-            "General": self.cutFlowCounts,
-            "4l_Channel": {},
-            "2l2q_Channel": {},
-            "2l2nu_Channel": {},
-            "2l2nu_Channel_emu_CR": {}
-        }
+        def printRows(rows):
+            """rows: (label, count, kind); cut rows get % of the previous start/cut row."""
+            previous = None
+            for label, count, kind in rows:
+                pct = ""
+                if kind == "cut" and previous:
+                    pct = "{:7.2f}%".format(100.0 * count / previous)
+                if kind in ("start", "cut"):
+                    previous = count
+                print("  {:<36}{:>10}  {}".format(label, count, pct))
 
-        for key, value in self.cutFlowCounts.items():
-            print("{:27}:{:7} {}".format(key, str(value), " Events"))
+        def printed(channels):
+            return channels is None or self.channels in channels
 
-        print("\n4l channel cut flow table:")
-        for idx, cut in enumerate(self.dynamicCuts_4l):
-            print("{:2} {:27}:{:7} {}".format(8 + idx, cut, str(getattr(self.worker, cut)), " Events"))
-            cutFlowData["4l_Channel"][cut] = getattr(self.worker, cut, 'N/A')
-            self.CutFlowTable.SetBinContent(8 + idx, getattr(self.worker, cut, 'N/A'))
+        print("\n==================== Cut flow ({} channel{}) ====================".format(
+            self.channels, "s" if self.channels == "all" else ""))
+        print("% = fraction of the previous selection step; indented rows are counts that remove no events")
+        print("Preselection: {}\n".format(self.preselection if self.preselection else "none"))
+        print("General")
+        printRows([(label, generalCounts[key], kind)
+                   for key, label, kind, channels in self.cutFlowGeneral if printed(channels)])
+        for key, title, channels, rows in self.cutFlowSections:
+            if not printed(channels):
+                continue
+            print("\n" + title)
+            printRows([(label, cutFlowData[key][counter], kind) for counter, label, kind in rows])
+        print("\nElectrons removed by electron-muon cross-cleaning (dR < {:.2f}): {}".format(
+            self.worker.eleMuCleaningDR, self.worker.nEleMuOverlapRemoved))
+        print("\n=================================================================\n")
 
-        print("\n2l2q channel cut flow table:")
-        for idx, cut in enumerate(self.dynamicCuts_2l2q):
-            print("{:2} {:27}:{:7} {}".format(8 + len(self.dynamicCuts_4l) + idx, cut, str(getattr(self.worker, cut)), " Events"))
-            cutFlowData["2l2q_Channel"][cut] = getattr(self.worker, cut, 'N/A')
-            self.CutFlowTable.SetBinContent(8 + len(self.dynamicCuts_4l) + idx, getattr(self.worker, cut, 'N/A'))
-
-        print("\n2l2nu channel cut flow table:")
-        for idx, cut in enumerate(self.dynamicCuts_2l2nu):
-            print("{:2} {:27}:{:7} {}".format(8 + len(self.dynamicCuts_4l) + len(self.dynamicCuts_2l2q) + idx, cut, str(getattr(self.worker, cut)), " Events"))
-            cutFlowData["2l2nu_Channel"][cut] = getattr(self.worker, cut, 'N/A')
-            self.CutFlowTable.SetBinContent(8 + len(self.dynamicCuts_4l) + len(self.dynamicCuts_2l2q) + idx, getattr(self.worker, cut, 'N/A'))
-
-        print("\n2l2nu channel emu control region cut flow table:")
-        for idx, cut in enumerate(self.dynamicCuts_2l2nu_emu_CR):
-            print("{:2} {:27}:{:7} {}".format(8 + len(self.dynamicCuts_4l) + len(self.dynamicCuts_2l2q) + len(self.dynamicCuts_2l2nu) + idx, cut, str(getattr(self.worker, cut)), " Events"))
-            cutFlowData["2l2nu_Channel_emu_CR"][cut] = getattr(self.worker, cut, 'N/A')
-            self.CutFlowTable.SetBinContent(8 + len(self.dynamicCuts_4l) + len(self.dynamicCuts_2l2q) + len(self.dynamicCuts_2l2nu) + idx, getattr(self.worker, cut, 'N/A'))
-
-        print("\n========== END: Print Cut flow table  ====================\n")
+        # Histogram bins follow self.cutFlowBinLabels
+        flat = dict(generalCounts)
+        for key, _, _, _ in self.cutFlowSections:
+            flat.update(cutFlowData[key])
+        for idx, label in enumerate(self.cutFlowBinLabels):
+            self.CutFlowTable.SetBinContent(idx + 1, flat[label])
 
         # Write the cut flow data to a json file
         with open(self.cutFlowJSONFile, "w") as jsonFile:
@@ -364,6 +509,14 @@ class HZZAnalysisCppProducer(Module):
     def analyze(self, event):
         """process event, return True (go to next module) or False (fail,
         go to next event)"""
+        #if event.run != 317292 or event.luminosityBlock != 95 or event.event != 144614313:
+        #if event.Electron_pt.GetSize() > 0:
+            #return False
+        #if event.nElectron != 1 or event.nMuon != 1:
+            #return False
+        #print("Event electron_pt =", event.Electron_pt)
+        #print("Event Muon_pt =", event.Muon_pt)
+        #print("Event MET_pt =", event.MET_pt)
         if self.DEBUG:
             print("======       Inside analyze function     ==========")
         # do this check at every event, as other modules might have read
@@ -380,6 +533,29 @@ class HZZAnalysisCppProducer(Module):
 
         keepIt = False
 
+        # --- MC event weights (see beginFile for the definition) ---
+        if isMC:
+            _is_run2 = int(self.year) in (2016, 2017, 2018)
+            _gen = self._get_weight_branch(event, "genWeight", 1.0)
+            _puN = self._get_weight_branch(event, "puWeight", 1.0,
+                                           warn="PU reweighting")           # puWeight_UL20XX
+            _puU = self._get_weight_branch(event, "puWeightUp", _puN)
+            _puD = self._get_weight_branch(event, "puWeightDown", _puN)
+            # L1PreFiringWeight_Nom = combined ECAL (2016-17) x muon (2016-18);
+            # for 2018 it is driven by the muon term and is NOT ~1.
+            _prN = self._get_weight_branch(event, "L1PreFiringWeight_Nom", 1.0,
+                                           warn="L1 prefiring" if _is_run2 else None)
+            _prU = self._get_weight_branch(event, "L1PreFiringWeight_Up", _prN)
+            _prD = self._get_weight_branch(event, "L1PreFiringWeight_Dn", _prN)
+            overallEventWeight             = _gen * _puN * _prN
+            overallEventWeight_puUp        = _gen * _puU * _prN
+            overallEventWeight_puDown      = _gen * _puD * _prN
+            overallEventWeight_prefireUp   = _gen * _puN * _prU
+            overallEventWeight_prefireDown = _gen * _puN * _prD
+        else:
+            overallEventWeight = overallEventWeight_puUp = overallEventWeight_puDown = \
+                overallEventWeight_prefireUp = overallEventWeight_prefireDown = 1.0
+
         passedTrig=False
         passedFullSelection=False
         passedZ4lSelection=False
@@ -392,7 +568,6 @@ class HZZAnalysisCppProducer(Module):
         nZXCRFailedLeptons=0
         self.passAllEvts += 1
         self.CutFlowTable.Fill(0)
-
         massZ2_2j = -999.
         phiZ2_2j = -999.
         etaZ2_2j = -999.
@@ -401,8 +576,8 @@ class HZZAnalysisCppProducer(Module):
         phiZ2_met = -999.
         pTZ2_met = -999.
         EneZ2_met = -999.
-        MT_2l2nu = -999.
         HZZ2l2nu_minDPhi_METAK4 = 999.0
+        HZZ2l2nu_dPhi_ZMET = -999.
 
         HZZ2l2nu_ZZmT = -999.
         HZZ2l2nu_ZZpT = -999.
@@ -473,12 +648,11 @@ class HZZAnalysisCppProducer(Module):
         eta4l = -999.
         phi4l = -999.
         mass4l = -999.
-        #Pz_neutrino = -999.
-
-        TriggerMap = {}
+        DeltaRl1l2 = -999.
         passedTrig = False
-        for TriggerChannel in self.cfg['TriggerChannels']:
-            TriggerMap[TriggerChannel] = PassTrig(event, self.cfg, TriggerChannel)
+        fired = {path: bool(getattr(event, path)) for path in self.triggerPaths}
+        TriggerMap = {channel: any(fired[path] for path in paths)
+                      for channel, paths in self.triggerLists.items()}
 
         # If any of the trigger channel from TriggerMap passes, then the event is kept else return keepIt
         for value in TriggerMap.values():
@@ -487,21 +661,38 @@ class HZZAnalysisCppProducer(Module):
                 break
         if not passedTrig:
             return keepIt
+
         self.passtrigEvts += 1
         self.CutFlowTable.Fill(1)
 
-        if passFilters(event, int(self.year)):
+        if passFilters(event, int(self.year), isMC=self.isMC):
             self.passMETFilters += 1
             self.CutFlowTable.Fill(2)
         else:
             return keepIt
+
         electrons = Collection(event, "Electron")
         muons = Collection(event, "Muon")
         fsrPhotons = Collection(event, "FsrPhoton")
         # Photons = Collection(event, "Photon")
         jets = Collection(event, "Jet")
         FatJets = Collection(event, "FatJet")
-        met = Object(event, "MET", None)
+        puppimet = Object(event, "PuppiMET", None)
+        corrector = self.metPhiCorrector
+
+        #MET correction for v15
+        if corrector is not None:
+            corr_pt, corr_phi = corrector(
+            puppimet.pt,
+            puppimet.phi,
+            npv=event.PV_npvs,
+            run=event.run
+            )
+        else:
+            if not getattr(self, "_warned_no_metphi", False):
+                print("WARNING: no MET-phi correction for year {} - using uncorrected PuppiMET".format(self.year))
+                self._warned_no_metphi = True
+            corr_pt, corr_phi = puppimet.pt, puppimet.phi
 
         # for photon in Photons:
         #     # Keep photons if pT > 55, |eta| < 2.5 and skip the transition region of barrel and endcap
@@ -510,14 +701,18 @@ class HZZAnalysisCppProducer(Module):
 
         if isMC:
             genparts = Collection(event, "GenPart")
+            GenJets = Collection(event, "GenJet")
             for xg in genparts:
                 self.worker.SetGenParts(xg.pt)
             for xm in muons:
                 self.worker.SetMuonsGen(xm.genPartIdx)
+            for xg in GenJets:
+                self.worker.SetGenJets(xg.pt, xg.eta, xg.phi, xg.mass)
 
         for xe in electrons:
-            self.worker.SetElectrons(xe.pt, xe.eta, xe.phi, xe.mass, xe.dxy,
-                                      xe.dz, xe.mvaFall17V2Iso_WP90, xe.pdgId, xe.pfRelIso03_all)
+            #self.worker.SetElectrons(xe.pt, xe.eta, xe.phi, xe.mass, xe.dxy,
+                                      #xe.dz, xe.mvaFall17V2Iso_WP90, xe.pdgId, xe.pfRelIso03_all) #for v9
+            self.worker.SetElectrons(xe.pt, xe.eta, xe.phi, xe.mass, xe.dxy, xe.dz, xe.mvaIso_WP90, xe.pfRelIso03_all, xe.pdgId, xe.deltaEtaSC) # for v15
             if self.DEBUG:
                 print("Electrons: pT, eta: {}, {}".format(xe.pt, xe.eta))
 
@@ -530,14 +725,25 @@ class HZZAnalysisCppProducer(Module):
 
         for xf in fsrPhotons:
             self.worker.SetFsrPhotons(xf.dROverEt2,xf.eta,xf.phi,xf.pt,xf.relIso03)
-
+        
+        # for v9
+        #for xj in jets:
+            #self.worker.SetJets(xj.pt,xj.eta,xj.phi,xj.mass,xj.jetId, xj.btagDeepFlavB, xj.puId)
+        # for v15
         for xj in jets:
-            self.worker.SetJets(xj.pt,xj.eta,xj.phi,xj.mass,xj.jetId, xj.btagDeepFlavB, xj.puId)
+            # argument order must match H4LTools.h SetJets: chEmEF, chHEF, neEmEF, neHEF, muEF, nConstituents, neMultiplicity, chMultiplicity
+            self.worker.SetJets(xj.pt,xj.eta,xj.phi,xj.mass,xj.btagUParTAK4B, xj.chEmEF, xj.chHEF, xj.neEmEF, xj.neHEF, xj.muEF, xj.nConstituents, xj.neMultiplicity, xj.chMultiplicity)
 
-        for xj in FatJets:
-            self.worker.SetFatJets(xj.pt, xj.eta, xj.phi, xj.msoftdrop, xj.jetId, xj.btagDeepB, xj.particleNet_ZvsQCD)
+        #for xj in FatJets:
+            #self.worker.SetFatJets(xj.pt, xj.eta, xj.phi, xj.msoftdrop, xj.jetId, xj.btagDeepB, xj.particleNet_ZvsQCD)
+            #self.worker.SetFatJets(xj.pt, xj.eta, xj.phi, xj.msoftdrop)
 
-        self.worker.SetMET(met.pt,met.phi,met.sumEt)
+        #self.worker.SetPuppiMET(puppimet.pt, puppimet.phi, puppimet.sumEt) # for v15
+        self.worker.SetPuppiMET(corr_pt, corr_phi, puppimet.sumEt)
+        if self.DEBUG:
+            print("***** MET: corr_pt, corr_phi, sumEt: {}, {}, {}".format(corr_pt, corr_phi, puppimet.sumEt))
+            print("***** MET not corrected: pt, phi, sumEt: {}, {}, {}".format(puppimet.pt, puppimet.phi, puppimet.sumEt))
+            print("***** Event branch MET_pt =", event.PuppiMET_pt)
 
         self.worker.LeptonSelection()
         foundZZCandidate_4l = False    # for 4l
@@ -550,6 +756,7 @@ class HZZAnalysisCppProducer(Module):
         passZZ2l2nu_emuCR_Selection = False    # for 2l2nu emu control region
         HZZ2l2nu_ifVBF = False
         HZZ2l2qNu_isELE = False
+        HZZ2l2nu_nExtraLep = -1
         HZZ2l2nu_isEMuCR = False
         HZZ2l2qNu_cutOppositeChargeFlag = False
         isBoosted2l2q = False
@@ -580,6 +787,8 @@ class HZZAnalysisCppProducer(Module):
         HZZ2l2nu_isEMuCR = self.worker.HZZ2l2nu_isEMuCR
         HZZ2l2qNu_cutOppositeChargeFlag = self.worker.HZZ2l2qNu_cutOppositeChargeFlag
         HZZ2l2qNu_nJets = self.worker.HZZ2l2qNu_nJets
+        HZZ2l2nu_nExtraLep = self.worker.HZZ2l2nu_nExtraLep
+        HZZ2l2nu_passDeltaRl1l2 = self.worker.HZZ2l2nu_passDeltaRl1l2
         HZZ2l2qNu_nTightBtagJets = self.worker.HZZ2l2qNu_nTightBtagJets
         HZZ2l2qNu_nMediumBtagJets = self.worker.HZZ2l2qNu_nMediumBtagJets
         HZZ2l2qNu_nLooseBtagJets = self.worker.HZZ2l2qNu_nLooseBtagJets
@@ -594,9 +803,10 @@ class HZZAnalysisCppProducer(Module):
             etaL2 = self.worker.etaL2
             phiL2 = self.worker.phiL2
             massL2 = self.worker.massL2
+            DeltaRl1l2 = self.worker.DeltaRl1l2
 
             if pTL2>pTL1:
-                pTL1, pTl2 = pTL2, pTL1
+                pTL1, pTL2 = pTL2, pTL1
                 etaL1, etaL2 = etaL2, etaL1
                 phiL1, phiL2 = phiL2, phiL1
                 massL1,massL2 = massL2, massL1
@@ -614,6 +824,15 @@ class HZZAnalysisCppProducer(Module):
             etaZ2 = self.worker.Z2.Eta()
             phiZ2 = self.worker.Z2.Phi()
             massZ2 = self.worker.Z2.M()
+
+            pTj1 = self.worker.pTj1
+            etaj1 = self.worker.etaj1
+            phij1 = self.worker.phij1
+            mj1 = self.worker.mj1
+            pTj2 = self.worker.pTj2
+            etaj2 = self.worker.etaj2
+            phij2 = self.worker.phij2
+            mj2 = self.worker.mj2
 
         if (foundZZCandidate_2l2q):
             keepIt = True
@@ -646,13 +865,14 @@ class HZZAnalysisCppProducer(Module):
             phiZ2_met = self.worker.Z2_met.Phi()
             pTZ2_met = self.worker.Z2_met.Pt()
             EneZ2_met = self.worker.Z2_met.E()
-            MT_2l2nu = self.worker.ZZ_metsystem.Mt()
 
-            HZZ2l2nu_ZZmT = self.worker.ZZ_metsystem.Mt()
-            HZZ2l2nu_ZZpT = self.worker.ZZ_metsystem.Pt()
+            # |dphi(Z, MET)|: computed and stored as an output branch; NO cut applied
+            # (AN-2016/325 4.4.7 uses |dphi(Z, MET)| > 0.5 - left to a downstream selection).
+            HZZ2l2nu_dPhi_ZMET = abs(ROOT.TVector2.Phi_mpi_pi(self.worker.Z1.Phi() - corr_phi))
 
-            HZZ2l2nu_ZZmT = self.worker.ZZ_metsystem.Mt()
+            HZZ2l2nu_ZZmT = self.worker.MT_2l2nu  # AN-2016/325 Eq. 6
             HZZ2l2nu_ZZpT = self.worker.ZZ_metsystem.Pt()
+            
 
             #Pz_neutrino = self.worker.Pz_neutrino
 
@@ -715,14 +935,7 @@ class HZZAnalysisCppProducer(Module):
             etaL4 = self.worker.etaL4
             phiL4 = self.worker.phiL4
             massL4 = self.worker.massL4
-            pTj1 = self.worker.pTj1
-            etaj1 = self.worker.etaj1
-            phij1 = self.worker.phij1
-            mj1 = self.worker.mj1
-            pTj2 = self.worker.pTj2
-            etaj2 = self.worker.etaj2
-            phij2 = self.worker.phij2
-            mj2 = self.worker.mj2
+            
 
             if pTL4>pTL3:
                 pTL3, pTL4 = pTL4, pTL3
@@ -751,10 +964,10 @@ class HZZAnalysisCppProducer(Module):
         self.out.fillBranch("phiZ2_met",phiZ2_met)
         self.out.fillBranch("pTZ2_met",pTZ2_met)
         self.out.fillBranch("EneZ2_met",EneZ2_met)
-        self.out.fillBranch("MT_2l2nu",MT_2l2nu)
         self.out.fillBranch("HZZ2l2nu_ZZmT", HZZ2l2nu_ZZmT)
         self.out.fillBranch("HZZ2l2nu_ZZpT", HZZ2l2nu_ZZpT)
         self.out.fillBranch("HZZ2l2nu_minDPhi_METAK4", HZZ2l2nu_minDPhi_METAK4)
+        self.out.fillBranch("HZZ2l2nu_dPhi_ZMET", HZZ2l2nu_dPhi_ZMET)
         #self.out.fillBranch("Pz_neutrino", Pz_neutrino)
 
         self.out.fillBranch("HZZ2l2nu_VBFIndexJet1", HZZ2l2nu_VBFIndexJet1)
@@ -791,6 +1004,8 @@ class HZZAnalysisCppProducer(Module):
         self.out.fillBranch("pTL2",pTL2)
         self.out.fillBranch("etaL2",etaL2)
         self.out.fillBranch("phiL2",phiL2)
+        self.out.fillBranch("DeltaRl1l2",DeltaRl1l2)
+        self.out.fillBranch("HZZ2l2nu_passDeltaRl1l2",HZZ2l2nu_passDeltaRl1l2)
 
         self.out.fillBranch("pTZ1",pTZ1)
         self.out.fillBranch("etaZ1",etaZ1)
@@ -800,6 +1015,14 @@ class HZZAnalysisCppProducer(Module):
         self.out.fillBranch("etaZ2",etaZ2)
         self.out.fillBranch("phiZ2",phiZ2)
         self.out.fillBranch("massZ2",massZ2)
+        self.out.fillBranch("pT_MET",corr_pt) #for v15
+        self.out.fillBranch("phi_MET",corr_phi) #for v15
+
+        self.out.fillBranch("overallEventWeight",             overallEventWeight)
+        self.out.fillBranch("overallEventWeight_puUp",        overallEventWeight_puUp)
+        self.out.fillBranch("overallEventWeight_puDown",      overallEventWeight_puDown)
+        self.out.fillBranch("overallEventWeight_prefireUp",   overallEventWeight_prefireUp)
+        self.out.fillBranch("overallEventWeight_prefireDown", overallEventWeight_prefireDown)
 
         self.out.fillBranch("mass4l",mass4l)
         self.out.fillBranch("pT4l",pT4l)
@@ -847,12 +1070,17 @@ class HZZAnalysisCppProducer(Module):
         self.out.fillBranch("HZZ2l2nu_isEMuCR",HZZ2l2nu_isEMuCR)
         self.out.fillBranch("HZZ2l2qNu_cutOppositeChargeFlag",HZZ2l2qNu_cutOppositeChargeFlag)
         self.out.fillBranch("HZZ2l2qNu_nJets",HZZ2l2qNu_nJets)
+        self.out.fillBranch("HZZ2l2nu_nExtraLep",HZZ2l2nu_nExtraLep)
         self.out.fillBranch("HZZ2l2qNu_nTightBtagJets",HZZ2l2qNu_nTightBtagJets)
         self.out.fillBranch("HZZ2l2qNu_nMediumBtagJets",HZZ2l2qNu_nMediumBtagJets)
         self.out.fillBranch("HZZ2l2qNu_nLooseBtagJets",HZZ2l2qNu_nLooseBtagJets)
 
-        # FIXME: Add weight branch having following:
-        # puWeight*btagWeight_DeepCSVB*L1PreFiringWeight_ECAL_Nom*L1PreFiringWeight_Muon_Nom*L1PreFiringWeight_Nom
+        # NOTE: overallEventWeight (= genWeight * puWeight * L1PreFiringWeight_Nom)
+        # and its PU / prefiring up-down variations are filled above.
+        # STILL MISSING (need a POG payload + verified WP key, or a per-variation
+        # re-run of the C++ selection): lepton reco/ID/iso/trigger SFs, b-tag SF,
+        # electron energy scale/smearing, JES/JER/unclustered-MET shape variations,
+        # Rochester muon-scale propagation.
 
         return keepIt
 
