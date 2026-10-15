@@ -156,6 +156,11 @@ Electron:
             LowPT: 0.9443653660
             HighPT: -0.5169136775
     Isocut: 0.15 #0.35
+    # Electron-muon cross-cleaning: drop electrons within dR < dR of a POG-loose muon
+    # (PF candidate, global or tracker) with pT > MuPt. 0.05 = CMS H->ZZ->4l convention.
+    MuonCleaning:
+        dR: 0.05
+        MuPt: 5.0
 
 Muon:
     pTcut: 25 #5

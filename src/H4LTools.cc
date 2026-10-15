@@ -13,9 +13,35 @@
         //std::cout << "H4LTools: Running in Data mode" << std::endl;
 //}
 
+// Flag electrons that overlap a muon (deltaR < eleMuCleaningDR to a muon passing the POG
+// loose ID with pT > eleMuCleaningMuPt). Such an electron is the muon reconstructed a second
+// time; flagged electrons are dropped from the selection and from the extra-lepton veto.
+void H4LTools::FlagElectronMuonOverlap(){
+    Electron_muOverlap.assign(Electron_pt.size(), false);
+    for (unsigned int i=0; i<Electron_pt.size(); i++){
+        TLorentzVector ele;
+        ele.SetPtEtaPhiM(Electron_pt[i], Electron_eta[i], Electron_phi[i], Electron_mass[i]);
+        for (unsigned int j=0; j<Muon_pt.size(); j++){
+            if (Muon_pt[j] <= eleMuCleaningMuPt) continue;
+            if (!(Muon_isPFcand[j] && (Muon_isGlobal[j] || Muon_isTracker[j]))) continue;
+            TLorentzVector mu;
+            mu.SetPtEtaPhiM(Muon_pt[j], Muon_eta[j], Muon_phi[j], Muon_mass[j]);
+            if (ele.DeltaR(mu) < eleMuCleaningDR){
+                Electron_muOverlap[i] = true;
+                nEleMuOverlapRemoved++;
+                if (DEBUG)
+                    std::cout << "Electron " << i << " (pT " << Electron_pt[i] << ") overlaps muon " << j
+                              << " (dR " << ele.DeltaR(mu) << "): removed" << std::endl;
+                break;
+            }
+        }
+    }
+}
+
 std::vector<unsigned int> H4LTools::goodLooseElectrons2012(){
     std::vector<unsigned int> LooseElectronindex;
     for (unsigned int i=0; i<Electron_pt.size(); i++){
+        if (Electron_muOverlap[i]) continue;   // electron-muon cross-cleaning
         if (DEBUG)
             std::cout << "Inside goodLooseElectrons2012:: Electron_pt[" << i << "] = " << Electron_pt[i] << std::endl;
         //if ((Electron_pt[i]>elePtcut)&&(fabs(Electron_eta[i])<eleEtacut)){
@@ -473,6 +499,7 @@ std::vector<float> H4LTools::MuonFsrPhi(){
 }
 
 void H4LTools::LeptonSelection(){
+    FlagElectronMuonOverlap();
     looseEle = goodLooseElectrons2012();
     looseMu = goodLooseMuons2012();
     bestEle = goodElectrons2015_noIso_noBdt(looseEle);
@@ -1127,6 +1154,7 @@ int H4LTools::CountExtraLeptons(int ele1, int ele2, int mu1, int mu2)
     for (unsigned int i = 0; i < Electron_pt.size(); i++)
     {
         if ((int)i == ele1 || (int)i == ele2) continue;
+        if (Electron_muOverlap[i]) continue;   // a muon reconstructed as an electron is not an extra lepton
         if (Electron_pt[i] <= vetoElePtcut || fabs(Electron_eta[i]) >= eleEtacut) continue;
         if (!Electron_mvaIso_WP90[i] || Electron_pfRelIso03_all[i] >= vetoEleIsocut) continue;
         nExtra++;

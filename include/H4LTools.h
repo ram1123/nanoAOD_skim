@@ -278,6 +278,18 @@ public:
     }
 
     std::vector<unsigned int> goodLooseElectrons2012();
+    void FlagElectronMuonOverlap();
+    // Electron-muon cross-cleaning: electrons within eleMuCleaningDR of a muon passing
+    // the POG loose ID (pT > eleMuCleaningMuPt) are dropped. Set from Electron.MuonCleaning
+    // in the YAML; these defaults are used if InitializeEleMuCleaning is not called.
+    float eleMuCleaningDR = 0.05, eleMuCleaningMuPt = 5.0;
+    void InitializeEleMuCleaning(float eleMuCleaningDR_, float eleMuCleaningMuPt_)
+    {
+        eleMuCleaningDR = eleMuCleaningDR_;
+        eleMuCleaningMuPt = eleMuCleaningMuPt_;
+    }
+    std::vector<bool> Electron_muOverlap;
+    int nEleMuOverlapRemoved = 0;   // electrons removed by the cleaning, summed over the job
     std::vector<unsigned int> goodLooseMuons2012();
     std::vector<unsigned int> goodMuons2015_noIso_noPf(std::vector<unsigned int> Muonindex);
     std::vector<unsigned int> goodElectrons2015_noIso_noBdt(std::vector<unsigned int> Electronindex);

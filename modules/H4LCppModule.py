@@ -149,6 +149,10 @@ class HZZAnalysisCppProducer(Module):
             ['BDTWP', 'MedEta', 'HighPT'], ['BDTWP', 'HighEta', 'HighPT']
         ]))
 
+        self.worker.InitializeEleMuCleaning(*self._get_nested_values(cfg['Electron'], [
+            ['MuonCleaning', 'dR'], ['MuonCleaning', 'MuPt']
+        ]))
+
         self.worker.InitializeMucut(*self._get_nested_values(cfg['Muon'], [
             'pTcut', 'Etacut', 'Loosedxycut', 'Loosedzcut', 'Isocut',
             'Tightdxycut', 'Tightdzcut', 'TightTrackerLayercut', 'TightpTErrorcut',
@@ -438,6 +442,8 @@ class HZZAnalysisCppProducer(Module):
                 continue
             print("\n" + title)
             printRows([(label, cutFlowData[key][counter], kind) for counter, label, kind in rows])
+        print("\nElectrons removed by electron-muon cross-cleaning (dR < {:.2f}): {}".format(
+            self.worker.eleMuCleaningDR, self.worker.nEleMuOverlapRemoved))
         print("\n=================================================================\n")
 
         # Histogram bins follow self.cutFlowBinLabels
