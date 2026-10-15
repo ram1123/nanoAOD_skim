@@ -357,6 +357,10 @@ public:
     // FIXME: For now these b-tag numbers are only for 2l2nu case
     bool HZZ2l2nu_ifVBF;
     bool HZZ2l2nu_isEMuCR;
+    // DeltaR(l1,l2) > HZZ2l2nu_DeltaRl1l2_min: stored as a flag only (no cut), since a cut
+    // would remove multi-TeV signal where the Z leptons are collimated
+    float HZZ2l2nu_DeltaRl1l2_min = 0.3;
+    bool HZZ2l2nu_passDeltaRl1l2;
     int HZZ2l2nu_nExtraLep; // leptons beyond the Z1 / emu pair passing the veto definition (-1 = not computed)
     int HZZ2l2qNu_nJets;
     int HZZ2l2qNu_nTightBtagJets;
@@ -574,6 +578,7 @@ public:
 
         HZZ2l2nu_ifVBF = false;
         HZZ2l2nu_isEMuCR = false;
+        HZZ2l2nu_passDeltaRl1l2 = false;
         HZZ2l2qNu_nJets = 0;
         HZZ2l2qNu_nTightBtagJets = 0;
         HZZ2l2qNu_nMediumBtagJets = 0;
@@ -687,15 +692,18 @@ public:
     int HZZ2l2qNu_cutZ1Pt ;
     int HZZ2l2nu_cutdPhiJetMET;
     int HZZ2l2nu_cutbtag;
+    int HZZ2l2qNu_cutDeltaRl1l2;    // events with DeltaR(l1,l2) > 0.3 (informational, not a cut)
+    int HZZ2l2nu_cutExtraLepVeto;   // SR events passing the extra-lepton veto
     int HZZemuCR_cut2l;
     int HZZemuCR_cutpTl1l2;
     int HZZemuCR_cutETAl1l2;
     int HZZemuCR_cutmZ1Window;
     int HZZemuCR_cutmZ1Window_SB;
     int HZZemuCR_cutZ1Pt;
-    int HZZ_emuCR_cutbtag;
-    int HZZ_emuCR_cutdPhiJetMET;
-    int HZZ_emuCR_cutMETgT100;
+    int HZZemuCR_cutDeltaRl1l2;     // emu events with DeltaR(e,mu) > 0.3 (informational, not a cut)
+    int HZZemuCR_cutExtraLepVeto;   // emu events passing the extra-lepton veto
+    int HZZemuCR_cutdPhiJetMET;     // emu events passing min dPhi(jet, MET)
+    int HZZemuCR_cutMETgT100;       // emu events with MET > 100 GeV (informational)
 
 
 private:
@@ -785,6 +793,8 @@ H4LTools::H4LTools(int year, bool DEBUG_Main, bool doMELA)
     HZZ2l2qNu_cutZ1Pt = 0;
     HZZ2l2nu_cutbtag = 0;
     HZZ2l2nu_cutdPhiJetMET = 0;
+    HZZ2l2qNu_cutDeltaRl1l2 = 0;
+    HZZ2l2nu_cutExtraLepVeto = 0;
 
     cut2e = 0;
     cut2mu = 0;
@@ -814,9 +824,10 @@ H4LTools::H4LTools(int year, bool DEBUG_Main, bool doMELA)
     HZZemuCR_cutmZ1Window = 0;
     HZZemuCR_cutmZ1Window_SB = 0;
     HZZemuCR_cutZ1Pt = 0;
-    HZZ_emuCR_cutbtag = 0;
-    HZZ_emuCR_cutdPhiJetMET = 0;
-    HZZ_emuCR_cutMETgT100 = 0;
+    HZZemuCR_cutDeltaRl1l2 = 0;
+    HZZemuCR_cutExtraLepVeto = 0;
+    HZZemuCR_cutdPhiJetMET = 0;
+    HZZemuCR_cutMETgT100 = 0;
     
 }
 #endif

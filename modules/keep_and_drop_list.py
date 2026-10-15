@@ -127,13 +127,11 @@ keep_drop_rules_Data_MC = [
     "keep lep*",
     "keep pass*",
     "keep higgs*",
-    "keep MT_2l2nu",
     "keep HZZ*",
     "keep Triggers_HZZ*",
     "keep *Weight",
     "keep *Weight*",
     "keep DeltaRl1l2",
-    "keep Pz_neutrino",
     "keep pT_MET",
     "keep Jet*",
     "keep phi_MET"

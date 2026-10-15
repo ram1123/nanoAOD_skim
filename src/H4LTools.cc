@@ -1227,11 +1227,10 @@ bool H4LTools::GetZ1_2l2qOR2l2nu()
     massL2 = Lep2.M();
 
     DeltaRl1l2 = Lep1.DeltaR(Lep2);
-    // Must be checked before foundZ1Candidate is set, otherwise the event is accepted
-    // without the b-tag counting below
-    if(DeltaRl1l2<0.3){
-      return foundZ1Candidate;
-    }
+    // DeltaR(l1,l2) is stored as a flag, not cut on
+    HZZ2l2nu_passDeltaRl1l2 = (DeltaRl1l2 > HZZ2l2nu_DeltaRl1l2_min);
+    if (HZZ2l2nu_passDeltaRl1l2)
+        HZZ2l2qNu_cutDeltaRl1l2++;
     foundZ1Candidate = true;
     if (DEBUG)
         std::cout << "Found Z1 candidate: " << foundZ1Candidate << std::endl;
@@ -1301,9 +1300,6 @@ bool H4LTools::GetZ1_emuCR()
     massL2 = Lep2.M();
 
     DeltaRl1l2 = Lep1.DeltaR(Lep2);
-    if(DeltaRl1l2<0.3){
-        return foundZ1_emuCRCandidate;
-    }
     
     /// pT selection
     if ((pTL1 < HZZ2l2nu_Leading_Lep_pT || pTL2 < HZZ2l2nu_SubLeading_Lep_pT))
@@ -1343,6 +1339,11 @@ bool H4LTools::GetZ1_emuCR()
     foundZ1_emuCRCandidate = true;
 
     HZZ2l2nu_isEMuCR = true;
+
+    // DeltaR(e,mu) is stored as a flag, not cut on (same as the signal region)
+    HZZ2l2nu_passDeltaRl1l2 = (DeltaRl1l2 > HZZ2l2nu_DeltaRl1l2_min);
+    if (HZZ2l2nu_passDeltaRl1l2)
+        HZZemuCR_cutDeltaRl1l2++;
 
     // Opposite-charge flag only (no charge cut in the emu CR); used downstream
     if ((Elechg[TightEleindex[0]] + Muchg[TightMuindex[0]]) == 0)
@@ -1464,6 +1465,10 @@ bool H4LTools::ZZSelection_2l2nu()
     {
         return foundZZCandidate;
     }
+    if (HZZ2l2nu_isEMuCR)
+        HZZemuCR_cutExtraLepVeto++;
+    else
+        HZZ2l2nu_cutExtraLepVeto++;
 
     jetidx = SelectedJets(tighteleforjetidx, tightmuforjetidx);
     if (DEBUG)
@@ -1493,7 +1498,11 @@ bool H4LTools::ZZSelection_2l2nu()
         return foundZZCandidate;
     }
     foundZZCandidate = true;
-    HZZ2l2nu_cutdPhiJetMET++;
+    // ZZSelection_2l2nu runs for both regions: keep their cut-flow counters separate
+    if (HZZ2l2nu_isEMuCR)
+        HZZemuCR_cutdPhiJetMET++;
+    else
+        HZZ2l2nu_cutdPhiJetMET++;
     if (DEBUG)
     {
         std::cout << "Passed dPhiJetMET cut" << std::endl;
@@ -1506,7 +1515,10 @@ bool H4LTools::ZZSelection_2l2nu()
     }
     if (PuppiMET_pt > 100)
     {
-        HZZ2l2nu_cutMETgT100++;
+        if (HZZ2l2nu_isEMuCR)
+            HZZemuCR_cutMETgT100++;
+        else
+            HZZ2l2nu_cutMETgT100++;
     }
 
     Z2_met.SetPtEtaPhiE(PuppiMET_pt, 0, PuppiMET_phi, PuppiMET_pt);
