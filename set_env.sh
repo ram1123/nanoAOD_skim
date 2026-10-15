@@ -18,6 +18,13 @@ PKG="$(cd "$(dirname "$_SE_SRC")" && pwd)"
 # .../CMSSW_x/src/PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim
 RELEASE="$(cd "$PKG/../../../../../../.." && pwd)"
 
+# --- must be inside cmssw-el9: JHU's libmcfm_710.so needs glibc >= 2.29 (el8 has 2.28)
+if grep -q 'VERSION_ID="8' /etc/os-release 2>/dev/null; then
+    echo "set_env.sh: this is an el8 shell; MELA needs el9. Enter the container first:" >&2
+    echo "    /cvmfs/cms.cern.ch/common/cmssw-el9 -B /work/users/\$USER --interactive" >&2
+    return 1 2>/dev/null || exit 1
+fi
+
 source /cvmfs/cms.cern.ch/cmsset_default.sh
 export SCRAM_ARCH="${SCRAM_ARCH:-el8_amd64_gcc12}"
 
@@ -26,7 +33,10 @@ export SCRAM_ARCH="${SCRAM_ARCH:-el8_amd64_gcc12}"
 # cmssw-el9 image: its welcome banner leaks into scram's internal
 # `env -i bash -c 'command -v python3'` and scram exits 127. Pre-setting
 # SCRAMRT_SET to non-empty makes scram take the clean `which python3` path.
-if [ -z "${CMSSW_BASE:-}" ] || [ "$CMSSW_BASE" != "$RELEASE" ]; then
+# CMSSW_BASE alone can be stale (inherited/exported without the rest of the
+# runtime env), so also require ROOTSYS and the release on PYTHONPATH.
+if [ -z "${CMSSW_BASE:-}" ] || [ "$CMSSW_BASE" != "$RELEASE" ] || [ -z "${ROOTSYS:-}" ] \
+   || [[ ":${PYTHONPATH:-}:" != *":$RELEASE/python:"* ]]; then
     echo "set_env.sh: cmsenv ($RELEASE)"
     ( cd "$RELEASE/src" ) || { echo "set_env.sh: $RELEASE/src not found" >&2; return 1 2>/dev/null || exit 1; }
     pushd "$RELEASE/src" >/dev/null
@@ -44,6 +54,10 @@ fi
 if [ -x "$PKG/external/JHUGenMELA/MELA/setup.sh" ]; then
     echo "set_env.sh: MELA environment"
     eval "$(cd "$PKG" && external/JHUGenMELA/MELA/setup.sh env)"
+    if [ -z "${MELA_ARCH:-}" ]; then
+        echo "set_env.sh: MELA env FAILED (run 'external/JHUGenMELA/MELA/setup.sh env' to see why)" >&2
+        return 1 2>/dev/null || exit 1
+    fi
 else
     echo "set_env.sh: WARNING - $PKG/external/JHUGenMELA/MELA missing; run setup.sh" >&2
 fi

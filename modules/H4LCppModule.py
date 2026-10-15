@@ -652,7 +652,7 @@ class HZZAnalysisCppProducer(Module):
         for xe in electrons:
             #self.worker.SetElectrons(xe.pt, xe.eta, xe.phi, xe.mass, xe.dxy,
                                       #xe.dz, xe.mvaFall17V2Iso_WP90, xe.pdgId, xe.pfRelIso03_all) #for v9
-            self.worker.SetElectrons(xe.pt, xe.eta, xe.phi, xe.mass, xe.dxy, xe.dz, xe.pdgId, xe.mvaIso_WP90, xe.pfRelIso03_all) # for v15
+            self.worker.SetElectrons(xe.pt, xe.eta, xe.phi, xe.mass, xe.dxy, xe.dz, xe.mvaIso_WP90, xe.pfRelIso03_all, xe.pdgId) # for v15
             if self.DEBUG:
                 print("Electrons: pT, eta: {}, {}".format(xe.pt, xe.eta))
 
@@ -671,7 +671,8 @@ class HZZAnalysisCppProducer(Module):
             #self.worker.SetJets(xj.pt,xj.eta,xj.phi,xj.mass,xj.jetId, xj.btagDeepFlavB, xj.puId)
         # for v15
         for xj in jets:
-            self.worker.SetJets(xj.pt,xj.eta,xj.phi,xj.mass,xj.btagDeepFlavB, xj.chEmEF, xj.neEmEF, xj.chHEF, xj.neHEF, xj.muEF, xj.nConstituents, xj.chMultiplicity, xj.neMultiplicity) 
+            # argument order must match H4LTools.h SetJets: chEmEF, chHEF, neEmEF, neHEF, muEF, nConstituents, neMultiplicity, chMultiplicity
+            self.worker.SetJets(xj.pt,xj.eta,xj.phi,xj.mass,xj.btagDeepFlavB, xj.chEmEF, xj.chHEF, xj.neEmEF, xj.neHEF, xj.muEF, xj.nConstituents, xj.neMultiplicity, xj.chMultiplicity)
 
         #for xj in FatJets:
             #self.worker.SetFatJets(xj.pt, xj.eta, xj.phi, xj.msoftdrop, xj.jetId, xj.btagDeepB, xj.particleNet_ZvsQCD)
