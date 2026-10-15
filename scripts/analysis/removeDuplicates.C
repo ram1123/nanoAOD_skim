@@ -64,6 +64,10 @@ void removeDuplicates(const char *inputList, const char *outputFile, const char 
         return;
     }
     TTree *outTree = chain.CloneTree(0);
+    if (!outTree) {
+        std::cerr << "ERROR: no clonable tree named " << treeName << " in the input files" << std::endl;
+        return;
+    }
 
     std::set<std::tuple<UInt_t, UInt_t, ULong64_t>> seen;
     std::vector<Long64_t> nRead(inputs.size(), 0), nDup(inputs.size(), 0);
