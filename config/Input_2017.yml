@@ -7,6 +7,7 @@ TriggerChannels:
     - Triggers_HZZ2l2nu_HighPt
     - Triggers_HZZ2l2nu_SR      # use this for the 2l2nu signal region
     - Triggers_HZZ2l2nu_EMuCR   # use this for the emu control region
+    - Triggers_HZZ2l2nu_GammaCR # use this for the single-photon control region (--channels 1g)
 
 Triggers_HZZ4l:
   - event.HLT_Ele35_WPTight_Gsf
@@ -127,6 +128,17 @@ Triggers_HZZ2l2nu_EMuCR:
     - event.HLT_Ele35_WPTight_Gsf
     - event.HLT_Photon200
 
+Triggers_HZZ2l2nu_GammaCR:
+    # single-photon (gamma+jets) CR: HLT_Photon ladder, AN-15-208 Table 7 style. All but
+    # HLT_Photon200 are PRESCALED in 2017 -> each event is used only through the path of its
+    # photon-pT window (GammaCR.TriggerWindows) and data are weighted by the prescale.
+    - event.HLT_Photon50_R9Id90_HE10_IsoM
+    - event.HLT_Photon75_R9Id90_HE10_IsoM
+    - event.HLT_Photon90_R9Id90_HE10_IsoM
+    - event.HLT_Photon120_R9Id90_HE10_IsoM
+    - event.HLT_Photon165_R9Id90_HE10_IsoM
+    - event.HLT_Photon200
+
 Zmass: 91.1876
 MZ1cut: 40
 MZcut:
@@ -225,3 +237,24 @@ HZZ2l2nu:
     emuCR:
         M_ll_Window: 160.0
         Pt_ll: 25.0
+
+# single-photon (gamma+jets) control region, AN-15-208 4.2 "Photons" / 5.2 (--channels 1g).
+# Exactly one photon passing: cut-based ID >= IDcut (3 = tight), barrel supercluster, electron veto,
+# no pixel seed, pT > pTcut. Jets within JetCleanDR of the photon are removed. No loose lepton
+# (HZZ2l2nu.VetoLep) allowed. The photon takes the Z role (Z1 = photon with m = mZ) in
+# ZZSelection_2l2nu (jets, b-tags, VBF, mT).
+GammaCR:
+    pTcut: 55.0
+    IDcut: 3
+    JetCleanDR: 0.4
+    # Exclusive photon-pT windows [ptMin, next ptMin): the event counts only if the window's path
+    # fired (branch gamma_trigWindowFired). Data weight gamma_prescaleWeight = FullLumi / EffLumi
+    # (year-averaged prescale; EffLumi in /fb from Additional_Docs/EGamma_trigger_paths.md, 2017).
+    FullLumi: 41.54
+    TriggerWindows:
+        - [HLT_Photon50_R9Id90_HE10_IsoM,   55.0,  0.30]
+        - [HLT_Photon75_R9Id90_HE10_IsoM,   82.5,  1.32]
+        - [HLT_Photon90_R9Id90_HE10_IsoM,   99.0,  2.63]
+        - [HLT_Photon120_R9Id90_HE10_IsoM, 135.0,  7.80]
+        - [HLT_Photon165_R9Id90_HE10_IsoM, 181.5, 28.34]
+        - [HLT_Photon200,                  230.0, 41.54]

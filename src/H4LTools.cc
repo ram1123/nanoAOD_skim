@@ -281,6 +281,12 @@ std::vector<unsigned int> H4LTools::SelectedJets(std::vector<unsigned int> ele, 
             if (mutest.DeltaR(jettest) < 0.5)
                 overlaptag++;
         }
+        // gamma CR: remove jets close to the selected photon (empty otherwise)
+        for (unsigned int ig = 0; ig < jetCleanPhotons.size(); ig++)
+        {
+            if (jetCleanPhotons[ig].DeltaR(jettest) < gammaJetCleanDR)
+                overlaptag++;
+        }
         if (overlaptag == 0)
             goodJets.push_back(i);
 
@@ -1483,6 +1489,50 @@ bool H4LTools::ZZSelection_2l2q()
    return foundZZCandidate;
 }
 
+// Single-photon (gamma+jets) control region, AN-15-208 4.2 "Photons" and 5.2.
+// Exactly one photon with cut-based ID >= gammaIDcut (3 = tight), barrel supercluster,
+// electron veto, no pixel seed and pT > gammaPtcut. The photon then plays the Z role:
+// Z1 = photon with m = mZ, so ZZSelection_2l2nu() applies the same jet / b-tag / VBF /
+// min dPhi(jet, MET) / mT logic as for the dilepton regions. The extra-lepton veto there
+// rejects events with any loose lepton (no lepton is part of the "Z" here).
+bool H4LTools::GetZ1_gammaCR()
+{
+    int nSel = 0;
+    for (unsigned int i = 0; i < Photon_pt.size(); i++)
+    {
+        if (Photon_pt[i] <= gammaPtcut) continue;
+        if (!Photon_isScEtaEB[i]) continue;
+        if (Photon_cutBased[i] < gammaIDcut) continue;
+        if (!Photon_electronVeto[i] || Photon_pixelSeed[i]) continue;
+        if (nSel == 0)
+            gammaIndex = i;
+        nSel++;
+    }
+    if (DEBUG)
+        std::cout << "gamma CR: selected photons = " << nSel << std::endl;
+    if (nSel != 1)
+    {
+        gammaIndex = -1;
+        return false;
+    }
+    HZZgammaCR_cut1g++;
+
+    HZZ2l2nu_isGammaCR = true;
+    gamma_pt = Photon_pt[gammaIndex];
+    gamma_eta = Photon_eta[gammaIndex];
+    gamma_phi = Photon_phi[gammaIndex];
+    Z1.SetPtEtaPhiM(Photon_pt[gammaIndex], Photon_eta[gammaIndex], Photon_phi[gammaIndex], Zmass);
+    Z1nofsr = Z1;
+    TLorentzVector photon;
+    photon.SetPtEtaPhiM(Photon_pt[gammaIndex], Photon_eta[gammaIndex], Photon_phi[gammaIndex], 0.0);
+    jetCleanPhotons.push_back(photon);
+
+    // all leptons count as "extra" (no lepton belongs to the photon "Z")
+    HZZ2l2nu_nExtraLep = CountExtraLeptons(-1, -1, -1, -1);
+    CountJetsAndBtags();
+    return true;
+}
+
 bool H4LTools::ZZSelection_2l2nu()
 {
     bool foundZZCandidate = false;
@@ -1495,6 +1545,8 @@ bool H4LTools::ZZSelection_2l2nu()
     }
     if (HZZ2l2nu_isEMuCR)
         HZZemuCR_cutExtraLepVeto++;
+    else if (HZZ2l2nu_isGammaCR)
+        HZZgammaCR_cutExtraLepVeto++;
     else
         HZZ2l2nu_cutExtraLepVeto++;
 
@@ -1529,6 +1581,8 @@ bool H4LTools::ZZSelection_2l2nu()
     // ZZSelection_2l2nu runs for both regions: keep their cut-flow counters separate
     if (HZZ2l2nu_isEMuCR)
         HZZemuCR_cutdPhiJetMET++;
+    else if (HZZ2l2nu_isGammaCR)
+        HZZgammaCR_cutdPhiJetMET++;
     else
         HZZ2l2nu_cutdPhiJetMET++;
     if (DEBUG)
@@ -1545,6 +1599,8 @@ bool H4LTools::ZZSelection_2l2nu()
     {
         if (HZZ2l2nu_isEMuCR)
             HZZemuCR_cutMETgT100++;
+        else if (HZZ2l2nu_isGammaCR)
+            HZZgammaCR_cutMETgT100++;
         else
             HZZ2l2nu_cutMETgT100++;
     }

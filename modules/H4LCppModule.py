@@ -23,10 +23,14 @@ class HZZAnalysisCppProducer(Module):
         self.year = year
         self.isMC = isMC
         self.cutFlowJSONFile = cutFlowJSONFile
-        self.channels = channels # choices=["all", "4l", "2l2q", "2l2v"],
+        self.channels = channels # choices=["all", "4l", "2l2q", "2l2v", "1g"],
         self.DEBUG = DEBUG
         self.cfgFile = cfgFile
         self.cfg = self._load_config(cfgFile)
+        # 1g = single-photon (gamma+jets) CR; needs a GammaCR block in the year's YAML
+        self.doGammaCR = self.channels in ("1g", "all") and "GammaCR" in self.cfg
+        if self.channels == "1g" and not self.doGammaCR:
+            raise KeyError("--channels 1g needs a GammaCR block in {}".format(cfgFile))
         # Event preselection applied by PostProcessor before this module (None = none),
         # and the -n limit; both are only used to label / count the cut flow.
         self.preselection = preselection
@@ -47,6 +51,17 @@ class HZZAnalysisCppProducer(Module):
                 paths.append(m.group(1))
             self.triggerLists[channel] = paths
         self.triggerPaths = sorted({p for paths in self.triggerLists.values() for p in paths})
+
+        # gamma CR: exclusive photon-pT windows, each served by one (mostly prescaled) path:
+        # [(ptMin, path, data weight = FullLumi / EffLumi)], ascending in ptMin
+        self.gammaWindows = []
+        if self.doGammaCR:
+            g = self.cfg['GammaCR']
+            self.gammaWindows = sorted((float(ptMin), path, float(g['FullLumi']) / float(effLumi))
+                                       for path, ptMin, effLumi in g['TriggerWindows'])
+            missing = [w[1] for w in self.gammaWindows if w[1] not in self.triggerPaths]
+            if missing:
+                raise ValueError("GammaCR.TriggerWindows paths not in Triggers_HZZ2l2nu_GammaCR: {}".format(missing))
 
         # MET-phi corrector built once per job (its lookup table was rebuilt every event,
         # ~20% of analyze()). No UL campaign for other years -> uncorrected PuppiMET.
@@ -96,6 +111,12 @@ class HZZAnalysisCppProducer(Module):
                 ("HZZemuCR_cutdPhiJetMET",    "min dPhi(jet, MET) = selected",  "cut"),
                 ("HZZemuCR_cutMETgT100",      "  MET > 100 GeV",                "info"),
             ]),
+            ("1g_Channel_gamma_CR", "single-photon (gamma+jets) control region", ("1g", "all"), [
+                ("HZZgammaCR_cut1g",          "exactly 1 tight barrel photon",  "start"),
+                ("HZZgammaCR_cutExtraLepVeto", "no loose lepton",               "cut"),
+                ("HZZgammaCR_cutdPhiJetMET",  "min dPhi(jet, MET) = selected",  "cut"),
+                ("HZZgammaCR_cutMETgT100",    "  MET > 100 GeV",                "info"),
+            ]),
             ("2l2nu_MuonObjects", "Muons: events with >= 2 muons passing (cumulative)", ("2l2v", "all"), [
                 ("cut_mu_pt",                 "pT",                             "start"),
                 ("cut_mu_eta",                "+ |eta|",                        "cut"),
@@ -124,6 +145,7 @@ class HZZAnalysisCppProducer(Module):
             ("PassMETFilters",              "Pass MET filters",            "cut",   None),
             ("PassZZ2l2nuSelection",        "Selected: 2l2nu SR",          "info",  ("2l2v", "all")),
             ("PassZZ2l2nu_emuCR_Selection", "Selected: 2l2nu emu CR",      "info",  ("2l2v", "all")),
+            ("PassGammaCR_Selection",       "Selected: gamma CR",          "info",  ("1g", "all")),
             ("PassZZ2l2qSelection",         "Selected: 2l2q",              "info",  ("2l2q", "all")),
             ("PassZZSelection",             "Selected: 4l",                "info",  ("4l", "all")),
         ]
@@ -207,7 +229,7 @@ class HZZAnalysisCppProducer(Module):
                                                                   ['Leading_Lep_pT', 'SubLeading_Lep_pT', 'Lep_eta',
                                                                    ['MZLepcut', 'down'], ['MZLepcut', 'up']]))
 
-        if self.channels == "all" or self.channels == "2l2v":
+        if self.channels in ("all", "2l2v", "1g"):   # 1g reuses the 2l2nu jet / veto / dPhi settings
             self.worker.InitializeHZZ2l2nuCut(*self._get_nested_values(cfg['HZZ2l2nu'],
                                                                    ['Leading_Lep_pT', 'SubLeading_Lep_pT', 'Lep_eta', 'Pt_ll',
                                                                     'M_ll_Window', 'dPhi_jetMET', ['MZLepcut', 'down'], ['MZLepcut', 'up']]))
@@ -216,6 +238,9 @@ class HZZAnalysisCppProducer(Module):
                                                                     ['VetoLep', 'Mu_pT'], ['VetoLep', 'Mu_Iso']]))
             self.worker.InitializeEmuCRCut(*self._get_nested_values(cfg['HZZ2l2nu'],
                                                                    [['emuCR', 'M_ll_Window'], ['emuCR', 'Pt_ll']]))
+        if self.doGammaCR:
+            self.worker.InitializeGammaCRCut(*self._get_nested_values(cfg['GammaCR'],
+                                                                      ['pTcut', 'IDcut', 'JetCleanDR']))
 
     def _get_nested_values(self, dictionary, keys):
         # Raise a clear error for a missing key instead of passing a placeholder
@@ -262,6 +287,7 @@ class HZZAnalysisCppProducer(Module):
         self.passZZ2l2qEvts = 0
         self.passZZ2l2nuEvts = 0
         self.passZZ2l2nu_emuCR_Evts = 0
+        self.passGammaCR_Evts = 0
 
     def beginJob(self):
         pass
@@ -290,6 +316,16 @@ class HZZAnalysisCppProducer(Module):
         self.out.branch("HZZ2l2qNu_isELE", "O")
         self.out.branch("HZZ2l2qNu_cutOppositeChargeFlag", "O")
         self.out.branch("HZZ2l2nu_isEMuCR", "O")
+        # single-photon CR (--channels 1g / all): photon kinematics; pTZ1/etaZ1/phiZ1 hold the
+        # photon too (Z1 = photon with m = mZ) so the 2l2nu variables (ZZmT, dPhi_ZMET, jets) apply
+        self.out.branch("passGammaCR_Selection", "O")
+        self.out.branch("HZZ2l2nu_isGammaCR", "O")
+        self.out.branch("gamma_pt", "F")
+        self.out.branch("gamma_eta", "F")
+        self.out.branch("gamma_phi", "F")
+        self.out.branch("gamma_trigWindowFired", "O")   # path of the photon's pT window fired (require it)
+        self.out.branch("gamma_trigWindowPath", "I")    # index of that path in GammaCR.TriggerWindows (-1 = none)
+        self.out.branch("gamma_prescaleWeight", "F")    # data: FullLumi / EffLumi of that path; MC: 1
 
         # Branches for leptons related varialbes: 4l, 2l2q, 2l2nu
         self.out.branch("massL1",  "F")
@@ -449,6 +485,7 @@ class HZZAnalysisCppProducer(Module):
             "PassZZ2l2qSelection": self.passZZ2l2qEvts,
             "PassZZ2l2nuSelection": self.passZZ2l2nuEvts,
             "PassZZ2l2nu_emuCR_Selection": self.passZZ2l2nu_emuCR_Evts,
+            "PassGammaCR_Selection": self.passGammaCR_Evts,
         }
         cutFlowData = {"General": generalCounts}
         for key, _, _, rows in self.cutFlowSections:
@@ -674,7 +711,10 @@ class HZZAnalysisCppProducer(Module):
         electrons = Collection(event, "Electron")
         muons = Collection(event, "Muon")
         fsrPhotons = Collection(event, "FsrPhoton")
-        # Photons = Collection(event, "Photon")
+        if self.doGammaCR:
+            for xp in Collection(event, "Photon"):
+                # argument order must match H4LTools.h SetPhotons
+                self.worker.SetPhotons(xp.pt, xp.eta, xp.phi, xp.cutBased, xp.isScEtaEB, xp.electronVeto, xp.pixelSeed)
         jets = Collection(event, "Jet")
         FatJets = Collection(event, "FatJet")
         puppimet = Object(event, "PuppiMET", None)
@@ -772,6 +812,17 @@ class HZZAnalysisCppProducer(Module):
             foundZZCandidate_4l = self.worker.ZZSelection_4l()
         if self.worker.GetZ1_emuCR() and (self.channels == "all"  or self.channels == "2l2v"):
             foundZZCandidate_2l2nu_emuCR = self.worker.ZZSelection_2l2nu()
+        # single-photon CR: own trigger; never together with a dilepton candidate (it vetoes leptons)
+        foundGammaCR = False
+        passGammaCR_Selection = False
+        gamma_pt = gamma_eta = gamma_phi = -999.
+        gamma_trigWindowFired = False
+        gamma_trigWindowPath = -1
+        gamma_prescaleWeight = 0.
+        if (self.doGammaCR and TriggerMap["Triggers_HZZ2l2nu_GammaCR"]
+                and not (foundZZCandidate_4l or foundZZCandidate_2l2q or foundZZCandidate_2l2nu or foundZZCandidate_2l2nu_emuCR)
+                and self.worker.GetZ1_gammaCR()):
+            foundGammaCR = self.worker.ZZSelection_2l2nu()
 
         HZZ2l2q_boostedJet_PNScore = self.worker.boostedJet_PNScore
         HZZ2l2q_boostedJet_Index = self.worker.boostedJet_Index
@@ -785,6 +836,7 @@ class HZZAnalysisCppProducer(Module):
         HZZ2l2nu_ifVBF = self.worker.HZZ2l2nu_ifVBF
         HZZ2l2qNu_isELE = self.worker.HZZ2l2qNu_isELE
         HZZ2l2nu_isEMuCR = self.worker.HZZ2l2nu_isEMuCR
+        HZZ2l2nu_isGammaCR = self.worker.HZZ2l2nu_isGammaCR
         HZZ2l2qNu_cutOppositeChargeFlag = self.worker.HZZ2l2qNu_cutOppositeChargeFlag
         HZZ2l2qNu_nJets = self.worker.HZZ2l2qNu_nJets
         HZZ2l2nu_nExtraLep = self.worker.HZZ2l2nu_nExtraLep
@@ -793,7 +845,7 @@ class HZZAnalysisCppProducer(Module):
         HZZ2l2qNu_nMediumBtagJets = self.worker.HZZ2l2qNu_nMediumBtagJets
         HZZ2l2qNu_nLooseBtagJets = self.worker.HZZ2l2qNu_nLooseBtagJets
 
-        if (foundZZCandidate_4l or foundZZCandidate_2l2q or foundZZCandidate_2l2nu or foundZZCandidate_2l2nu_emuCR):
+        if (foundZZCandidate_4l or foundZZCandidate_2l2q or foundZZCandidate_2l2nu or foundZZCandidate_2l2nu_emuCR or foundGammaCR):
             if self.DEBUG: print("Found ZZ candidate (4l, 2l2q, 2l2nu): ({}, {}, {})".format(foundZZCandidate_4l, foundZZCandidate_2l2q, foundZZCandidate_2l2nu))
             pTL1 = self.worker.pTL1
             etaL1 = self.worker.etaL1
@@ -861,7 +913,20 @@ class HZZAnalysisCppProducer(Module):
             self.passZZ2l2nu_emuCR_Evts += 1
             self.CutFlowTable.Fill(6)
 
-        if (foundZZCandidate_2l2nu or foundZZCandidate_2l2nu_emuCR):
+        if (foundGammaCR):
+            keepIt = True
+            passGammaCR_Selection = True
+            self.passGammaCR_Evts += 1
+            gamma_pt, gamma_eta, gamma_phi = self.worker.gamma_pt, self.worker.gamma_eta, self.worker.gamma_phi
+            for iw, (ptMin, path, weight) in enumerate(self.gammaWindows):
+                if gamma_pt >= ptMin:
+                    gamma_trigWindowPath = iw
+            if gamma_trigWindowPath >= 0:
+                _, path, weight = self.gammaWindows[gamma_trigWindowPath]
+                gamma_trigWindowFired = fired[path]
+                gamma_prescaleWeight = 1.0 if self.isMC else weight
+
+        if (foundZZCandidate_2l2nu or foundZZCandidate_2l2nu_emuCR or foundGammaCR):
             phiZ2_met = self.worker.Z2_met.Phi()
             pTZ2_met = self.worker.Z2_met.Pt()
             EneZ2_met = self.worker.Z2_met.E()
@@ -1068,6 +1133,14 @@ class HZZAnalysisCppProducer(Module):
         self.out.fillBranch("HZZ2l2nu_ifVBF",HZZ2l2nu_ifVBF)
         self.out.fillBranch("HZZ2l2qNu_isELE",HZZ2l2qNu_isELE)
         self.out.fillBranch("HZZ2l2nu_isEMuCR",HZZ2l2nu_isEMuCR)
+        self.out.fillBranch("passGammaCR_Selection",passGammaCR_Selection)
+        self.out.fillBranch("HZZ2l2nu_isGammaCR",HZZ2l2nu_isGammaCR)
+        self.out.fillBranch("gamma_pt",gamma_pt)
+        self.out.fillBranch("gamma_eta",gamma_eta)
+        self.out.fillBranch("gamma_phi",gamma_phi)
+        self.out.fillBranch("gamma_trigWindowFired",gamma_trigWindowFired)
+        self.out.fillBranch("gamma_trigWindowPath",gamma_trigWindowPath)
+        self.out.fillBranch("gamma_prescaleWeight",gamma_prescaleWeight)
         self.out.fillBranch("HZZ2l2qNu_cutOppositeChargeFlag",HZZ2l2qNu_cutOppositeChargeFlag)
         self.out.fillBranch("HZZ2l2qNu_nJets",HZZ2l2qNu_nJets)
         self.out.fillBranch("HZZ2l2nu_nExtraLep",HZZ2l2nu_nExtraLep)

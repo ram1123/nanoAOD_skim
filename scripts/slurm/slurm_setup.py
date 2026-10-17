@@ -88,7 +88,7 @@ def main():
                     help="array throttle (%N) -- keep modest so the Purdue XCache "
                          "is not saturated by concurrent cold reads")
     ap.add_argument("--entries", type=int, default=0, help="post_proc --entriesToRun")
-    ap.add_argument("--channels", default="2l2v", choices=["all", "4l", "2l2q", "2l2v"])
+    ap.add_argument("--channels", default="2l2v", choices=["all", "4l", "2l2q", "2l2v", "1g"])
     ap.add_argument("--with_syst", action="store_true")
     ap.add_argument("--max_files", type=int, default=0,
                     help="debug: cap total input files")

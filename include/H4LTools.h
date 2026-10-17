@@ -72,6 +72,16 @@ public:
         HZZemuCR_Pt_ll = HZZemuCR_Pt_ll_;
     }
 
+    // single-photon (gamma+jets) control region, AN-15-208: one tight barrel photon (YAML GammaCR)
+    float gammaPtcut = 205.0, gammaJetCleanDR = 0.4;
+    int gammaIDcut = 3;   // Photon_cutBased: 1 loose, 2 medium, 3 tight
+    void InitializeGammaCRCut(float gammaPtcut_, int gammaIDcut_, float gammaJetCleanDR_)
+    {
+        gammaPtcut = gammaPtcut_;
+        gammaIDcut = gammaIDcut_;
+        gammaJetCleanDR = gammaJetCleanDR_;
+    }
+
     // Extra-lepton veto. Defaults are AN-2016/325 4.4.4 values (unverified for UL / v15);
     // they are used when InitializeVetoLepCut is not called (e.g. --channels 2l2q).
     float vetoElePtcut = 10.0, vetoEleIsocut = 0.15, vetoMuPtcut = 10.0, vetoMuIsocut = 0.2;
@@ -260,6 +270,19 @@ public:
         FsrPhoton_relIso03.push_back(FsrPhoton_relIso03_);
     }
 
+    // argument order must match the PyROOT call in H4LCppModule.analyze
+    void SetPhotons(float Photon_pt_, float Photon_eta_, float Photon_phi_, int Photon_cutBased_,
+                    bool Photon_isScEtaEB_, bool Photon_electronVeto_, bool Photon_pixelSeed_)
+    {
+        Photon_pt.push_back(Photon_pt_);
+        Photon_eta.push_back(Photon_eta_);
+        Photon_phi.push_back(Photon_phi_);
+        Photon_cutBased.push_back(Photon_cutBased_);
+        Photon_isScEtaEB.push_back(Photon_isScEtaEB_);
+        Photon_electronVeto.push_back(Photon_electronVeto_);
+        Photon_pixelSeed.push_back(Photon_pixelSeed_);
+    }
+
     void SetGenParts(float GenPart_pt_)
     {
         GenPart_pt.push_back(GenPart_pt_);
@@ -369,6 +392,10 @@ public:
     // FIXME: For now these b-tag numbers are only for 2l2nu case
     bool HZZ2l2nu_ifVBF;
     bool HZZ2l2nu_isEMuCR;
+    bool HZZ2l2nu_isGammaCR;  // event selected as single-photon CR (Z1 = photon)
+    int gammaIndex;           // raw Photon index of the selected gamma-CR photon (-1 = none)
+    float gamma_pt, gamma_eta, gamma_phi;   // selected gamma-CR photon (-999 = none)
+    std::vector<TLorentzVector> jetCleanPhotons;   // photons removed from the jet collection (dR < gammaJetCleanDR)
     // DeltaR(l1,l2) > HZZ2l2nu_DeltaRl1l2_min: stored as a flag only (no cut), since a cut
     // would remove multi-TeV signal where the Z leptons are collimated
     float HZZ2l2nu_DeltaRl1l2_min = 0.3;
@@ -514,6 +541,18 @@ public:
         FsrPhoton_pt.clear();
         FsrPhoton_relIso03.clear();
 
+        // Photon related variables (gamma CR)
+        Photon_pt.clear();
+        Photon_eta.clear();
+        Photon_phi.clear();
+        Photon_cutBased.clear();
+        Photon_isScEtaEB.clear();
+        Photon_electronVeto.clear();
+        Photon_pixelSeed.clear();
+        jetCleanPhotons.clear();
+        gammaIndex = -1;
+        gamma_pt = gamma_eta = gamma_phi = -999.0;
+
         // Generator  related variables
         nGenPart = 0;
         GenPart_pt.clear();
@@ -590,6 +629,7 @@ public:
 
         HZZ2l2nu_ifVBF = false;
         HZZ2l2nu_isEMuCR = false;
+        HZZ2l2nu_isGammaCR = false;
         HZZ2l2nu_passDeltaRl1l2 = false;
         HZZ2l2qNu_nJets = 0;
         HZZ2l2qNu_nTightBtagJets = 0;
@@ -652,6 +692,7 @@ public:
     bool ZZSelection_4l();
     bool GetZ1_2l2qOR2l2nu();
     bool GetZ1_emuCR();
+    bool GetZ1_gammaCR();
     void CountJetsAndBtags();
     int CountExtraLeptons(int ele1, int ele2, int mu1, int mu2);
     bool ZZSelection_2l2q();
@@ -716,6 +757,10 @@ public:
     int HZZemuCR_cutExtraLepVeto;   // emu events passing the extra-lepton veto
     int HZZemuCR_cutdPhiJetMET;     // emu events passing min dPhi(jet, MET)
     int HZZemuCR_cutMETgT100;       // emu events with MET > 100 GeV (informational)
+    int HZZgammaCR_cut1g;            // exactly one selected photon (tight, barrel, vetoes, pT)
+    int HZZgammaCR_cutExtraLepVeto;  // gamma events with no loose lepton
+    int HZZgammaCR_cutdPhiJetMET;    // gamma events passing min dPhi(jet, MET)
+    int HZZgammaCR_cutMETgT100;      // gamma events with MET > 100 GeV (informational)
 
 
 private:
@@ -743,6 +788,9 @@ private:
     std::vector<bool> Muon_isTracker, Muon_isGlobal, Muon_isPFcand, Muon_mediumId;
 
     std::vector<float> FsrPhoton_dROverEt2, FsrPhoton_phi, FsrPhoton_pt, FsrPhoton_relIso03, FsrPhoton_eta;
+    std::vector<float> Photon_pt, Photon_eta, Photon_phi;
+    std::vector<int> Photon_cutBased;
+    std::vector<bool> Photon_isScEtaEB, Photon_electronVeto, Photon_pixelSeed;
 
     std::vector<float> GenPart_pt;
 
@@ -840,6 +888,10 @@ H4LTools::H4LTools(int year, bool DEBUG_Main, bool doMELA)
     HZZemuCR_cutExtraLepVeto = 0;
     HZZemuCR_cutdPhiJetMET = 0;
     HZZemuCR_cutMETgT100 = 0;
-    
+    HZZgammaCR_cut1g = 0;
+    HZZgammaCR_cutExtraLepVeto = 0;
+    HZZgammaCR_cutdPhiJetMET = 0;
+    HZZgammaCR_cutMETgT100 = 0;
+
 }
 #endif

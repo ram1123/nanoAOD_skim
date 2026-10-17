@@ -41,8 +41,8 @@ def parse_arguments():
     parser.add_argument("--DEBUG", default=False, action="store_true", help="Print debug information")
     parser.add_argument("--noPreselection", default=False, action="store_true",
                         help="Do not drop events with < 2 leptons before the analysis modules (slower)")
-    parser.add_argument("--channels",  choices=["all", "4l", "2l2q", "2l2v"],  default="2l2v",
-                        help="Channels to run: all, 4l, 2l2q, or 2l2v")
+    parser.add_argument("--channels",  choices=["all", "4l", "2l2q", "2l2v", "1g"],  default="2l2v",
+                        help="Channels to run: all, 4l, 2l2q, 2l2v, or 1g (single-photon control region)")
     return parser.parse_args()
 
 def getListFromFile(filename):
@@ -154,6 +154,10 @@ def main():
             _cfg = yaml.safe_load(f)
         _ptmin = max(0.0, min(_cfg['Electron']['pTcut'], _cfg['Muon']['pTcut']) - 5.0)
         preselCut = "Sum$(Muon_pt > {0}) + Sum$(Electron_pt > {0}) >= 2".format(_ptmin)
+        # 1g (single-photon CR) needs >= 1 barrel photon instead; "all" accepts either
+        if args.channels in ("1g", "all") and "GammaCR" in _cfg:
+            _gammaSel = "Sum$(Photon_pt > {0} && Photon_isScEtaEB) >= 1".format(_cfg["GammaCR"]["pTcut"] - 5.0)
+            preselCut = _gammaSel if args.channels == "1g" else "({0}) || ({1})".format(preselCut, _gammaSel)
     print("Preselection: {}".format(preselCut))
 
     H4LCppModule = lambda: HZZAnalysisCppProducer(year=year, cfgFile=cfgFile,
