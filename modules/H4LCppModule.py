@@ -97,6 +97,7 @@ class HZZAnalysisCppProducer(Module):
             ("2l2nu_Channel", "2l2nu signal region (ee / mumu)", ("2l2v", "all"), _z1_rows + [
                 ("HZZ2l2qNu_cutDeltaRl1l2",   "  DeltaR(l1,l2) > 0.3 (flag)",   "info"),
                 ("HZZ2l2nu_cutExtraLepVeto",  "extra-lepton veto",              "cut"),
+                ("HZZ2l2nu_cutSoftMuVeto",    "soft-muon veto",                 "cut"),
                 ("HZZ2l2nu_cutdPhiJetMET",    "min dPhi(jet, MET) = selected",  "cut"),
                 ("HZZ2l2nu_cutMETgT100",      "  MET > 100 GeV",                "info"),
             ]),
@@ -108,12 +109,14 @@ class HZZAnalysisCppProducer(Module):
                 ("HZZemuCR_cutZ1Pt",          "pT(emu)",                        "cut"),
                 ("HZZemuCR_cutDeltaRl1l2",    "  DeltaR(e,mu) > 0.3 (flag)",    "info"),
                 ("HZZemuCR_cutExtraLepVeto",  "extra-lepton veto",              "cut"),
+                ("HZZemuCR_cutSoftMuVeto",    "soft-muon veto",                 "cut"),
                 ("HZZemuCR_cutdPhiJetMET",    "min dPhi(jet, MET) = selected",  "cut"),
                 ("HZZemuCR_cutMETgT100",      "  MET > 100 GeV",                "info"),
             ]),
             ("1g_Channel_gamma_CR", "single-photon (gamma+jets) control region", ("1g", "all"), [
                 ("HZZgammaCR_cut1g",          "exactly 1 tight barrel photon",  "start"),
                 ("HZZgammaCR_cutExtraLepVeto", "no loose lepton",               "cut"),
+                ("HZZgammaCR_cutSoftMuVeto",  "no soft muon",                   "cut"),
                 ("HZZgammaCR_cutdPhiJetMET",  "min dPhi(jet, MET) = selected",  "cut"),
                 ("HZZgammaCR_cutMETgT100",    "  MET > 100 GeV",                "info"),
             ]),
@@ -217,7 +220,7 @@ class HZZAnalysisCppProducer(Module):
             'pTcut', 'Etacut', 'Isocut', 'dRlcut', 'dRlOverPtcut'
         ]))
 
-        self.worker.InitializeJetcut(*self._get_nested_values(cfg['Jet'], ['pTcut', 'Etacut', ['UParTAK4_btag', 'Etacut']]))
+        self.worker.InitializeJetcut(*self._get_nested_values(cfg['Jet'], ['pTcut', 'Etacut', ['UParTAK4_btag', 'Etacut'], 'LepCleanDR']))
 
         self.worker.InitializeEvtCut(*self._get_nested_values(cfg, ['MZ1cut', 'MZZcut',
                                                                     ['Higgscut', 'down'], ['Higgscut', 'up'],
@@ -234,10 +237,15 @@ class HZZAnalysisCppProducer(Module):
                                                                    ['Leading_Lep_pT', 'SubLeading_Lep_pT', 'Lep_eta', 'Pt_ll',
                                                                     'M_ll_Window', 'dPhi_jetMET', ['MZLepcut', 'down'], ['MZLepcut', 'up']]))
             self.worker.InitializeVetoLepCut(*self._get_nested_values(cfg['HZZ2l2nu'],
-                                                                   [['VetoLep', 'Ele_pT'], ['VetoLep', 'Ele_Iso'],
+                                                                   [['VetoLep', 'Ele_pT'], ['VetoLep', 'Ele_cutBased'], ['VetoLep', 'Ele_Iso'],
                                                                     ['VetoLep', 'Mu_pT'], ['VetoLep', 'Mu_Iso']]))
             self.worker.InitializeEmuCRCut(*self._get_nested_values(cfg['HZZ2l2nu'],
                                                                    [['emuCR', 'M_ll_Window'], ['emuCR', 'Pt_ll']]))
+            # AN-2016/325: charge requirement, soft-muon veto, VBF tag (argument order = H4LTools.h)
+            self.worker.InitializeHZZ2l2nuAN(*self._get_nested_values(cfg['HZZ2l2nu'],
+                                                                   ['RequireOS', ['VetoLep', 'SoftMu_pT'],
+                                                                    ['VBF', 'dEta_jj'], ['VBF', 'M_jj'],
+                                                                    ['VBF', 'ZCentrality'], ['VBF', 'CentralJetVeto']]))
         if self.doGammaCR:
             self.worker.InitializeGammaCRCut(*self._get_nested_values(cfg['GammaCR'],
                                                                       ['pTcut', 'IDcut', 'JetCleanDR']))
@@ -431,6 +439,8 @@ class HZZAnalysisCppProducer(Module):
         # Branches for 2l2nu channel: VBF jets and dijet kinematics
         self.out.branch("HZZ2l2qNu_nJets", "I")
         self.out.branch("HZZ2l2nu_nExtraLep", "I")
+        self.out.branch("HZZ2l2nu_nExtraSoftMu", "I")    # AN-2016/325 soft-muon veto (pT > 3, soft ID); == 0 required in the skim
+        self.out.branch("HZZ2l2nu_nExtraSoftMuPV", "I")  # same, |dz| < 0.5, |dxy| < 0.2 cm
 
         self.out.branch("HZZ2l2qNu_nTightBtagJets", "I")
         self.out.branch("HZZ2l2qNu_nMediumBtagJets", "I")
@@ -517,8 +527,9 @@ class HZZAnalysisCppProducer(Module):
                 continue
             print("\n" + title)
             printRows([(label, cutFlowData[key][counter], kind) for counter, label, kind in rows])
-        print("\nElectrons removed by electron-muon cross-cleaning (dR < {:.2f}): {}".format(
-            self.worker.eleMuCleaningDR, self.worker.nEleMuOverlapRemoved))
+        # electron-muon cross-cleaning is disabled in H4LTools::LeptonSelection (docs/TODO.md)
+        #print("\nElectrons removed by electron-muon cross-cleaning (dR < {:.2f}): {}".format(
+        #    self.worker.eleMuCleaningDR, self.worker.nEleMuOverlapRemoved))
         print("\n=================================================================\n")
 
         # Histogram bins follow self.cutFlowBinLabels
@@ -753,6 +764,7 @@ class HZZAnalysisCppProducer(Module):
             #self.worker.SetElectrons(xe.pt, xe.eta, xe.phi, xe.mass, xe.dxy,
                                       #xe.dz, xe.mvaFall17V2Iso_WP90, xe.pdgId, xe.pfRelIso03_all) #for v9
             self.worker.SetElectrons(xe.pt, xe.eta, xe.phi, xe.mass, xe.dxy, xe.dz, xe.mvaIso_WP90, xe.pfRelIso03_all, xe.pdgId, xe.deltaEtaSC) # for v15
+            self.worker.SetElectronsCutBased(xe.cutBased)   # veto-electron ID (Fall17V2 cut-based)
             if self.DEBUG:
                 print("Electrons: pT, eta: {}, {}".format(xe.pt, xe.eta))
 
@@ -760,6 +772,7 @@ class HZZAnalysisCppProducer(Module):
             self.worker.SetMuons(xm.corrected_pt, xm.eta, xm.phi, xm.mass, xm.isGlobal, xm.isTracker, xm.mediumId,
                                 xm.dxy, xm.dz, xm.ptErr, xm.nTrackerLayers, xm.isPFcand,
                                  xm.pdgId, xm.charge, xm.pfRelIso03_all)
+            self.worker.SetMuonsSoftId(xm.softId)
             if self.DEBUG:
                 print("Muons: pT, eta: {}, {}".format(xm.corrected_pt, xm.eta))
 
@@ -840,6 +853,8 @@ class HZZAnalysisCppProducer(Module):
         HZZ2l2qNu_cutOppositeChargeFlag = self.worker.HZZ2l2qNu_cutOppositeChargeFlag
         HZZ2l2qNu_nJets = self.worker.HZZ2l2qNu_nJets
         HZZ2l2nu_nExtraLep = self.worker.HZZ2l2nu_nExtraLep
+        HZZ2l2nu_nExtraSoftMu = self.worker.HZZ2l2nu_nExtraSoftMu
+        HZZ2l2nu_nExtraSoftMuPV = self.worker.HZZ2l2nu_nExtraSoftMuPV
         HZZ2l2nu_passDeltaRl1l2 = self.worker.HZZ2l2nu_passDeltaRl1l2
         HZZ2l2qNu_nTightBtagJets = self.worker.HZZ2l2qNu_nTightBtagJets
         HZZ2l2qNu_nMediumBtagJets = self.worker.HZZ2l2qNu_nMediumBtagJets
@@ -1144,6 +1159,8 @@ class HZZAnalysisCppProducer(Module):
         self.out.fillBranch("HZZ2l2qNu_cutOppositeChargeFlag",HZZ2l2qNu_cutOppositeChargeFlag)
         self.out.fillBranch("HZZ2l2qNu_nJets",HZZ2l2qNu_nJets)
         self.out.fillBranch("HZZ2l2nu_nExtraLep",HZZ2l2nu_nExtraLep)
+        self.out.fillBranch("HZZ2l2nu_nExtraSoftMu",HZZ2l2nu_nExtraSoftMu)
+        self.out.fillBranch("HZZ2l2nu_nExtraSoftMuPV",HZZ2l2nu_nExtraSoftMuPV)
         self.out.fillBranch("HZZ2l2qNu_nTightBtagJets",HZZ2l2qNu_nTightBtagJets)
         self.out.fillBranch("HZZ2l2qNu_nMediumBtagJets",HZZ2l2qNu_nMediumBtagJets)
         self.out.fillBranch("HZZ2l2qNu_nLooseBtagJets",HZZ2l2qNu_nLooseBtagJets)

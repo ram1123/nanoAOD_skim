@@ -271,14 +271,14 @@ std::vector<unsigned int> H4LTools::SelectedJets(std::vector<unsigned int> ele, 
         {
             TLorentzVector eletest;
             eletest.SetPtEtaPhiM(Electron_pt[ele[ie]], Electron_eta[ele[ie]], Electron_phi[ele[ie]], Electron_mass[ele[ie]]);
-            if (eletest.DeltaR(jettest) < 0.5)
+            if (eletest.DeltaR(jettest) < jetLepCleanDR)
                 overlaptag++;
         }
         for (unsigned int im = 0; im < mu.size(); im++)
         {
             TLorentzVector mutest;
             mutest.SetPtEtaPhiM(Muon_pt[mu[im]], Muon_eta[mu[im]], Muon_phi[mu[im]], Muon_mass[mu[im]]);
-            if (mutest.DeltaR(jettest) < 0.5)
+            if (mutest.DeltaR(jettest) < jetLepCleanDR)
                 overlaptag++;
         }
         // gamma CR: remove jets close to the selected photon (empty otherwise)
@@ -505,7 +505,10 @@ std::vector<float> H4LTools::MuonFsrPhi(){
 }
 
 void H4LTools::LeptonSelection(){
-    FlagElectronMuonOverlap();
+    // Electron-muon cross-cleaning disabled for now (not in AN-2016/325; see docs/TODO.md):
+    // all electrons are kept. Re-enable by restoring the FlagElectronMuonOverlap() call.
+    //FlagElectronMuonOverlap();
+    Electron_muOverlap.assign(Electron_pt.size(), false);
     looseEle = goodLooseElectrons2012();
     looseMu = goodLooseMuons2012();
     bestEle = goodElectrons2015_noIso_noBdt(looseEle);
@@ -514,14 +517,6 @@ void H4LTools::LeptonSelection(){
     Muonindex = bestMu;
     AllEid = passTight_BDT_Id();
     AllMuid = passTight_Id();
-    for (unsigned int iuj=0;iuj<looseEle.size();iuj++){
-        if(AllEid[looseEle[iuj]]) tighteleforjetidx.push_back(looseEle[iuj]);
-    }
-    for (unsigned int juj=0;juj<looseMu.size();juj++){
-        if(AllMuid[looseMu[juj]]) tightmuforjetidx.push_back(looseMu[juj]);
-    }
-    jetidx = SelectedJets(tighteleforjetidx,tightmuforjetidx);
-    FatJetidx = SelectedFatJets(tighteleforjetidx, tightmuforjetidx);
 
     for(unsigned int ie=0; ie<Electronindex.size();ie++){
         if(Electron_pdgId[Electronindex[ie]]>0){
@@ -611,11 +606,22 @@ void H4LTools::LeptonSelection(){
     // Cut-flow: events with >= 2 selected muons passing the isolation cut
     if (nMuIso >= 2) cut_mu_iso++;
 
+    // Jets are cleaned against the selected leptons (tight ID + isolation, AN-2016/325), not against
+    // all ID-passing leptons as before (raw-collection indices)
+    for (unsigned int k = 0; k < TightEleindex.size(); k++)
+        tighteleforjetidx.push_back(Electronindex[TightEleindex[k]]);
+    for (unsigned int k = 0; k < TightMuindex.size(); k++)
+        tightmuforjetidx.push_back(Muonindex[TightMuindex[k]]);
+    jetidx = SelectedJets(tighteleforjetidx, tightmuforjetidx);
+    FatJetidx = SelectedFatJets(tighteleforjetidx, tightmuforjetidx);
 
 }
 bool H4LTools::findZCandidate(){
 
     TLorentzVector z1,z2;
+    // mass window of the pairs: MZcut, or the 2l2nu window set by GetZ1_2l2qOR2l2nu
+    const float mZdown = (ZCandMassDown >= 0) ? ZCandMassDown : MZcutdown;
+    const float mZup = (ZCandMassUp >= 0) ? ZCandMassUp : MZcutup;
 
     if (nTightEle>=4) {
         cut4e++;
@@ -650,11 +656,12 @@ bool H4LTools::findZCandidate(){
             for(unsigned int je=ke+1;je<TightEleindex.size();je++){
                 // Z candidates are opposite-sign same-flavour pairs. (The OS requirement had been
                 // disabled while SetElectrons received the WP90 flag as pdgId, fixed in 43f7831.)
-                if ((Elechg[TightEleindex[ke]]+Elechg[TightEleindex[je]])==0)
+                // ZCandRequireOS is false only for the 2l2nu Z1 search (AN-2016/325 4.3)
+                if (!ZCandRequireOS || (Elechg[TightEleindex[ke]]+Elechg[TightEleindex[je]])==0)
                 {
                     TLorentzVector Zcan;
                     Zcan = ElelistFsr[TightEleindex[ke]] + ElelistFsr[TightEleindex[je]];
-                    if((Zcan.M()>MZcutdown)&&(Zcan.M()<MZcutup)){
+                    if((Zcan.M()>mZdown)&&(Zcan.M()<mZup)){
                         Zlist.push_back(Zcan);
                         Zlep1index.push_back(TightEleindex[ke]);
                         Zlep2index.push_back(TightEleindex[je]);
@@ -686,14 +693,14 @@ bool H4LTools::findZCandidate(){
     if(TightMuindex.size()>1){
         for(unsigned int kmu=0; kmu<(TightMuindex.size()-1);kmu++){
             for(unsigned int jmu=kmu+1;jmu<TightMuindex.size();jmu++){
-                if ((Muchg[TightMuindex[kmu]]+Muchg[TightMuindex[jmu]])==0)
+                if (!ZCandRequireOS || (Muchg[TightMuindex[kmu]]+Muchg[TightMuindex[jmu]])==0)
                 {
                     TLorentzVector Zcan;
                     Zcan = MulistFsr[TightMuindex[kmu]] + MulistFsr[TightMuindex[jmu]];
                     if (DEBUG)
-                        std::cout << "Zcan.M() = " << Zcan.M() << "\tMZcutdown = " << MZcutdown << "\tMZcutup = " << MZcutup << std::endl;
+                        std::cout << "Zcan.M() = " << Zcan.M() << "\tmZdown = " << mZdown << "\tmZup = " << mZup << std::endl;
 
-                    if((Zcan.M()>MZcutdown)&&(Zcan.M()<MZcutup)){
+                    if((Zcan.M()>mZdown)&&(Zcan.M()<mZup)){
                         Zlist.push_back(Zcan);
                         Zlep1index.push_back(TightMuindex[kmu]);
                         Zlep2index.push_back(TightMuindex[jmu]);
@@ -1154,6 +1161,8 @@ void H4LTools::CountJetsAndBtags()
 
 // Number of leptons passing the extra-lepton veto definition, skipping the given
 // raw-collection indices (-1 = none). Veto thresholds come from HZZ2l2nu.VetoLep in the YAML.
+// A selected (tight, isolated) lepton always counts, even if it fails the veto ID (WP90 does not
+// imply cut-based Loose), so the AN "exactly two tight leptons" requirement holds.
 int H4LTools::CountExtraLeptons(int ele1, int ele2, int mu1, int mu2)
 {
     int nExtra = 0;
@@ -1161,20 +1170,54 @@ int H4LTools::CountExtraLeptons(int ele1, int ele2, int mu1, int mu2)
     {
         if ((int)i == ele1 || (int)i == ele2) continue;
         if (Electron_muOverlap[i]) continue;   // a muon reconstructed as an electron is not an extra lepton
-        if (Electron_pt[i] <= vetoElePtcut || fabs(Electron_eta[i]) >= eleEtacut) continue;
-        if (!Electron_mvaIso_WP90[i] || Electron_pfRelIso03_all[i] >= vetoEleIsocut) continue;
-        nExtra++;
+        const bool isSelected = std::find(tighteleforjetidx.begin(), tighteleforjetidx.end(), i) != tighteleforjetidx.end();
+        // AN-2016/325 4.4.4 veto electron: cut-based Loose ID, I_rel < 0.15, pT > 10
+        const bool passVeto = Electron_pt[i] > vetoElePtcut && fabs(Electron_eta[i]) < eleEtacut &&
+                              Electron_cutBased[i] >= vetoEleIDcut && Electron_pfRelIso03_all[i] < vetoEleIsocut;
+        if (isSelected || passVeto)
+            nExtra++;
     }
     for (unsigned int i = 0; i < Muon_pt.size(); i++)
     {
         if ((int)i == mu1 || (int)i == mu2) continue;
-        if (Muon_pt[i] <= vetoMuPtcut || fabs(Muon_eta[i]) >= MuEtacut) continue;
+        const bool isSelected = std::find(tightmuforjetidx.begin(), tightmuforjetidx.end(), i) != tightmuforjetidx.end();
         // POG loose muon ID: PF candidate and global or tracker muon
-        if (!(Muon_isPFcand[i] && (Muon_isGlobal[i] || Muon_isTracker[i]))) continue;
-        if (Muon_pfRelIso03_all[i] >= vetoMuIsocut) continue;
-        nExtra++;
+        const bool passVeto = Muon_pt[i] > vetoMuPtcut && fabs(Muon_eta[i]) < MuEtacut &&
+                              Muon_isPFcand[i] && (Muon_isGlobal[i] || Muon_isTracker[i]) &&
+                              Muon_pfRelIso03_all[i] < vetoMuIsocut;
+        if (isSelected || passVeto)
+            nExtra++;
     }
     return nExtra;
+}
+
+// AN-2016/325 4.4.4 soft-muon veto: HZZ2l2nu_nExtraSoftMu (AN definition) is required to be 0 in
+// ZZSelection_2l2nu; HZZ2l2nu_nExtraSoftMuPV is stored only. Counts soft-ID muons (pT > vetoSoftMuPtcut,
+// |eta| < MuEtacut) beyond the given raw muon indices that are not already loose veto muons. pvCompatible additionally requires |dz| < 0.5, |dxy| < 0.2 cm (the soft ID
+// allows |dz| < 20 cm, so pileup muons pass it).
+int H4LTools::CountExtraSoftMuons(int mu1, int mu2, bool pvCompatible)
+{
+    if (vetoSoftMuPtcut < 0)
+        return 0;
+    int n = 0;
+    for (unsigned int i = 0; i < Muon_pt.size() && i < Muon_softId.size(); i++)
+    {
+        if ((int)i == mu1 || (int)i == mu2) continue;
+        if (!Muon_softId[i] || Muon_pt[i] <= vetoSoftMuPtcut || fabs(Muon_eta[i]) >= MuEtacut) continue;
+        if (pvCompatible && (fabs(Muon_dz[i]) >= 0.5 || fabs(Muon_dxy[i]) >= 0.2)) continue;
+        const bool countedLoose = (Muon_pt[i] > vetoMuPtcut && Muon_isPFcand[i] &&
+                                   (Muon_isGlobal[i] || Muon_isTracker[i]) &&
+                                   Muon_pfRelIso03_all[i] < vetoMuIsocut);
+        if (!countedLoose)
+            n++;
+    }
+    return n;
+}
+
+void H4LTools::SetExtraSoftMuons(int mu1, int mu2)
+{
+    HZZ2l2nu_nExtraSoftMu = CountExtraSoftMuons(mu1, mu2, false);
+    HZZ2l2nu_nExtraSoftMuPV = CountExtraSoftMuons(mu1, mu2, true);
 }
 
 bool H4LTools::GetZ1_2l2qOR2l2nu()
@@ -1182,7 +1225,18 @@ bool H4LTools::GetZ1_2l2qOR2l2nu()
     if (DEBUG)
         std::cout << "Inside function GetZ1_2l2qOR2l2nu()" << std::endl;
     bool foundZ1Candidate = false;
-    if (!findZCandidate())
+    // 2l2nu (AN-2016/325 4.3): no charge requirement, and the HZZ2l2nu.MZLepcut window, wide enough
+    // for the alpha-method sidebands (40-70, 110-200 GeV). The 4l search keeps OS + MZcut.
+    if (use2l2nuZCand)
+    {
+        ZCandRequireOS = HZZ2l2nu_RequireOS;
+        ZCandMassDown = HZZ2l2nu_MZLepcutdown;
+        ZCandMassUp = HZZ2l2nu_MZLepcutup;
+    }
+    const bool foundZ = findZCandidate();
+    ZCandRequireOS = true;
+    ZCandMassDown = ZCandMassUp = -1.;
+    if (!foundZ)
     {
         return foundZ1Candidate;
     }
@@ -1205,9 +1259,15 @@ bool H4LTools::GetZ1_2l2qOR2l2nu()
 
     // Extra leptons beyond the Z1 pair (raw-collection indices of the Z1 leptons are excluded)
     if (HZZ2l2qNu_isELE)
+    {
         HZZ2l2nu_nExtraLep = CountExtraLeptons(Electronindex[Zlep1index[Z1index]], Electronindex[Zlep2index[Z1index]], -1, -1);
+        SetExtraSoftMuons(-1, -1);
+    }
     else
+    {
         HZZ2l2nu_nExtraLep = CountExtraLeptons(-1, -1, Muonindex[Zlep1index[Z1index]], Muonindex[Zlep2index[Z1index]]);
+        SetExtraSoftMuons(Muonindex[Zlep1index[Z1index]], Muonindex[Zlep2index[Z1index]]);
+    }
 
     // Opposite-charge flag from the Z1 leptons themselves
     if (Zlep1chg[Z1index] + Zlep2chg[Z1index] == 0)
@@ -1387,6 +1447,7 @@ bool H4LTools::GetZ1_emuCR()
     CountJetsAndBtags();
 
     HZZ2l2nu_nExtraLep = CountExtraLeptons(Electronindex[TightEleindex[0]], -1, Muonindex[TightMuindex[0]], -1);
+    SetExtraSoftMuons(Muonindex[TightMuindex[0]], -1);
     if (DEBUG)
         std::cout << "*****$$$$***** Found Z1_emuCR candidate: " << foundZ1_emuCRCandidate << std::endl;
 
@@ -1529,6 +1590,7 @@ bool H4LTools::GetZ1_gammaCR()
 
     // all leptons count as "extra" (no lepton belongs to the photon "Z")
     HZZ2l2nu_nExtraLep = CountExtraLeptons(-1, -1, -1, -1);
+    SetExtraSoftMuons(-1, -1);
     CountJetsAndBtags();
     return true;
 }
@@ -1549,6 +1611,19 @@ bool H4LTools::ZZSelection_2l2nu()
         HZZgammaCR_cutExtraLepVeto++;
     else
         HZZ2l2nu_cutExtraLepVeto++;
+
+    // AN-2016/325 4.4.4 soft-muon veto: no extra soft-ID muon with pT > HZZ2l2nu.VetoLep.SoftMu_pT
+    // (counts 0 when SoftMu_pT < 0, i.e. veto off)
+    if (HZZ2l2nu_nExtraSoftMu > 0)
+    {
+        return foundZZCandidate;
+    }
+    if (HZZ2l2nu_isEMuCR)
+        HZZemuCR_cutSoftMuVeto++;
+    else if (HZZ2l2nu_isGammaCR)
+        HZZgammaCR_cutSoftMuVeto++;
+    else
+        HZZ2l2nu_cutSoftMuVeto++;
 
     jetidx = SelectedJets(tighteleforjetidx, tightmuforjetidx);
     if (DEBUG)
@@ -1655,44 +1730,40 @@ bool H4LTools::ZZSelection_2l2nu()
         }
     }
     
-    // Get VBF jets having dEta>4.0 and mjj>500
-    // If there are more than one pair of VBF jets, select the pair with highest mjj
-    float VBF_jj_mjj = 0.0;
-    for (unsigned int i = 0; i < jetidx.size(); i++)
+    // VBF tag, AN-2016/325 4.3: the two LEADING jets (pT > JetPtcut) with |dEta| > VBF_dEta_jj and
+    // m_jj > VBF_M_jj, the Z (dilepton, emu pair or photon) between them in eta, and no other jet
+    // with pT > JetPtcut in [eta_min, eta_max] (central jet veto).
+    // (Previously: any jet pair passing dEta / m_jj, the one with the highest m_jj, no centrality / CJV.)
+    if (jetidx.size() >= 2)
     {
-        for (unsigned int j = i + 1; j < jetidx.size(); j++)
+        TLorentzVector VBF_jj = Jet1 + Jet2;
+        const float etaMin = std::min(Jet1.Eta(), Jet2.Eta());
+        const float etaMax = std::max(Jet1.Eta(), Jet2.Eta());
+        bool passVBF = (fabs(Jet1.Eta() - Jet2.Eta()) > VBF_dEta_jj) && (VBF_jj.M() > VBF_M_jj);
+        if (passVBF && VBF_ZCentrality)
+            passVBF = (Z1.Eta() > etaMin) && (Z1.Eta() < etaMax);
+        if (passVBF && VBF_CentralJetVeto)
         {
-            // std::cout << "Inside: i: " << i << ", j: " << j << std::endl;
-            TLorentzVector VBF_jet1;
-            TLorentzVector VBF_jet2;
-            VBF_jet1.SetPtEtaPhiM(Jet_pt[jetidx[i]], Jet_eta[jetidx[i]], Jet_phi[jetidx[i]], Jet_mass[jetidx[i]]);
-            VBF_jet2.SetPtEtaPhiM(Jet_pt[jetidx[j]], Jet_eta[jetidx[j]], Jet_phi[jetidx[j]], Jet_mass[jetidx[j]]);
-            TLorentzVector VBF_jj = VBF_jet1 + VBF_jet2;
-
-            if (fabs(VBF_jet1.Eta() - VBF_jet2.Eta()) > 4.0 && VBF_jj.M() > 500.0)
+            for (unsigned int i = 0; i < jetidx.size(); i++)
             {
-                if (VBF_jj.M() > VBF_jj_mjj)
+                const unsigned int j = jetidx[i];
+                if (j == jet1index || j == jet2index) continue;
+                if (Jet_eta[j] > etaMin && Jet_eta[j] < etaMax)
                 {
-                    VBF_jj_mjj = VBF_jj.M();
-                    HZZ2l2nu_VBFIndexJet1 = jetidx[i];
-                    HZZ2l2nu_VBFIndexJet2 = jetidx[j];
-                    if (DEBUG)
-                        std::cout << "Inside: VBF_jj_mjj: " << VBF_jj_mjj << "\tHZZ2l2nu_VBFIndexJet1: " << HZZ2l2nu_VBFIndexJet1 << "\tHZZ2l2nu_VBFIndexJet2: " << HZZ2l2nu_VBFIndexJet2 << std::endl;
+                    passVBF = false;
+                    break;
                 }
             }
         }
-    }
-
-    if (jetidx.size() >= 2 && HZZ2l2nu_VBFIndexJet1 >= 0 && HZZ2l2nu_VBFIndexJet2 >= 0)
-    {
-        HZZ2l2nu_ifVBF = true;
-        TLorentzVector VBF_jet1;
-        TLorentzVector VBF_jet2;
-        VBF_jet1.SetPtEtaPhiM(Jet_pt[HZZ2l2nu_VBFIndexJet1], Jet_eta[HZZ2l2nu_VBFIndexJet1], Jet_phi[HZZ2l2nu_VBFIndexJet1], Jet_mass[HZZ2l2nu_VBFIndexJet1]);
-        VBF_jet2.SetPtEtaPhiM(Jet_pt[HZZ2l2nu_VBFIndexJet2], Jet_eta[HZZ2l2nu_VBFIndexJet2], Jet_phi[HZZ2l2nu_VBFIndexJet2], Jet_mass[HZZ2l2nu_VBFIndexJet2]);
-        TLorentzVector VBF_jj = VBF_jet1 + VBF_jet2;
+        if (passVBF)
+        {
+            HZZ2l2nu_ifVBF = true;
+            HZZ2l2nu_VBFIndexJet1 = jet1index;
+            HZZ2l2nu_VBFIndexJet2 = jet2index;
+        }
         if (DEBUG)
-            std::cout << "Outside: VBF_jj_mjj: " << VBF_jj.M() << "\tHZZ2l2nu_VBFIndexJet1: " << HZZ2l2nu_VBFIndexJet1 << "\tHZZ2l2nu_VBFIndexJet2: " << HZZ2l2nu_VBFIndexJet2 << std::endl;
+            std::cout << "VBF tag: m_jj = " << VBF_jj.M() << ", dEta = " << fabs(Jet1.Eta() - Jet2.Eta())
+                      << ", eta_Z = " << Z1.Eta() << ", ifVBF = " << HZZ2l2nu_ifVBF << std::endl;
     }
 
     return foundZZCandidate;

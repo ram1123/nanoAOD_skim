@@ -170,6 +170,7 @@ Electron:
     Isocut: 0.15 #0.35
     # Electron-muon cross-cleaning: drop electrons within dR < dR of a POG-loose muon
     # (PF candidate, global or tracker) with pT > MuPt. 0.05 = CMS H->ZZ->4l convention.
+    # DISABLED for now (not in AN-2016/325; H4LTools::LeptonSelection, see docs/TODO.md).
     MuonCleaning:
         dR: 0.05
         MuPt: 5.0
@@ -206,6 +207,8 @@ Jet:
         Medium: 0.1776
         Tight: 0.5755
         Etacut: 2.4   # b-tagging acceptance
+    # jets within dR < LepCleanDR of a selected (tight, isolated) lepton are removed (AN-2016/325)
+    LepCleanDR: 0.4
 
 HZZ2l2q:
     Leading_Lep_pT: 40
@@ -220,19 +223,38 @@ HZZ2l2nu:
     SubLeading_Lep_pT: 25.0
     Lep_eta: 2.5
     Pt_ll: 10.0
-    M_ll_Window: 80.0   # |m_ll - mZ| < M_ll_Window (loose skim; tighten downstream)
+    # Loose skim; the AN-2016/325 cuts (|m_ll - mZ| < 15, pT_ll > 55, b-veto, min dPhi(jet, MET) > 0.5,
+    # |dPhi(Z, MET)| > 0.5, MET > 125) are applied downstream. The m_ll range is kept wide for the
+    # AN alpha-method sidebands 40-70 and 110-200 GeV.
+    M_ll_Window: 110.0  # |m_ll - mZ| < M_ll_Window
     dPhi_jetMET: 0.0
+    # m_ll window of the ee / mumu Z1 candidates (instead of the 4l MZcut 12-120)
     MZLepcut:
-        down: 60.0
-        up: 120.0
+        down: 12.0
+        up: 200.0
+    # AN-2016/325 4.3: the ee / mumu pair is not required to have opposite charge
+    # (HZZ2l2qNu_cutOppositeChargeFlag is still stored). Shared with 2l2q under --channels all.
+    RequireOS: false
+    # AN-2016/325 4.3 VBF tag: two leading jets, |dEta_jj| > dEta_jj, m_jj > M_jj, the Z between the
+    # two jets in eta (ZCentrality) and no other jet between them (CentralJetVeto).
+    VBF:
+        dEta_jj: 4.0
+        M_jj: 500.0
+        ZCentrality: true
+        CentralJetVeto: true
     # Extra-lepton veto: events with a loose lepton beyond the Z1 / emu pair are rejected
     # in ZZSelection_2l2nu (count stored as HZZ2l2nu_nExtraLep).
     # AN-2016/325 4.4.4 values -- unverified for UL / NanoAOD v15.
     VetoLep:
         Ele_pT: 10.0
+        # cut-based ID WP (Electron_cutBased, Fall17V2: 1 veto, 2 loose, 3 medium, 4 tight); AN = Loose
+        Ele_cutBased: 2
         Ele_Iso: 0.15
         Mu_pT: 10.0
         Mu_Iso: 0.2
+        # AN 4.4.4 soft-muon veto (soft ID, pT > SoftMu_pT; < 0: off). APPLIED in the skim: events with
+        # HZZ2l2nu_nExtraSoftMu (AN definition) > 0 are rejected; _nExtraSoftMuPV (+ |dz| < 0.5, |dxy| < 0.2) stored only.
+        SoftMu_pT: 3.0
     # emu control region: |m_emu - mZ| < M_ll_Window and pT_emu > Pt_ll
     emuCR:
         M_ll_Window: 160.0

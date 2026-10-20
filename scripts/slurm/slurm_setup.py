@@ -65,6 +65,76 @@ def sample_tag(dataset):
     return name
 
 
+def _run(cmd, cwd):
+    r = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True)
+    return r.stdout if r.returncode == 0 else "(%s failed: %s)" % (" ".join(cmd), r.stderr.strip())
+
+
+def _sha256(path):
+    import hashlib
+    h = hashlib.sha256()
+    with open(path, "rb") as fh:
+        for block in iter(lambda: fh.read(1 << 20), b""):
+            h.update(block)
+    return h.hexdigest()
+
+
+# files whose staged (/depot) copy must match the /work tree the submission was made from
+PROVENANCE_FILES = ["src/H4LTools.cc", "include/H4LTools.h", "modules/H4LCppModule.py",
+                    "modules/keep_and_drop_list.py", "modules/METFilters.py", "post_proc.py",
+                    "config/Input_2016.yml", "config/Input_2017.yml", "config/Input_2018.yml",
+                    "config/Input_2022.yml", "scripts/slurm/job_inner.sh", "scripts/slurm/job_wrapper.sh"]
+
+
+def write_metadata(args, sub, subdir, skimbase, in_list, tasks_tsv, tasks):
+    """Write <skims>/<submission>/_metadata/<timestamp>/ next to the output: what code, config and
+    inputs produced these skims (git state + diff, YAML, sample list, tasks, staged-copy check)."""
+    import json
+    meta = os.path.join(skimbase, "_metadata", sub.rsplit("_", 2)[-2] + "_" + sub.rsplit("_", 1)[-1])
+    os.makedirs(meta, exist_ok=True)
+    with open(os.path.join(meta, "git.txt"), "w") as fh:
+        fh.write("repo: %s\n" % PKG_DIR)
+        fh.write("branch: %s" % _run(["git", "rev-parse", "--abbrev-ref", "HEAD"], PKG_DIR))
+        fh.write("HEAD: %s\n" % _run(["git", "log", "-1", "--format=%H %ad %s"], PKG_DIR).strip())
+        fh.write("\n== git status --short\n" + _run(["git", "status", "--short"], PKG_DIR))
+        fh.write("\n== git log -10\n" + _run(["git", "log", "-10", "--oneline"], PKG_DIR))
+    with open(os.path.join(meta, "git_diff_HEAD.patch"), "w") as fh:
+        fh.write(_run(["git", "diff", "HEAD"], PKG_DIR))
+    for rel in ["config/Input_%s.yml" % y for y in ("2016", "2017", "2018", "2022")] + \
+               ["modules/keep_and_drop_list.py"]:
+        src = os.path.join(PKG_DIR, rel)
+        if os.path.isfile(src):
+            shutil.copy(src, os.path.join(meta, os.path.basename(rel)))
+    shutil.copy(in_list, os.path.join(meta, os.path.basename(in_list)))
+    shutil.copy(tasks_tsv, os.path.join(meta, "tasks.tsv"))
+    # the jobs run the /depot copy: record whether it matches the /work tree above
+    staged = os.path.join(args.cmssw_on_depot, PKG_REL)
+    lines, n_diff = [], 0
+    for rel in PROVENANCE_FILES:
+        a, b = os.path.join(PKG_DIR, rel), os.path.join(staged, rel)
+        if not os.path.isfile(a) and not os.path.isfile(b):
+            continue
+        same = os.path.isfile(a) and os.path.isfile(b) and _sha256(a) == _sha256(b)
+        n_diff += (not same)
+        lines.append("%-6s %s" % ("MATCH" if same else "DIFF", rel))
+    with open(os.path.join(meta, "staged_vs_work.txt"), "w") as fh:
+        fh.write("work  : %s\nstaged: %s\n\n" % (PKG_DIR, staged) + "\n".join(lines) + "\n")
+    samples = {}
+    for _, _, tag, _ in tasks:
+        samples[tag] = samples.get(tag, 0) + 1
+    info = {"submission": sub, "created": datetime.datetime.now().isoformat(timespec="seconds"),
+            "user": os.environ.get("USER"), "host": os.uname()[1], "command": " ".join(sys.argv),
+            "args": vars(args), "submit_dir": subdir, "skim_dir": skimbase,
+            "n_tasks": len(tasks), "files_per_sample": samples,
+            "staged_files_differing_from_work": n_diff}
+    with open(os.path.join(meta, "submission.json"), "w") as fh:
+        json.dump(info, fh, indent=2, sort_keys=True)
+    print("metadata -> %s" % meta)
+    if n_diff:
+        print("  !! %d provenance file(s) differ between /work and the staged copy "
+              "(see staged_vs_work.txt) -- re-run stage_to_depot.sh?" % n_diff)
+
+
 def main():
     ap = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     ap.add_argument("--input_file", required=True,
@@ -168,6 +238,10 @@ def main():
         info.generate_git_patch_and_log()
     except Exception as e:  # provenance is best-effort
         print("  (git provenance skipped: %s)" % e)
+    try:
+        write_metadata(args, sub, subdir, skimbase, in_list, tasks_tsv, tasks)
+    except Exception as e:  # best-effort, never blocks a submission
+        print("  (metadata skipped: %s)" % e)
 
     # ---- the array job script ------------------------------------------
     njobs = len(tasks)
