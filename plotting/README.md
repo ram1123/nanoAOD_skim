@@ -78,11 +78,17 @@ UParTAK4 b tagging, and the Run-2 UL TightLepVeto jet ID. Event-level cuts and c
 ## Reproduce
 
 ```bash
-cd $CMSSW_BASE/src/PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim   # no cmsenv needed
+cd /work/users/$USER/<area>/CMSSW_14_0_2/src/PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim   # no cmsenv
+export SKIM=/depot/cms/users/$USER/HZZ2l2nu_skim/skims/<submission_name>       # input: the Slurm skim (<SKIM>/<sample>/*_Skim.root)
+export BASE=/depot/cms/users/$USER/HZZ2l2nu_skim/controlplots_<year>_<tag>     # output: $BASE/inputs (prepare_inputs.py --outdir), $BASE/plots
 mkdir -p plotting/logs
 setsid nohup bash plotting/run_all.sh > plotting/logs/run_all.log 2>&1 < /dev/null &
-# another skim / output area:  SKIM=<skim dir> BASE=<output dir> bash plotting/run_all.sh
 ```
+
+Set both every time. If unset, `run_all.sh` falls back to the last 2017 run
+(`skims/HZZ2l2nu_AN325_2017_MCdata`, `controlplots_2017_AN325`), and a new skim
+would silently be plotted from the old inputs. `BASE/inputs` must be the
+`--outdir` you gave `prepare_inputs.py`.
 
 `prepare_inputs.py` skips samples whose slim file already exists; pass `--force` (or delete them) after a
 re-skim.
