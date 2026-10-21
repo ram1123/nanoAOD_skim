@@ -105,6 +105,29 @@ condor_submit <generated>.jdl
 
 Resubmit failures with `scripts/condor/nanoAOD_condor_resubmit.py`.
 
+## After the skim: control plots and limits
+
+Both run on the AF host (no `cmssw-el9` / `cmsenv`), with ROOT from the global pixi env.
+
+**Control plots** &mdash; [`plotting/`](plotting/README.md) (2017, AN-2016/325 selection: low-MET,
+m_ll-sideband, eμ, α sidebands, γ CR):
+
+```bash
+mkdir -p plotting/logs
+setsid nohup bash plotting/run_all.sh > plotting/logs/run_all.log 2>&1 < /dev/null &
+# other skim / output area:  SKIM=<skim dir> BASE=<output dir> bash plotting/run_all.sh
+```
+
+1. [`scripts/analysis/prepare_inputs.py`](scripts/analysis/prepare_inputs.py) &mdash; one slim file per
+   sample + `sumw.json` (Σ genEventSumw over all skim files); data chained over the primary datasets and
+   de-duplicated on (run, lumi, event) in priority order. Skips existing outputs unless `--force`.
+2. `plotting/make_config.py` &mdash; cross sections, cuts, ranges; generates the sample list, `cuts/` and
+   `controlplotvars_2017.h` (git-ignored).
+3. `RunMacro_2017_v15.C` → `myControlPlots.C` (copied from PlottingCodes), then `yield_table.py` and
+   `write_metadata.sh` (provenance next to the outputs on `/depot`).
+
+**Limits** &mdash; `higgs_combine/` (ROOT macros: shapes → datacard), see `CLAUDE.md`.
+
 ## Sample lists
 
 `input_data_files/sample_list_v15_<year>.dat` (MC) and
