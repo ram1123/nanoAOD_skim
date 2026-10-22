@@ -178,8 +178,52 @@ bool H4LTools::PassJetIDv15(unsigned int i, bool isPUPPI)
     const float NEMF = Jet_neEmEF[i];
     const float NHF  = Jet_neHEF[i];
     const float MUF  = Jet_muEF[i];
-    const int   NumConst = Jet_nConstituents[i];
+    const int   NumConst = Jet_chMultiplicity[i] + Jet_neMultiplicity[i]; // JetID13TeVUL NanoV15: chM + neM
     const int   NumNeutral = Jet_neMultiplicity[i];
+
+    // UL2016 TightLepVeto, as RUN2UL16PUPPI / RUN2UL16CHS in
+    // CMSSW PhysicsTools/SelectorUtils/interface/PFJetIDSelectionFunctor.h
+    if (dataYear == 2016)
+    {
+        // |eta| <= 2.4 (AK4CHS & AK4PUPPI, LepVeto)
+        if (abseta <= 2.4)
+        {
+            return (CEMF < 0.8 &&
+                    CHM > 0 &&
+                    CHF > 0 &&
+                    NumConst > 1 &&
+                    NEMF < 0.9 &&
+                    MUF < 0.8 &&
+                    NHF < 0.9);
+        }
+        // 2.4 < |eta| <= 2.7
+        if (abseta <= 2.7)
+        {
+            return (NEMF < 0.99 &&
+                    NHF < (isPUPPI ? 0.98 : 0.9));
+        }
+        // 2.7 < |eta| <= 3.0
+        if (abseta <= 3.0)
+        {
+            if (!isPUPPI) // AK4CHS
+            {
+                return (NHF < 0.9 &&
+                        NEMF > 0.0 &&
+                        NEMF < 0.99 &&
+                        NumNeutral > 1);
+            }
+            return (NumNeutral >= 1); // AK4PUPPI
+        }
+        // |eta| > 3.0
+        if (!isPUPPI) // AK4CHS
+        {
+            return (NEMF < 0.90 &&
+                    NHF > 0.2 &&
+                    NumNeutral > 10);
+        }
+        return (NEMF < 0.90 && // AK4PUPPI
+                NumNeutral > 2);
+    }
 
     // Run 2 UL TightLepVeto, as RUN2ULPUPPI / RUN2ULCHS in
     // CMSSW PhysicsTools/SelectorUtils/interface/PFJetIDSelectionFunctor.h
@@ -260,10 +304,20 @@ std::vector<unsigned int> H4LTools::SelectedJets(std::vector<unsigned int> ele, 
         if ((Jet_pt[i] <= JetPtcut)) continue;
         if (fabs(Jet_eta[i]) >= JetEtacut) continue;
 
-        if (!PassJetIDv15(i, isPUPPI)) continue; // for v15
-
-        //if (Jet_jetId[i] <= 0) continue;  // for v9
-        //if ((Jet_pt[i] < 50) && (Jet_puId[i] != 7)) continue; //for v9
+        if (nanoAODVersion >= 15)
+        {
+            // v15: AK4 PUPPI, jet ID recomputed; PU jet ID does not exist for PUPPI
+            if (!PassJetIDv15(i, isPUPPI)) continue;
+        }
+        else
+        {
+            // v9: AK4 CHS, stored IDs. Jet_jetId bit 2 = TightLepVeto
+            if (!(Jet_jetId[i] & (1 << 2))) continue;
+            // PU jet ID tight, only below 50 GeV. UL2016 bits are flipped (tight = bit 2),
+            // UL2017/2018 tight = bit 0 (PileupJetIDUL TWiki)
+            const int puIdTightBit = (dataYear == 2016) ? 2 : 0;
+            if ((Jet_pt[i] < 50) && !(Jet_puId[i] & (1 << puIdTightBit))) continue;
+        }
         int overlaptag = 0;
         TLorentzVector jettest;
         jettest.SetPtEtaPhiM(Jet_pt[i], Jet_eta[i], Jet_phi[i], Jet_mass[i]);
@@ -359,7 +413,8 @@ std::vector<unsigned int> H4LTools::SelectedFatJets(std::vector<unsigned int> el
       if (overlaptag == 0)
       {
         // std::cout<<"jetindex: "<<i<<"jetID "<<(*Jet_jetId)[i]<<" puID "<<(*Jet_puId)[i]<<std::endl;
-        if ((Jet_jetId[i] > 0) && (Jet_puId[i] == 7))
+        // no PU jet ID: it exists only for AK4 CHS (v9); v15 has no Jet_puId
+        if (FatJet_jetId[i] > 0)
         {
             goodJets.push_back(i);
         }

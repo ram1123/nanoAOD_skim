@@ -18,9 +18,10 @@ class HZZAnalysisCppProducer(Module):
 
     #def __init__(self, year, cfgFile, isMC, isFSR, cutFlowJSONFile, channels, DEBUG=False, corrector=None):
     def __init__(self, year, cfgFile, isMC, isFSR, cutFlowJSONFile, channels, DEBUG=False,
-                 preselection=None, maxEntries=None):
+                 preselection=None, maxEntries=None, era=None):
         self.loadLibraries()
         self.year = year
+        self.era = era  # "2016preVFP" / "2016postVFP"; None for other years
         self.isMC = isMC
         self.cutFlowJSONFile = cutFlowJSONFile
         self.channels = channels # choices=["all", "4l", "2l2q", "2l2v", "1g"],
@@ -65,7 +66,12 @@ class HZZAnalysisCppProducer(Module):
 
         # MET-phi corrector built once per job (its lookup table was rebuilt every event,
         # ~20% of analyze()). No UL campaign for other years -> uncorrected PuppiMET.
+        # UL2016: one data campaign (run-dependent), separate MC campaigns for preVFP (APV) / postVFP.
         campaign = {2016: Campaign.UL_2016, 2017: Campaign.UL_2017, 2018: Campaign.UL_2018}.get(int(year))
+        if int(year) == 2016 and isMC:
+            if era not in ("2016preVFP", "2016postVFP"):
+                raise ValueError("2016 MC needs era 2016preVFP or 2016postVFP (got {})".format(era))
+            campaign = Campaign.UL_2016_APV if era == "2016preVFP" else Campaign.UL_2016_NONAPV
         self.metPhiCorrector = (METPhiCorrector(campaign=campaign, is_data=not isMC, is_puppi=True)
                                 if campaign is not None else None)
         # MELA is only used by the 4l channel; constructing it is very slow and
@@ -310,6 +316,20 @@ class HZZAnalysisCppProducer(Module):
         nFile = inputFile.Get("Events").GetEntries()
         self.nInputEntries += min(nFile, self.maxEntries) if self.maxEntries else nFile
         self.out = wrappedOutputTree
+
+        # NanoAOD version from the jet branches: v9 stores Jet_puId (AK4 CHS), v15 does not (AK4 PUPPI)
+        self.isNanoV9 = bool(inputTree.GetBranch("Jet_puId"))
+        self.worker.nanoAODVersion = 9 if self.isNanoV9 else 15
+        print("INFO: NanoAOD v{} jets in {}: {}".format(self.worker.nanoAODVersion, inputFile.GetName(),
+              "stored jetId + PU jet ID" if self.isNanoV9 else "recomputed jet ID, no PU jet ID"))
+
+        # A path missing from the HLT menu of this file's era (2016 emu paths) has no branch: it
+        # counts as not fired instead of crashing getattr() in analyze().
+        self.presentTriggerPaths = [p for p in self.triggerPaths if inputTree.GetBranch(p)]
+        missing = sorted(set(self.triggerPaths) - set(self.presentTriggerPaths))
+        if missing:
+            print("WARNING: trigger paths absent in {} (treated as not fired): {}".format(
+                inputFile.GetName(), ", ".join(missing)))
 
         # Boolean branches for Trigger channels
         for TriggerChannel in self.cfg['TriggerChannels']:
@@ -698,8 +718,8 @@ class HZZAnalysisCppProducer(Module):
         mass4l = -999.
         DeltaRl1l2 = -999.
         passedTrig = False
-        fired = {path: bool(getattr(event, path)) for path in self.triggerPaths}
-        TriggerMap = {channel: any(fired[path] for path in paths)
+        fired = {path: bool(getattr(event, path)) for path in self.presentTriggerPaths}
+        TriggerMap = {channel: any(fired.get(path, False) for path in paths)
                       for channel, paths in self.triggerLists.items()}
 
         # If any of the trigger channel from TriggerMap passes, then the event is kept else return keepIt
@@ -786,6 +806,8 @@ class HZZAnalysisCppProducer(Module):
         for xj in jets:
             # argument order must match H4LTools.h SetJets: chEmEF, chHEF, neEmEF, neHEF, muEF, nConstituents, neMultiplicity, chMultiplicity
             self.worker.SetJets(xj.pt,xj.eta,xj.phi,xj.mass,xj.btagUParTAK4B, xj.chEmEF, xj.chHEF, xj.neEmEF, xj.neHEF, xj.muEF, xj.nConstituents, xj.neMultiplicity, xj.chMultiplicity)
+            if self.isNanoV9:
+                self.worker.SetJetIDv9(xj.jetId, xj.puId)
 
         #for xj in FatJets:
             #self.worker.SetFatJets(xj.pt, xj.eta, xj.phi, xj.msoftdrop, xj.jetId, xj.btagDeepB, xj.particleNet_ZvsQCD)
@@ -938,7 +960,7 @@ class HZZAnalysisCppProducer(Module):
                     gamma_trigWindowPath = iw
             if gamma_trigWindowPath >= 0:
                 _, path, weight = self.gammaWindows[gamma_trigWindowPath]
-                gamma_trigWindowFired = fired[path]
+                gamma_trigWindowFired = fired.get(path, False)
                 gamma_prescaleWeight = 1.0 if self.isMC else weight
 
         if (foundZZCandidate_2l2nu or foundZZCandidate_2l2nu_emuCR or foundGammaCR):

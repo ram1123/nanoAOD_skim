@@ -25,6 +25,8 @@ public:
     float HZZ2l2q_Leading_Lep_pT, HZZ2l2q_SubLeading_Lep_pT, HZZ2l2q_Lep_eta, HZZ2l2q_MZLepcutdown, HZZ2l2q_MZLepcutup;
     float HZZ2l2nu_Leading_Lep_pT, HZZ2l2nu_SubLeading_Lep_pT, HZZ2l2nu_Lep_eta, HZZ2l2nu_Pt_ll, HZZ2l2nu_M_ll_Window, HZZ2l2nu_dPhi_jetMET, HZZ2l2nu_MZLepcutdown, HZZ2l2nu_MZLepcutup;
     bool DEBUG;
+    int dataYear; // selects the UL2016 jet ID in PassJetIDv15
+    int nanoAODVersion = 15; // 9: AK4 CHS, stored Jet_jetId + Jet_puId; 15: AK4 PUPPI, recomputed ID, no PU jet ID
     H4LTools(bool isMC_);
 
     void InitializeElecut(float elePtcut_, float eleEtacut_, float eleLoosedxycut_, float eleLoosedzcut_, float eleIsocut_, float eleBDTWPLELP_, float eleBDTWPMELP_, float eleBDTWPHELP_, float eleBDTWPLEHP_, float eleBDTWPMEHP_, float eleBDTWPHEHP_)
@@ -236,6 +238,13 @@ public:
     Jet_nConstituents.push_back(Jet_nConstituents_);
     Jet_neMultiplicity.push_back(Jet_neMultiplicity_);
     Jet_chMultiplicity.push_back(Jet_chMultiplicity_);
+    }
+
+    // v9 only: stored jet ID and PU jet ID, one call per jet after SetJets
+    void SetJetIDv9(int Jet_jetId_, int Jet_puId_)
+    {
+        Jet_jetId.push_back(Jet_jetId_);
+        Jet_puId.push_back(Jet_puId_);
     }
 
     void SetFatJets(float Jet_pt_, float Jet_eta_, float Jet_phi_, float Jet_mass_, int Jet_jetId_, float Jet_btagDeepB_,
@@ -853,6 +862,7 @@ private:
 H4LTools::H4LTools(int year, bool DEBUG_Main, bool doMELA)
 {
     DEBUG = DEBUG_Main;
+    dataYear = year;
     std::cout << "year" << " " << year << std::endl;
     mela = nullptr;
     spline_g4 = nullptr; spline_g2 = nullptr; spline_L1 = nullptr; spline_L1Zgs = nullptr;

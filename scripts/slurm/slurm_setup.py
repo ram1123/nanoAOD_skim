@@ -82,7 +82,7 @@ def _sha256(path):
 # files whose staged (/depot) copy must match the /work tree the submission was made from
 PROVENANCE_FILES = ["src/H4LTools.cc", "include/H4LTools.h", "modules/H4LCppModule.py",
                     "modules/keep_and_drop_list.py", "modules/METFilters.py", "post_proc.py",
-                    "config/Input_2016.yml", "config/Input_2017.yml", "config/Input_2018.yml",
+                    "config/Input_2016preVFP.yml", "config/Input_2016postVFP.yml", "config/Input_2017.yml", "config/Input_2018.yml",
                     "config/Input_2022.yml", "scripts/slurm/job_inner.sh", "scripts/slurm/job_wrapper.sh"]
 
 
@@ -100,7 +100,7 @@ def write_metadata(args, sub, subdir, skimbase, in_list, tasks_tsv, tasks):
         fh.write("\n== git log -10\n" + _run(["git", "log", "-10", "--oneline"], PKG_DIR))
     with open(os.path.join(meta, "git_diff_HEAD.patch"), "w") as fh:
         fh.write(_run(["git", "diff", "HEAD"], PKG_DIR))
-    for rel in ["config/Input_%s.yml" % y for y in ("2016", "2017", "2018", "2022")] + \
+    for rel in ["config/Input_%s.yml" % y for y in ("2016preVFP", "2016postVFP", "2017", "2018", "2022")] + \
                ["modules/keep_and_drop_list.py"]:
         src = os.path.join(PKG_DIR, rel)
         if os.path.isfile(src):

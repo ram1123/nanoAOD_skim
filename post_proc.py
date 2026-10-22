@@ -68,6 +68,7 @@ def main():
     isFSR = True # set false for now
     isFiducialAna = True
     year = None
+    era = None  # 2016preVFP / 2016postVFP (None for other years)
     cfgFile = None
     jsonFileName = None
     sfFileName = None
@@ -95,14 +96,30 @@ def main():
     first_file = testfilelist[0]
     isMC = "/data/" not in first_file
 
-    if "Summer22" in first_file or "Run2022" in first_file:
-        """Summer22 and Run2022 for identification of 2022 MC and data respectiverly
-        """
-        year = 2022
-        cfgFile = "config/Input_2022.yml"
-        jsonFileName = "data/golden_json/Cert_Collisions2022_355100_362760_Golden.json"
-        sfFileName = "DeepCSV_102XSF_V2.csv" # FIXME: Update for year 2022
-        modulesToRun.extend([muonScaleRes2022()]) # FIXME: Update for year 2022
+    # UL2016 = two eras. preVFP (HIPM / APV): MC "UL16NanoAODAPVv15", data "HIPM_UL2016_NanoAODv15";
+    # postVFP: MC "UL16NanoAODv15", data "UL2016_NanoAODv15" (a substring of the HIPM token -> elif)
+    if "UL16NanoAODAPVv15" in first_file or "HIPM_UL2016_NanoAODv15" in first_file:
+        year = 2016
+        era = "2016preVFP"
+        cfgFile = "config/Input_2016preVFP.yml"
+        jsonFileName = "data/golden_json/Cert_271036-284044_13TeV_Legacy2016_Collisions16_JSON.txt"
+        sfFileName = "DeepCSV_102XSF_V2.csv"
+        modulesToRun.extend([muonScaleRes2016pre()])
+    elif "UL16NanoAODv15" in first_file or "UL2016_NanoAODv15" in first_file:
+        year = 2016
+        era = "2016postVFP"
+        cfgFile = "config/Input_2016postVFP.yml"
+        jsonFileName = "data/golden_json/Cert_271036-284044_13TeV_Legacy2016_Collisions16_JSON.txt"
+        sfFileName = "DeepCSV_102XSF_V2.csv"
+        modulesToRun.extend([muonScaleRes2016()])
+
+    if "UL17NanoAODv15" in first_file or "UL2017" in first_file:
+        year = 2017
+        cfgFile = "config/Input_2017.yml"
+        jsonFileName="data/golden_json/Cert_294927-306462_13TeV_UL2017_Collisions17_GoldenJSON.txt"
+        sfFileName = "DeepCSV_102XSF_V2.csv"
+        modulesToRun.extend([muonScaleRes2017()])
+
     if "UL18NanoAODv9" in first_file or "UL2018_MiniAODv2_NanoAODv9" in first_file:
         """UL2018 for identification of 2018 UL data and UL18 for identification of 2018 UL MC
         """
@@ -111,32 +128,21 @@ def main():
         jsonFileName = "data/golden_json/Cert_314472-325175_13TeV_Legacy2018_Collisions18_JSON.txt"
         sfFileName = "DeepCSV_102XSF_V2.csv"
         modulesToRun.extend([muonScaleRes2018()])
-    if "UL17NanoAODv15" in first_file or "UL2017" in first_file:
-        year = 2017
-        cfgFile = "config/Input_2017.yml"
-        jsonFileName="data/golden_json/Cert_294927-306462_13TeV_UL2017_Collisions17_GoldenJSON.txt"
-        sfFileName = "DeepCSV_102XSF_V2.csv"
-        modulesToRun.extend([muonScaleRes2017()])
-
-    if "20UL16NanoAODAPVv9" in first_file:
-        year = 2016
-        cfgFile = "config/Input_2016.yml"
-        jsonFileName = "data/golden_json/Cert_271036-284044_13TeV_Legacy2016_Collisions16_JSON.txt"
-        sfFileName = "DeepCSV_102XSF_V2.csv"
-        modulesToRun.extend([muonScaleRes2016pre()])
-    if "20UL16NanoAODv9" in first_file:
-        year = 2016
-        cfgFile = "config/Input_2016.yml"
-        jsonFileName = "data/golden_json/Cert_271036-284044_13TeV_Legacy2016_Collisions16_JSON.txt"
-        sfFileName = "DeepCSV_102XSF_V2.csv"
-        modulesToRun.extend([muonScaleRes2016()])
-
     if "UL2018_NanoAODv15" in first_file or "UL18NanoAODv15" in first_file:
         year = 2018
         cfgFile = "config/Input_2018.yml"
         jsonFileName = "data/golden_json/Cert_314472-325175_13TeV_Legacy2018_Collisions18_JSON.txt"
         sfFileName = "DeepCSV_102XSF_V2.csv"
         modulesToRun.extend([muonScaleRes2018()])
+
+    if "Summer22" in first_file or "Run2022" in first_file:
+        """Summer22 and Run2022 for identification of 2022 MC and data respectiverly
+        """
+        year = 2022
+        cfgFile = "config/Input_2022.yml"
+        jsonFileName = "data/golden_json/Cert_Collisions2022_355100_362760_Golden.json"
+        sfFileName = "DeepCSV_102XSF_V2.csv" # FIXME: Update for year 2022
+        modulesToRun.extend([muonScaleRes2022()]) # FIXME: Update for year 2022
 
 
     #if cfgFile is None:
@@ -160,7 +166,7 @@ def main():
             preselCut = _gammaSel if args.channels == "1g" else "({0}) || ({1})".format(preselCut, _gammaSel)
     print("Preselection: {}".format(preselCut))
 
-    H4LCppModule = lambda: HZZAnalysisCppProducer(year=year, cfgFile=cfgFile,
+    H4LCppModule = lambda: HZZAnalysisCppProducer(year=year, era=era, cfgFile=cfgFile,
                                                   isMC=isMC, isFSR=isFSR,
                                                   cutFlowJSONFile=args.cutFlowFile,
                                                   channels=args.channels,
