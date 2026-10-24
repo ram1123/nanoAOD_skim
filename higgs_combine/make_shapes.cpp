@@ -19,6 +19,27 @@ struct Sample {
     double nNeg;
 };
 
+//====================================================
+// Sum of generator weights of all processed events (Runs/genEventSumw).
+// This is the normalisation that matches weighting events by overallEventWeight
+// (= genWeight * puWeight * L1PreFiringWeight_Nom); an event count does not.
+//====================================================
+double sum_genweight(TFile *f) {
+    TTree *runs = (TTree*)f->Get("Runs");
+    if (!runs) {
+        cout << "Missing Runs tree in " << f->GetName() << endl;
+        return 0.0;
+    }
+    double w = 0.0, sumw = 0.0;
+    runs->SetBranchAddress("genEventSumw", &w);
+    for (Long64_t i = 0; i < runs->GetEntries(); i++) {
+        runs->GetEntry(i);
+        sumw += w;
+    }
+    runs->ResetBranchAddresses();
+    return sumw;
+}
+
 //========================================================
 
 int make_shapes() {
@@ -132,7 +153,7 @@ int make_shapes() {
     };
 
     // Common weight
-    TString weight = "puWeight";
+    TString weight = "overallEventWeight";   // genWeight * puWeight * L1PreFiringWeight_Nom
 
     // Variable
     TString var = "HZZ2l2nu_ZZmT";
@@ -163,7 +184,7 @@ int make_shapes() {
         }
 
         // ---- Scale factor ----
-        double scale = (s.xsec * lumi) / (s.nMC - 2.0 * s.nNeg);
+        double scale = (s.xsec * lumi) / sum_genweight(fin);   // was (nMC - 2*nNeg)
 
         // ---- Histogram names ----
         //TString hname     = s.name + "_alpha";
@@ -248,7 +269,7 @@ int make_shapes() {
 
     // ---- signal inputs ----
     double sig_xsec = 39.71;    
-    double sig_ngen = 486250.0;  
+    double sig_ngen = sum_genweight(fsig);   // was hard-coded 486250 events
 
     double sig_scale = (sig_xsec * lumi) / sig_ngen;
 
@@ -302,7 +323,7 @@ for (auto &finfo : dy_files) {
     TTree *tree = (TTree*)f->Get("Events");
     if (!tree) continue;
 
-    double scale = (xsec * lumi) / ngen;
+    double scale = (xsec * lumi) / sum_genweight(f);   // tuple ngen (event count) no longer used
 
     TH1F *h_tmp = new TH1F("h_tmp","",nbins,xmin,xmax);
     h_tmp->Sumw2();
