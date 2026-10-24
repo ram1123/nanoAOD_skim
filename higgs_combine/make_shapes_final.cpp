@@ -36,6 +36,27 @@ struct WJetBin {
 };
 
 //====================================================
+// Sum of generator weights of all processed events (Runs/genEventSumw).
+// This is the normalisation that matches weighting events by overallEventWeight
+// (= genWeight * puWeight * L1PreFiringWeight_Nom); an event count does not.
+//====================================================
+double sum_genweight(TFile *f) {
+    TTree *runs = (TTree*)f->Get("Runs");
+    if (!runs) {
+        cout << "Missing Runs tree in " << f->GetName() << endl;
+        return 0.0;
+    }
+    double w = 0.0, sumw = 0.0;
+    runs->SetBranchAddress("genEventSumw", &w);
+    for (Long64_t i = 0; i < runs->GetEntries(); i++) {
+        runs->GetEntry(i);
+        sumw += w;
+    }
+    runs->ResetBranchAddresses();
+    return sumw;
+}
+
+//====================================================
 // Helper function
 //====================================================
 
@@ -64,6 +85,7 @@ void add_sample_to_histogram(
     );
 
     h_tmp_total->Sumw2();
+    double sumw_total = 0.0;
 
     //-----------------------------------------
     // Loop over files
@@ -91,6 +113,8 @@ void add_sample_to_histogram(
             f->Close();
             continue;
         }
+
+        sumw_total += sum_genweight(f);
 
         TH1F *h_tmp = new TH1F(
             "h_tmp",
@@ -129,8 +153,13 @@ void add_sample_to_histogram(
     //-----------------------------------------
     // Normalize
     //-----------------------------------------
+    if (sumw_total <= 0) {
+        cout << "No genEventSumw for " << s.name << " - skipped" << endl;
+        delete h_tmp_total;
+        return;
+    }
     double scale =
-        (s.xsec * lumi) / s.ngen;
+        (s.xsec * lumi) / sumw_total;
 
     h_tmp_total->Scale(scale);
 
@@ -177,7 +206,7 @@ int make_shapes_final() {
     //------------------------------------------------
     double lumi = 59547.0;
 
-    TString weight = "puWeight";
+    TString weight = "overallEventWeight";   // genWeight * puWeight * L1PreFiringWeight_Nom
     TString var    = "HZZ2l2nu_ZZmT";
 
 //------------------------------------------------
@@ -190,9 +219,11 @@ TString SRcut =
 
     " && ((pTL1>25)&&(pTL2>25))"              // lepton pt
 
-    " && (HZZ2l2qNu_cutOppositeChargeFlag==0)" // opposite charge
+    " && (HZZ2l2qNu_cutOppositeChargeFlag==1)" // opposite charge (flag is true for an OS pair)
 
     " && (passZZ2l2nuSelection==1)"           // 2l2nu selection
+
+    " && (HZZ2l2nu_nExtraLep==0)"             // extra-lepton veto
 
     " && (HZZ2l2qNu_nMediumBtagJets==0)"      // no b-tag
 
@@ -206,7 +237,7 @@ TString SRcut =
 
     " && (HZZ2l2qNu_nJets==0)"                // zero jet
 
-    " && (Triggers_HZZ2l2nu_SingleLep==1)";  // trigger
+    " && (Triggers_HZZ2l2nu_SR==1)";  // trigger: single-lepton + dilepton + high-pT OR
 
     int nbins  = 100;
     float xmin = 0;
@@ -630,7 +661,7 @@ TString SRcut =
         (TTree*)fsig->Get("Events");
 
     double sig_xsec = 39.71;
-    double sig_ngen = 486250.0;
+    double sig_ngen = sum_genweight(fsig);   // was hard-coded 486250 events
 
     double sig_scale =
         (sig_xsec * lumi) / sig_ngen;
@@ -734,7 +765,7 @@ TString SRcut =
         if (!tree) continue;
 
         double scale =
-            (xsec * lumi) / ngen;
+            (xsec * lumi) / sum_genweight(f);   // tuple ngen (event count) no longer used
 
         TH1F *h_tmp = new TH1F(
             "h_tmp",
@@ -891,6 +922,7 @@ TString SRcut =
         );
 
         h_ht->Sumw2();
+        double sumw_bin = 0.0;
 
         for (auto &fname : bin.files) {
 
@@ -902,6 +934,8 @@ TString SRcut =
                 (TTree*)f->Get("Events");
 
             if (!tree) continue;
+
+            sumw_bin += sum_genweight(f);
 
             TH1F *h_tmp = new TH1F(
                 "h_tmp",
@@ -928,7 +962,7 @@ TString SRcut =
 
         double scale =
             (bin.xsec * lumi)
-            / bin.ngen_total;
+            / sumw_bin;   // ngen_total (event count) no longer used
 
         h_ht->Scale(scale);
 

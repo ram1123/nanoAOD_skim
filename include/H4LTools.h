@@ -25,6 +25,8 @@ public:
     float HZZ2l2q_Leading_Lep_pT, HZZ2l2q_SubLeading_Lep_pT, HZZ2l2q_Lep_eta, HZZ2l2q_MZLepcutdown, HZZ2l2q_MZLepcutup;
     float HZZ2l2nu_Leading_Lep_pT, HZZ2l2nu_SubLeading_Lep_pT, HZZ2l2nu_Lep_eta, HZZ2l2nu_Pt_ll, HZZ2l2nu_M_ll_Window, HZZ2l2nu_dPhi_jetMET, HZZ2l2nu_MZLepcutdown, HZZ2l2nu_MZLepcutup;
     bool DEBUG;
+    int dataYear; // selects the UL2016 jet ID in PassJetIDv15
+    int nanoAODVersion = 15; // 9: AK4 CHS, stored Jet_jetId + Jet_puId; 15: AK4 PUPPI, recomputed ID, no PU jet ID
     H4LTools(bool isMC_);
 
     void InitializeElecut(float elePtcut_, float eleEtacut_, float eleLoosedxycut_, float eleLoosedzcut_, float eleIsocut_, float eleBDTWPLELP_, float eleBDTWPMELP_, float eleBDTWPHELP_, float eleBDTWPLEHP_, float eleBDTWPMEHP_, float eleBDTWPHEHP_)
@@ -64,6 +66,28 @@ public:
         HZZ2l2nu_MZLepcutup = HZZ2l2nu_MZLepcutup_;
     }
 
+    // AN-2016/325 settings of the 2l2nu Z1 search and categories (YAML HZZ2l2nu.RequireOS / MZLepcut /
+    // VetoLep.SoftMu_pT / VBF). Only used after InitializeHZZ2l2nuAN; without it (e.g. --channels 2l2q /
+    // 4l) findZCandidate keeps the OS requirement and the MZcut window.
+    bool use2l2nuZCand = false;      // GetZ1_2l2qOR2l2nu uses the settings below
+    bool HZZ2l2nu_RequireOS = true;  // AN 4.3: no charge requirement on the ee / mumu pair
+    bool ZCandRequireOS = true;      // what findZCandidate applies right now
+    float ZCandMassDown = -1., ZCandMassUp = -1.;   // findZCandidate window (<0: MZcutdown / MZcutup)
+    float vetoSoftMuPtcut = -1.;     // AN 4.4.4: soft-ID muon pT threshold for HZZ2l2nu_nExtraSoftMu* (<0: off)
+    float VBF_dEta_jj = 4.0, VBF_M_jj = 500.0;      // AN 4.3 VBF tag on the two leading jets
+    bool VBF_ZCentrality = true, VBF_CentralJetVeto = true;
+    void InitializeHZZ2l2nuAN(bool requireOS_, float softMuPtcut_, float VBF_dEta_jj_, float VBF_M_jj_,
+                              bool VBF_ZCentrality_, bool VBF_CentralJetVeto_)
+    {
+        use2l2nuZCand = true;
+        HZZ2l2nu_RequireOS = requireOS_;
+        vetoSoftMuPtcut = softMuPtcut_;
+        VBF_dEta_jj = VBF_dEta_jj_;
+        VBF_M_jj = VBF_M_jj_;
+        VBF_ZCentrality = VBF_ZCentrality_;
+        VBF_CentralJetVeto = VBF_CentralJetVeto_;
+    }
+
     // emu control region: |m_emu - mZ| window and pT_emu threshold (defaults = previous hard-coded values)
     float HZZemuCR_M_ll_Window = 160.0, HZZemuCR_Pt_ll = 25.0;
     void InitializeEmuCRCut(float HZZemuCR_M_ll_Window_, float HZZemuCR_Pt_ll_)
@@ -72,12 +96,26 @@ public:
         HZZemuCR_Pt_ll = HZZemuCR_Pt_ll_;
     }
 
+    // single-photon (gamma+jets) control region, AN-15-208: one tight barrel photon (YAML GammaCR)
+    float gammaPtcut = 205.0, gammaJetCleanDR = 0.4;
+    int gammaIDcut = 3;   // Photon_cutBased: 1 loose, 2 medium, 3 tight
+    void InitializeGammaCRCut(float gammaPtcut_, int gammaIDcut_, float gammaJetCleanDR_)
+    {
+        gammaPtcut = gammaPtcut_;
+        gammaIDcut = gammaIDcut_;
+        gammaJetCleanDR = gammaJetCleanDR_;
+    }
+
     // Extra-lepton veto. Defaults are AN-2016/325 4.4.4 values (unverified for UL / v15);
     // they are used when InitializeVetoLepCut is not called (e.g. --channels 2l2q).
+    // Veto electron = cut-based ID (Electron_cutBased >= vetoEleIDcut; Fall17V2: 1 veto, 2 loose, 3 medium,
+    // 4 tight) + pfRelIso03_all < vetoEleIsocut, as in AN-2016/325 (Loose ID, I_rel < 0.15, pT > 10).
     float vetoElePtcut = 10.0, vetoEleIsocut = 0.15, vetoMuPtcut = 10.0, vetoMuIsocut = 0.2;
-    void InitializeVetoLepCut(float vetoElePtcut_, float vetoEleIsocut_, float vetoMuPtcut_, float vetoMuIsocut_)
+    int vetoEleIDcut = 2;
+    void InitializeVetoLepCut(float vetoElePtcut_, int vetoEleIDcut_, float vetoEleIsocut_, float vetoMuPtcut_, float vetoMuIsocut_)
     {
         vetoElePtcut = vetoElePtcut_;
+        vetoEleIDcut = vetoEleIDcut_;
         vetoEleIsocut = vetoEleIsocut_;
         vetoMuPtcut = vetoMuPtcut_;
         vetoMuIsocut = vetoMuIsocut_;
@@ -105,11 +143,14 @@ public:
         fsrphotondRlcut = fsrphotondRlcut_;
         fsrphotondRlOverPtcut = fsrphotondRlOverPtcut_;
     }
-    void InitializeJetcut(float JetPtcut_, float JetEtacut_, float btag_Etacut_)
+    // jets within jetLepCleanDR of a selected (tight, isolated) lepton are removed (AN-2016/325: 0.4)
+    float jetLepCleanDR = 0.4;
+    void InitializeJetcut(float JetPtcut_, float JetEtacut_, float btag_Etacut_, float jetLepCleanDR_)
     {
         JetPtcut = JetPtcut_;
         JetEtacut = JetEtacut_;
         btag_Etacut = btag_Etacut_;
+        jetLepCleanDR = jetLepCleanDR_;
     }
     void InitializeEvtCut(float MZ1cut_, float MZZcut_, float HiggscutDown_, float HiggscutUp_, float Zmass_, float MZcutdown_, float MZcutup_, float btag_UParTAK4_Loose_, float btag_UParTAK4_Medium_, float btag_UParTAK4_Tight_)
     {
@@ -159,6 +200,12 @@ public:
     Electron_deltaEtaSC.push_back(Electron_deltaEtaSC_);
     }
 
+    // separate setter (not an extra SetElectrons argument) so the positional SetElectrons call is unchanged
+    void SetElectronsCutBased(int Electron_cutBased_)
+    {
+        Electron_cutBased.push_back(Electron_cutBased_);
+    }
+
     // for v9
     /*void SetJets(float Jet_pt_, float Jet_eta_, float Jet_phi_, float Jet_mass_, int Jet_jetId_, float Jet_btagDeepFlavB_,
                  int Jet_puId_)
@@ -191,6 +238,13 @@ public:
     Jet_nConstituents.push_back(Jet_nConstituents_);
     Jet_neMultiplicity.push_back(Jet_neMultiplicity_);
     Jet_chMultiplicity.push_back(Jet_chMultiplicity_);
+    }
+
+    // v9 only: stored jet ID and PU jet ID, one call per jet after SetJets
+    void SetJetIDv9(int Jet_jetId_, int Jet_puId_)
+    {
+        Jet_jetId.push_back(Jet_jetId_);
+        Jet_puId.push_back(Jet_puId_);
     }
 
     void SetFatJets(float Jet_pt_, float Jet_eta_, float Jet_phi_, float Jet_mass_, int Jet_jetId_, float Jet_btagDeepB_,
@@ -245,6 +299,12 @@ public:
         Muon_pfRelIso03_all.push_back(Muon_pfRelIso03_all_);
     }
 
+    // separate setter (not an extra SetMuons argument) so the positional SetMuons call is unchanged
+    void SetMuonsSoftId(bool Muon_softId_)
+    {
+        Muon_softId.push_back(Muon_softId_);
+    }
+
     void SetMuonsGen(int Muon_genPartIdx_)
     {
         Muon_genPartIdx.push_back(Muon_genPartIdx_);
@@ -258,6 +318,19 @@ public:
         FsrPhoton_eta.push_back(FsrPhoton_eta_);
         FsrPhoton_pt.push_back(FsrPhoton_pt_);
         FsrPhoton_relIso03.push_back(FsrPhoton_relIso03_);
+    }
+
+    // argument order must match the PyROOT call in H4LCppModule.analyze
+    void SetPhotons(float Photon_pt_, float Photon_eta_, float Photon_phi_, int Photon_cutBased_,
+                    bool Photon_isScEtaEB_, bool Photon_electronVeto_, bool Photon_pixelSeed_)
+    {
+        Photon_pt.push_back(Photon_pt_);
+        Photon_eta.push_back(Photon_eta_);
+        Photon_phi.push_back(Photon_phi_);
+        Photon_cutBased.push_back(Photon_cutBased_);
+        Photon_isScEtaEB.push_back(Photon_isScEtaEB_);
+        Photon_electronVeto.push_back(Photon_electronVeto_);
+        Photon_pixelSeed.push_back(Photon_pixelSeed_);
     }
 
     void SetGenParts(float GenPart_pt_)
@@ -369,11 +442,16 @@ public:
     // FIXME: For now these b-tag numbers are only for 2l2nu case
     bool HZZ2l2nu_ifVBF;
     bool HZZ2l2nu_isEMuCR;
+    bool HZZ2l2nu_isGammaCR;  // event selected as single-photon CR (Z1 = photon)
+    int gammaIndex;           // raw Photon index of the selected gamma-CR photon (-1 = none)
+    float gamma_pt, gamma_eta, gamma_phi;   // selected gamma-CR photon (-999 = none)
+    std::vector<TLorentzVector> jetCleanPhotons;   // photons removed from the jet collection (dR < gammaJetCleanDR)
     // DeltaR(l1,l2) > HZZ2l2nu_DeltaRl1l2_min: stored as a flag only (no cut), since a cut
     // would remove multi-TeV signal where the Z leptons are collimated
     float HZZ2l2nu_DeltaRl1l2_min = 0.3;
     bool HZZ2l2nu_passDeltaRl1l2;
     int HZZ2l2nu_nExtraLep; // leptons beyond the Z1 / emu pair passing the veto definition (-1 = not computed)
+    int HZZ2l2nu_nExtraSoftMu, HZZ2l2nu_nExtraSoftMuPV; // AN soft-muon counts; the veto (nExtraSoftMu == 0) is applied in ZZSelection_2l2nu (-1 = not computed)
     int HZZ2l2qNu_nJets;
     int HZZ2l2qNu_nTightBtagJets;
     int HZZ2l2qNu_nMediumBtagJets;
@@ -388,7 +466,10 @@ public:
     int HZZ2l2nu_VBFIndexJet2;
 
     void LeptonSelection();
-    std::vector<unsigned int> looseEle, looseMu, bestEle, bestMu, tighteleforjetidx, tightmuforjetidx;
+    std::vector<unsigned int> looseEle, looseMu, bestEle, bestMu;
+    // raw-collection indices of the selected (tight ID + isolated) leptons: jets are cleaned against
+    // them, and they always count as extra leptons in CountExtraLeptons (AN: exactly two tight leptons)
+    std::vector<unsigned int> tighteleforjetidx, tightmuforjetidx;
     std::vector<unsigned int> Electronindex;
     std::vector<unsigned int> Muonindex;
     std::vector<bool> AllEid;
@@ -436,6 +517,7 @@ public:
         Electron_pdgId.clear();
         Electron_pfRelIso03_all.clear();
         Electron_deltaEtaSC.clear();
+        Electron_cutBased.clear();
         Elechg.clear();
         Eiso.clear();
         Eid.clear();
@@ -454,6 +536,7 @@ public:
         Muon_sip3d.clear();
         Muon_ptErr.clear();
         Muon_pfRelIso03_all.clear();
+        Muon_softId.clear();
         Muon_nTrackerLayers.clear();
         Muon_genPartIdx.clear();
         Muon_pdgId.clear();
@@ -513,6 +596,18 @@ public:
         FsrPhoton_eta.clear();
         FsrPhoton_pt.clear();
         FsrPhoton_relIso03.clear();
+
+        // Photon related variables (gamma CR)
+        Photon_pt.clear();
+        Photon_eta.clear();
+        Photon_phi.clear();
+        Photon_cutBased.clear();
+        Photon_isScEtaEB.clear();
+        Photon_electronVeto.clear();
+        Photon_pixelSeed.clear();
+        jetCleanPhotons.clear();
+        gammaIndex = -1;
+        gamma_pt = gamma_eta = gamma_phi = -999.0;
 
         // Generator  related variables
         nGenPart = 0;
@@ -590,6 +685,7 @@ public:
 
         HZZ2l2nu_ifVBF = false;
         HZZ2l2nu_isEMuCR = false;
+        HZZ2l2nu_isGammaCR = false;
         HZZ2l2nu_passDeltaRl1l2 = false;
         HZZ2l2qNu_nJets = 0;
         HZZ2l2qNu_nTightBtagJets = 0;
@@ -615,6 +711,7 @@ public:
         HZZ2l2qNu_isELE = false;
         HZZ2l2qNu_cutOppositeChargeFlag = false;
         HZZ2l2nu_nExtraLep = -1;
+        HZZ2l2nu_nExtraSoftMu = HZZ2l2nu_nExtraSoftMuPV = -1;
 	    muonpt = false;
 
         HZZ2l2nu_flag2e_met = false;
@@ -652,8 +749,11 @@ public:
     bool ZZSelection_4l();
     bool GetZ1_2l2qOR2l2nu();
     bool GetZ1_emuCR();
+    bool GetZ1_gammaCR();
     void CountJetsAndBtags();
     int CountExtraLeptons(int ele1, int ele2, int mu1, int mu2);
+    int CountExtraSoftMuons(int mu1, int mu2, bool pvCompatible);
+    void SetExtraSoftMuons(int mu1, int mu2);
     bool ZZSelection_2l2q();
     bool ZZSelection_2l2nu();
     bool ZZSelection_2l2nu_EMu_CR();
@@ -706,6 +806,7 @@ public:
     int HZZ2l2nu_cutbtag;
     int HZZ2l2qNu_cutDeltaRl1l2;    // events with DeltaR(l1,l2) > 0.3 (informational, not a cut)
     int HZZ2l2nu_cutExtraLepVeto;   // SR events passing the extra-lepton veto
+    int HZZ2l2nu_cutSoftMuVeto;     // SR events passing the soft-muon veto
     int HZZemuCR_cut2l;
     int HZZemuCR_cutpTl1l2;
     int HZZemuCR_cutETAl1l2;
@@ -714,14 +815,20 @@ public:
     int HZZemuCR_cutZ1Pt;
     int HZZemuCR_cutDeltaRl1l2;     // emu events with DeltaR(e,mu) > 0.3 (informational, not a cut)
     int HZZemuCR_cutExtraLepVeto;   // emu events passing the extra-lepton veto
+    int HZZemuCR_cutSoftMuVeto;     // emu events passing the soft-muon veto
     int HZZemuCR_cutdPhiJetMET;     // emu events passing min dPhi(jet, MET)
     int HZZemuCR_cutMETgT100;       // emu events with MET > 100 GeV (informational)
+    int HZZgammaCR_cut1g;            // exactly one selected photon (tight, barrel, vetoes, pT)
+    int HZZgammaCR_cutExtraLepVeto;  // gamma events with no loose lepton
+    int HZZgammaCR_cutSoftMuVeto;    // gamma events with no soft muon
+    int HZZgammaCR_cutdPhiJetMET;    // gamma events passing min dPhi(jet, MET)
+    int HZZgammaCR_cutMETgT100;      // gamma events with MET > 100 GeV (informational)
 
 
 private:
     std::vector<float> Electron_pt, Electron_phi, Electron_eta, Electron_mass, Electron_dxy, Electron_dz, Electron_sip3d;
     std::vector<float> Electron_mvaFall17V2Iso_WP90, Electron_pfRelIso03_all, Electron_mvaIso_WP90, Electron_deltaEtaSC;
-    std::vector<int> Electron_pdgId;
+    std::vector<int> Electron_pdgId, Electron_cutBased;
     bool isMC;
 
     std::vector<float> Jet_pt, Jet_phi, Jet_eta, Jet_mass, Jet_btagUParTAK4B;
@@ -740,9 +847,12 @@ private:
 
     std::vector<float> Muon_pt, Muon_phi, Muon_eta, Muon_mass, Muon_dxy, Muon_dz, Muon_sip3d, Muon_ptErr, Muon_pfRelIso03_all;
     std::vector<int> Muon_nTrackerLayers, Muon_genPartIdx, Muon_pdgId, Muon_charge;
-    std::vector<bool> Muon_isTracker, Muon_isGlobal, Muon_isPFcand, Muon_mediumId;
+    std::vector<bool> Muon_isTracker, Muon_isGlobal, Muon_isPFcand, Muon_mediumId, Muon_softId;
 
     std::vector<float> FsrPhoton_dROverEt2, FsrPhoton_phi, FsrPhoton_pt, FsrPhoton_relIso03, FsrPhoton_eta;
+    std::vector<float> Photon_pt, Photon_eta, Photon_phi;
+    std::vector<int> Photon_cutBased;
+    std::vector<bool> Photon_isScEtaEB, Photon_electronVeto, Photon_pixelSeed;
 
     std::vector<float> GenPart_pt;
 
@@ -752,6 +862,7 @@ private:
 H4LTools::H4LTools(int year, bool DEBUG_Main, bool doMELA)
 {
     DEBUG = DEBUG_Main;
+    dataYear = year;
     std::cout << "year" << " " << year << std::endl;
     mela = nullptr;
     spline_g4 = nullptr; spline_g2 = nullptr; spline_L1 = nullptr; spline_L1Zgs = nullptr;
@@ -807,6 +918,7 @@ H4LTools::H4LTools(int year, bool DEBUG_Main, bool doMELA)
     HZZ2l2nu_cutdPhiJetMET = 0;
     HZZ2l2qNu_cutDeltaRl1l2 = 0;
     HZZ2l2nu_cutExtraLepVeto = 0;
+    HZZ2l2nu_cutSoftMuVeto = 0;
 
     cut2e = 0;
     cut2mu = 0;
@@ -838,8 +950,14 @@ H4LTools::H4LTools(int year, bool DEBUG_Main, bool doMELA)
     HZZemuCR_cutZ1Pt = 0;
     HZZemuCR_cutDeltaRl1l2 = 0;
     HZZemuCR_cutExtraLepVeto = 0;
+    HZZemuCR_cutSoftMuVeto = 0;
     HZZemuCR_cutdPhiJetMET = 0;
     HZZemuCR_cutMETgT100 = 0;
-    
+    HZZgammaCR_cut1g = 0;
+    HZZgammaCR_cutExtraLepVeto = 0;
+    HZZgammaCR_cutSoftMuVeto = 0;
+    HZZgammaCR_cutdPhiJetMET = 0;
+    HZZgammaCR_cutMETgT100 = 0;
+
 }
 #endif

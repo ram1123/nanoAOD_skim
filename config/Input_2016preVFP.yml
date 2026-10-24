@@ -1,0 +1,245 @@
+# UL2016 preVFP (NanoAOD v15). Derived from Input_2017.yml: triggers and b-tag WPs differ; object /
+# event cuts are identical to 2017.
+#
+# Triggers: only paths with HLT prescale 1 (display_TriggerPreScale/2016), present for the full 2016 run
+# range -- except the emu paths: no MuonEG path is both, so the emu CR ORs era-dependent paths (non-DZ in
+# Run2016B-G, _DZ in Run2016F-H; branch presence checked on one DoubleMuon file per era). A path without a
+# branch in a file counts as not fired (H4LCppModule.beginFile).
+# Not used: non-DZ Mu17_TrkIsoVVL_(Tk)Mu8_TrkIsoVVL, Mu23_TrkIsoVVL_Ele12_..._IsoVL, Ele23_Ele12_..._IsoVL
+# and DoubleEle33_CaloIdL_MW (prescaled in part of 2016); TkMu50, TkMu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ and
+# DoubleEle33_CaloIdL_GsfTrkIdVL (PS=1 for only part of 2016).
+TriggerChannels:
+    - Triggers_HZZ4l
+    - Triggers_HZZ2l2q
+    - Triggers_HZZ2l2nu
+    - Triggers_HZZ2l2nu_SingleLep
+    - Triggers_HZZ2l2nu_DiLep
+    - Triggers_HZZ2l2nu_HighPt
+    - Triggers_HZZ2l2nu_SR      # use this for the 2l2nu signal region
+    - Triggers_HZZ2l2nu_EMuCR   # use this for the emu control region
+    - Triggers_HZZ2l2nu_GammaCR # use this for the single-photon control region (--channels 1g)
+
+Triggers_HZZ4l:
+    - event.HLT_IsoMu24
+    - event.HLT_IsoTkMu24
+    - event.HLT_Mu50
+    - event.HLT_Ele27_WPTight_Gsf
+    - event.HLT_Ele115_CaloIdVT_GsfTrkIdT
+    - event.HLT_Photon175
+    - event.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ
+    - event.HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ
+    - event.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ
+    - event.HLT_DoubleEle33_CaloIdL_GsfTrkIdVL_MW
+    - event.HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL  # Run2016B-G only
+    - event.HLT_Mu23_TrkIsoVVL_Ele8_CaloIdL_TrackIdL_IsoVL  # Run2016B-G only
+    - event.HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_DZ  # Run2016F-H only
+    - event.HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ  # Run2016F-H only
+    - event.HLT_Mu12_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ  # Run2016F-H only
+
+Triggers_HZZ2l2q:
+    - event.HLT_IsoMu24
+    - event.HLT_IsoTkMu24
+    - event.HLT_Mu50
+    - event.HLT_Ele27_WPTight_Gsf
+    - event.HLT_Ele115_CaloIdVT_GsfTrkIdT
+    - event.HLT_Photon175
+    - event.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ
+    - event.HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ
+    - event.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ
+    - event.HLT_DoubleEle33_CaloIdL_GsfTrkIdVL_MW
+    - event.HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL  # Run2016B-G only
+    - event.HLT_Mu23_TrkIsoVVL_Ele8_CaloIdL_TrackIdL_IsoVL  # Run2016B-G only
+    - event.HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_DZ  # Run2016F-H only
+    - event.HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ  # Run2016F-H only
+    - event.HLT_Mu12_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ  # Run2016F-H only
+
+Triggers_HZZ2l2nu:
+    - event.HLT_IsoMu24
+    - event.HLT_IsoTkMu24
+    - event.HLT_Mu50
+    - event.HLT_Ele27_WPTight_Gsf
+    - event.HLT_Ele115_CaloIdVT_GsfTrkIdT
+    - event.HLT_Photon175
+    - event.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ
+    - event.HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ
+    - event.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ
+    - event.HLT_DoubleEle33_CaloIdL_GsfTrkIdVL_MW
+    - event.HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL  # Run2016B-G only
+    - event.HLT_Mu23_TrkIsoVVL_Ele8_CaloIdL_TrackIdL_IsoVL  # Run2016B-G only
+    - event.HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_DZ  # Run2016F-H only
+    - event.HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ  # Run2016F-H only
+    - event.HLT_Mu12_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ  # Run2016F-H only
+
+Triggers_HZZ2l2nu_SingleLep:
+    - event.HLT_IsoMu24
+    - event.HLT_IsoTkMu24
+    - event.HLT_Mu50
+    - event.HLT_Ele27_WPTight_Gsf
+
+Triggers_HZZ2l2nu_DiLep:
+    - event.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ
+    - event.HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ
+    - event.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ
+    - event.HLT_DoubleEle33_CaloIdL_GsfTrkIdVL_MW
+
+Triggers_HZZ2l2nu_HighPt:
+    - event.HLT_Mu50
+    - event.HLT_Ele115_CaloIdVT_GsfTrkIdT
+    - event.HLT_Photon175
+    - event.HLT_DoubleEle33_CaloIdL_GsfTrkIdVL_MW
+
+Triggers_HZZ2l2nu_SR:
+    # 2l2nu signal region (ee / mumu): AN-2016/325 Table 4 (DZ versions) + high-pT e (Ele115 || Photon175)
+    - event.HLT_IsoMu24
+    - event.HLT_IsoTkMu24
+    - event.HLT_Mu50
+    - event.HLT_Ele27_WPTight_Gsf
+    - event.HLT_Ele115_CaloIdVT_GsfTrkIdT
+    - event.HLT_Photon175
+    - event.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ
+    - event.HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ
+    - event.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ
+    - event.HLT_DoubleEle33_CaloIdL_GsfTrkIdVL_MW
+
+Triggers_HZZ2l2nu_EMuCR:
+    # 2l2nu emu control region
+    - event.HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL  # Run2016B-G only
+    - event.HLT_Mu23_TrkIsoVVL_Ele8_CaloIdL_TrackIdL_IsoVL  # Run2016B-G only
+    - event.HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_DZ  # Run2016F-H only
+    - event.HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ  # Run2016F-H only
+    - event.HLT_Mu12_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ  # Run2016F-H only
+    - event.HLT_IsoMu24
+    - event.HLT_IsoTkMu24
+    - event.HLT_Mu50
+    - event.HLT_Ele27_WPTight_Gsf
+    - event.HLT_Ele115_CaloIdVT_GsfTrkIdT
+    - event.HLT_Photon175
+
+Triggers_HZZ2l2nu_GammaCR:
+    # single-photon CR ladder. Photon50/75/90/120 are PRESCALED in 2016; Photon165 / Photon175 are not.
+    - event.HLT_Photon50_R9Id90_HE10_IsoM
+    - event.HLT_Photon75_R9Id90_HE10_IsoM
+    - event.HLT_Photon90_R9Id90_HE10_IsoM
+    - event.HLT_Photon120_R9Id90_HE10_IsoM
+    - event.HLT_Photon165_R9Id90_HE10_IsoM
+    - event.HLT_Photon175
+
+Zmass: 91.1876
+MZ1cut: 40
+MZcut:
+    down:   12
+    up: 120
+MZZcut: 70
+Higgscut:
+    up: 160
+    down: 105
+
+Electron:
+    pTcut: 25  #7
+    Etacut: 2.5 #2.5
+    #Sip3dcut: 4
+    Loosedxycut: 0.045 #0.5 
+    Loosedzcut: 0.2 #1 #0.2
+    ttH:
+        WP: 0.8
+    BDTWP:
+        LowEta:
+            LowPT: 0.9044286167
+            HighPT: 0.1968600840
+        MedEta:
+            LowPT: 0.9094166886
+            HighPT: 0.0759172100
+        HighEta:
+            LowPT: 0.9443653660
+            HighPT: -0.5169136775
+    Isocut: 0.15 #0.35
+    # Electron-muon cross-cleaning: drop electrons within dR < dR of a POG-loose muon
+    # (PF candidate, global or tracker) with pT > MuPt. 0.05 = CMS H->ZZ->4l convention.
+    # DISABLED for now (not in AN-2016/325; H4LTools::LeptonSelection, see docs/TODO.md).
+    MuonCleaning:
+        dR: 0.05
+        MuPt: 5.0
+
+Muon:
+    pTcut: 25 #5
+
+    Etacut: 2.4
+    #Sip3dcut: 4
+    Loosedxycut: 0.045 #0.5 #0.045
+    Loosedzcut: 0.2 #1 #0.2
+    Tightdxycut: 0.045 #0.2
+    Tightdzcut: 0.2 #0.5
+    TightTrackerLayercut: 5
+    TightpTErrorcut: 0.3
+    HighPtBound: 200
+    Isocut: 0.2 #0.35
+
+FsrPhoton:
+    pTcut: 2
+    Etacut: 2.4
+    Isocut: 0.8
+    dRlcut: 0.5
+    dRlOverPtcut: 0.012
+
+Jet:
+    pTcut: 30
+    Etacut: 4.7
+    # UParTAK4 (Jet_btagUParTAK4B) WPs for UL NanoAODv15.
+    # UParTAK4_wp_values in /cvmfs/cms-griddata.cern.ch/cat/metadata/BTV/Run2-2016preVFP-UL-NanoAODv15/latest/btagging.json.gz
+    UParTAK4_btag:
+        Loose: 0.0387
+        Medium: 0.1847
+        Tight: 0.5467
+        Etacut: 2.4   # b-tagging acceptance
+    # jets within dR < LepCleanDR of a selected (tight, isolated) lepton are removed (AN-2016/325)
+    LepCleanDR: 0.4
+
+HZZ2l2q:
+    Leading_Lep_pT: 40
+    SubLeading_Lep_pT: 24
+    Lep_eta: 2.4
+    MZLepcut:
+        down: 60
+        up: 120
+
+HZZ2l2nu:
+    Leading_Lep_pT: 25.0
+    SubLeading_Lep_pT: 25.0
+    Lep_eta: 2.5
+    Pt_ll: 10.0
+    # Loose skim; the AN-2016/325 cuts (|m_ll - mZ| < 15, pT_ll > 55, b-veto, min dPhi(jet, MET) > 0.5,
+    # |dPhi(Z, MET)| > 0.5, MET > 125) are applied downstream. The m_ll range is kept wide for the
+    # AN alpha-method sidebands 40-70 and 110-200 GeV.
+    M_ll_Window: 110.0  # |m_ll - mZ| < M_ll_Window
+    dPhi_jetMET: 0.0
+    # m_ll window of the ee / mumu Z1 candidates (instead of the 4l MZcut 12-120)
+    MZLepcut:
+        down: 12.0
+        up: 200.0
+    # AN-2016/325 4.3: the ee / mumu pair is not required to have opposite charge
+    # (HZZ2l2qNu_cutOppositeChargeFlag is still stored). Shared with 2l2q under --channels all.
+    RequireOS: false
+    # AN-2016/325 4.3 VBF tag: two leading jets, |dEta_jj| > dEta_jj, m_jj > M_jj, the Z between the
+    # two jets in eta (ZCentrality) and no other jet between them (CentralJetVeto).
+    VBF:
+        dEta_jj: 4.0
+        M_jj: 500.0
+        ZCentrality: true
+        CentralJetVeto: true
+    # Extra-lepton veto: events with a loose lepton beyond the Z1 / emu pair are rejected
+    # in ZZSelection_2l2nu (count stored as HZZ2l2nu_nExtraLep).
+    # AN-2016/325 4.4.4 values -- unverified for UL / NanoAOD v15.
+    VetoLep:
+        Ele_pT: 10.0
+        # cut-based ID WP (Electron_cutBased, Fall17V2: 1 veto, 2 loose, 3 medium, 4 tight); AN = Loose
+        Ele_cutBased: 2
+        Ele_Iso: 0.15
+        Mu_pT: 10.0
+        Mu_Iso: 0.2
+        # AN 4.4.4 soft-muon veto (soft ID, pT > SoftMu_pT; < 0: off). APPLIED in the skim: events with
+        # HZZ2l2nu_nExtraSoftMu (AN definition) > 0 are rejected; _nExtraSoftMuPV (+ |dz| < 0.5, |dxy| < 0.2) stored only.
+        SoftMu_pT: 3.0
+    # emu control region: |m_emu - mZ| < M_ll_Window and pT_emu > Pt_ll
+    emuCR:
+        M_ll_Window: 160.0
+        Pt_ll: 25.0

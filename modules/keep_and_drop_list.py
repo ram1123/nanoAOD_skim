@@ -128,5 +128,6 @@ keep_drop_rules_Data_MC = [
     "keep DeltaRl1l2",
     "keep pT_MET",
     "keep Jet*",
-    "keep phi_MET"
+    "keep phi_MET",
+    "keep gamma_*",   # single-photon CR photon (--channels 1g)
 ]

@@ -1,0 +1,66 @@
+site_name: HZZ 2l2nu NanoAOD skim
+site_description: NanoAOD skimmer and control-plot pipeline for the X/H -> ZZ -> 2l2nu search (Run 2 UL, NanoAOD v15)
+repo_url: https://github.com/ram1123/nanoAOD_skim
+repo_name: ram1123/nanoAOD_skim
+edit_uri: edit/HZZ_Analysis_2l2nu/docs/
+
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - navigation.top
+    - navigation.indexes
+    - toc.follow
+    - content.code.copy
+    - search.highlight
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      toggle:
+        icon: material/weather-night
+        name: Dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      toggle:
+        icon: material/weather-sunny
+        name: Light mode
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.arithmatex:
+      generic: true
+
+extra_javascript:
+  - javascripts/mathjax.js
+  - https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js
+
+nav:
+  - Home: index.md
+  - Getting started:
+      - Setup: setup.md
+      - Running the skim: running.md
+  - Analysis:
+      - Data and MC samples: samples.md
+      - Object selection: objects.md
+      - Corrections and weights: corrections.md
+      - Event selection: event-selection.md
+  - Results:
+      - Data/MC control plots: control-plots.md
+      - Output branches: output.md

@@ -1,34 +1,40 @@
 #!/usr/bin/env python3
 """
 Build per-Run-2-year DAS sample lists for the X/H->ZZ->2l2nu skim from the
-sample list of CMS AN-2016/325 (Tables 1, 2, 3, 52).
+sample list of CMS AN-2016/325 (Tables 1, 2, 3, 52), extended with the
+backgrounds added for the UL analysis.
 
 AN-2016/325 is a 2016 (pre-UltraLegacy) note.  This script maps every AN
-process to its **UltraLegacy NanoAODv9** equivalent and resolves the exact
-DAS dataset name(s) with `dasgoclient`, per year:
+process to its UltraLegacy equivalent and resolves the exact DAS dataset
+name(s) with `dasgoclient`, per year:
 
-    2016preVFP  -> RunIISummer20UL16NanoAODAPVv9 / HIPM_UL2016_MiniAODv2_NanoAODv9
-    2016postVFP -> RunIISummer20UL16NanoAODv9    / UL2016_MiniAODv2_NanoAODv9 (no HIPM)
-    2017        -> RunIISummer20UL17NanoAODv9    / UL2017_MiniAODv2_NanoAODv9
-    2018        -> RunIISummer20UL18NanoAODv9    / UL2018_MiniAODv2_NanoAODv9
+    2016preVFP  -> RunIISummer20UL16NanoAODAPV<nv> / HIPM_UL2016_*  (eras B-F)
+    2016postVFP -> RunIISummer20UL16NanoAOD<nv>    / UL2016_*       (eras F-H, no HIPM)
+    2017        -> RunIISummer20UL17NanoAOD<nv>    / UL2017_*       (eras B-F)
+    2018        -> RunIISummer20UL18NanoAOD<nv>    / UL2018_*       (eras A-D)
 
 Writes (into this directory):
-    sample_list_AN2016_325_<v9|v15>_<year>.dat        - MC, grouped by AN category
-    sample_list_AN2016_325_<v9|v15>_<year>_data.dat   - Data primary datasets
+    sample_list_AN2016_325_<v9|v15>_<year>.dat        - MC + DATA (one Slurm submission)
+    sample_list_AN2016_325_<v9|v15>_<year>_data.dat   - DATA only
 
 Format: one DAS dataset per line; '#' in column 0 = comment / section header
 (compatible with scripts/condor/condor_setup_lxplus.py and
-scripts/slurm/slurm_setup.py).  Patterns with no DAS match are written as
-`# UNRESOLVED: <pattern>` for the user to fix by hand.
+scripts/slurm/slurm_setup.py).  A process with no DAS match is written as
+`# NOT IN DAS: <pattern>`; signal systematic variants are written commented.
+
+Dataset choice per primary dataset: the standard NanoAOD processing (JMENano /
+BTVNano only if nothing else exists), the highest -vN, and every _extN
+extension (independent statistics; normalise with the summed genEventSumw).
 
 Requires: a valid VOMS proxy (`voms-proxy-init -voms cms`) and `dasgoclient`
 (on lxplus / cvmfs).  Run:
 
-    python3 input_data_files/make_AN2016_325_lists.py            # NanoAODv9 (default)
-    python3 input_data_files/make_AN2016_325_lists.py --nano v15 # if v15 re-nano wanted
-    python3 input_data_files/make_AN2016_325_lists.py --years 2018
+    python3 input_data_files/make_AN2016_325_lists.py --nano v15
+    python3 input_data_files/make_AN2016_325_lists.py --nano v15 --years 2018
+    python3 input_data_files/make_AN2016_325_lists.py            # NanoAODv9
 """
 import argparse
+import fnmatch
 import re
 import os
 import shutil
@@ -40,50 +46,59 @@ DASGOCLIENT = shutil.which("dasgoclient") or "/cvmfs/cms.cern.ch/common/dasgocli
 
 YEARS = {
     "2016preVFP": dict(
-        mc="RunIISummer20UL16NanoAODAPV{NV}-*",
+        mc="RunIISummer20UL16NanoAODAPV{NV}",
         data_run="Run2016", data_yy="2016",
         data_keep="HIPM",          # eras B(ver1,ver2),C,D,E,F  (HIPM / APV)
+        data_eras="BCDEF",
         tier_note="UL16 pre-VFP (APV / HIPM)",
     ),
     "2016postVFP": dict(
-        mc="RunIISummer20UL16NanoAOD{NV}-*",
+        mc="RunIISummer20UL16NanoAOD{NV}",
         data_run="Run2016", data_yy="2016",
         data_keep="NOT_HIPM",      # eras F,G,H
+        data_eras="FGH",
         tier_note="UL16 post-VFP",
     ),
     "2017": dict(
-        mc="RunIISummer20UL17NanoAOD{NV}-*",
+        mc="RunIISummer20UL17NanoAOD{NV}",
         data_run="Run2017", data_yy="2017",
-        data_keep="ALL",           # eras B..F
+        data_keep="ALL",
+        # Run2017G (5 TeV) / H (low pileup) are outside the UL2017 golden JSON
+        # (Cert_294927-306462, last run 306460): every event would be rejected.
+        data_eras="BCDEF",
         tier_note="UL17",
     ),
     "2018": dict(
-        mc="RunIISummer20UL18NanoAOD{NV}-*",
+        mc="RunIISummer20UL18NanoAOD{NV}",
         data_run="Run2018", data_yy="2018",
-        data_keep="ALL",           # eras A..D
+        data_keep="ALL",
+        data_eras="ABCD",
         tier_note="UL18",
     ),
 }
 
-# conditions / re-processing substrings we never want
+# conditions / re-processing substrings we never want (primary-dataset level)
 BAD_SUBSTR = (
-    "JMENano", "BTVNano", "PUForMUOVal", "PUForTRK", "PUForNanoMuon", "PUFor", "Pilot",
+    "PUForMUOVal", "PUForTRK", "PUForNanoMuon", "PUFor", "Pilot",
     "FlatPU", "PU35", "PU25", "LowPU", "LensingPU", "_BS20", "PrivateMC",
     "EpsilonPU", "forPOG", "NanoMuon",
 )
+# special NanoAOD flavours (processed-dataset level): only if nothing else exists
+SPECIAL_NANO = ("JMENano", "BTVNano")
 # tune / model systematic variants - dropped when a nominal exists
 SYST_SUBSTR = (
     "TuneCP5CR1", "TuneCP5CR2", "TuneCP5up", "TuneCP5down", "TuneCP5Up",
     "TuneCP5Down", "TuneCP5_erdON", "CP5TuneUp", "CP5TuneDown", "_erdON",
     "_mtop1", "hdamp", "GEN-", "minloHJJ", "BGenFilter", "TuneCH3", "herwig",
-    "evtgen",
+    "evtgen", "withDipoleRecoil",
 )
 
 # --------------------------------------------------------------------------
-# AN-2016/325 sample list -> UL primary-dataset name patterns.
+# AN-2016/325 sample list -> UL primary-dataset name patterns (fnmatch on /PD).
 #   entry:  (label, [patterns], mode)
-#   mode "first" (default) : alternative names for ONE sample, first hit wins
-#   mode "all"             : each pattern is a distinct sample (HT/pT bins)
+#   mode "first"  : alternative names for ONE sample, first hit wins
+#   mode "all"    : each pattern is a distinct sample (HT/pT bins)
+#   mode "signal" : every mass point found; systematic variants written commented
 # tune is TuneCP5 in UL (the AN used TuneCUETP8M1 / RunIISummer16).
 # --------------------------------------------------------------------------
 def _bins(stem, bins, tail):
@@ -95,7 +110,7 @@ MC = [
     ("WJetsToLNu inclusive (amcatnloFXFX)",
      ["/WJetsToLNu_TuneCP5*_13TeV-amcatnloFXFX-pythia8"], "first"),
     ("WJetsToLNu HT-binned (madgraphMLM)",
-     _bins("WJetsToLNu_HT-", ("100To200", "200To400", "400To600", "600To800",
+     _bins("WJetsToLNu_HT-", ("70To100", "100To200", "200To400", "400To600", "600To800",
                               "800To1200", "1200To2500", "2500ToInf"),
            "_TuneCP5_13TeV-madgraphMLM-pythia8"), "all"),
 
@@ -104,6 +119,10 @@ MC = [
      ["/DYJetsToLL_M-10to50_TuneCP5*_13TeV-amcatnloFXFX-pythia8"], "first"),
     ("DYJetsToLL M-50 (amcatnloFXFX)",
      ["/DYJetsToLL_M-50_TuneCP5*_13TeV-amcatnloFXFX-pythia8"], "first"),
+    ("DYJetsToLL LHEFilterPtZ-binned (amcatnloFXFX)",
+     _bins("DYJetsToLL_LHEFilterPtZ-", ("0To50", "50To100", "100To250", "250To400",
+                                        "400To650", "650ToInf"),
+           "_MatchEWPDG20_TuneCP5_13TeV-amcatnloFXFX-pythia8"), "all"),
 
     ("### Z->nunu  HT>100  (AN Table 52 - instrumental-MET closure)", None, None),
     ("ZJetsToNuNu HT-binned (madgraphMLM)",
@@ -120,17 +139,22 @@ MC = [
 
     ("### Single top  (AN Table 2, 52)", None, None),
     ("ST tW top 5f inclusiveDecays (powheg)",
-     ["/ST_tW_top_5f_inclusiveDecays_TuneCP5_13TeV-powheg-pythia8",
-      "/ST_tW_top_5f_NoFullyHadronicDecays_TuneCP5_13TeV-powheg-pythia8"], "first"),
+     ["/ST_tW_top_5f_inclusiveDecays_TuneCP5_13TeV-powheg-pythia8"], "first"),
     ("ST tW antitop 5f inclusiveDecays (powheg)",
-     ["/ST_tW_antitop_5f_inclusiveDecays_TuneCP5_13TeV-powheg-pythia8",
-      "/ST_tW_antitop_5f_NoFullyHadronicDecays_TuneCP5_13TeV-powheg-pythia8"], "first"),
+     ["/ST_tW_antitop_5f_inclusiveDecays_TuneCP5_13TeV-powheg-pythia8"], "first"),
     ("ST t-channel top 4f InclusiveDecays (powheg-madspin)",
      ["/ST_t-channel_top_4f_InclusiveDecays_TuneCP5_13TeV-powheg-madspin-pythia8"], "first"),
     ("ST t-channel antitop 4f InclusiveDecays (powheg-madspin)",
      ["/ST_t-channel_antitop_4f_InclusiveDecays_TuneCP5_13TeV-powheg-madspin-pythia8"], "first"),
     ("ST s-channel 4f leptonDecays (amcatnlo)",
      ["/ST_s-channel_4f_leptonDecays_TuneCP5_13TeV-amcatnlo-pythia8"], "first"),
+    ("ST s-channel 4f hadronicDecays (amcatnlo)",
+     ["/ST_s-channel_4f_hadronicDecays_TuneCP5_13TeV-amcatnlo-pythia8"], "first"),
+    ("ST tW top/antitop 5f NoFullyHadronicDecays (powheg)",
+     ["/ST_tW_top_5f_NoFullyHadronicDecays_TuneCP5_13TeV-powheg-pythia8",
+      "/ST_tW_antitop_5f_NoFullyHadronicDecays_TuneCP5_13TeV-powheg-pythia8"], "all"),
+    ("tZq ll 4f ckm NLO (amcatnlo)",
+     ["/tZq_ll_4f_ckm_NLO_TuneCP5_13TeV-amcatnlo-pythia8"], "first"),
 
     ("### Dibosons  (AN Table 2, 52)", None, None),
     ("WZTo3LNu (powheg / amcatnloFXFX)",
@@ -152,6 +176,20 @@ MC = [
      ["/GluGluToContinToZZTo2mu2nu_TuneCP5*_13TeV-mcfm701-pythia8"], "first"),
     ("GluGluToContinToZZTo2e2nu (MCFM701)  -- gg->ZZ continuum",
      ["/GluGluToContinToZZTo2e2nu_TuneCP5*_13TeV-mcfm701-pythia8"], "first"),
+    ("VBFToContinToZZTo2l2nu (JHUGen+MCFM701)  -- EW qqZZjj continuum, VBF signal interference",
+     ["/VBFToContinToZZTo2l2nu_TuneCP5*_13TeV-jhugenv730-mcfm701-pythia8"], "first"),
+    ("GluGluToWW -> 2l2nu (MCFM701)  -- gg->WW continuum",
+     _bins("GluGluToWWTo", ("ENEN", "MNMN", "ENMN"), "_TuneCP5_13TeV_MCFM701_pythia8"), "all"),
+    ("WZTo1L1Nu2Q (amcatnloFXFX)",
+     ["/WZTo1L1Nu2Q_4f_TuneCP5_13TeV-amcatnloFXFX-pythia8"], "first"),
+    ("WZTo1L3Nu (amcatnloFXFX)",
+     ["/WZTo1L3Nu_4f_TuneCP5_13TeV-amcatnloFXFX-pythia8"], "first"),
+    ("WZTo2Q2Nu (amcatnloFXFX-madspin)",
+     ["/WZTo2Q2Nu_4f_TuneCP5_13TeV-amcatnloFXFX-madspin-pythia8"], "first"),
+    ("ZZTo2Nu2Q (amcatnloFXFX)",
+     ["/ZZTo2Nu2Q_5f_TuneCP5_13TeV-amcatnloFXFX-pythia8"], "first"),
+    ("ZZTo4L (powheg)",
+     ["/ZZTo4L_TuneCP5_13TeV_powheg_pythia8"], "first"),
 
     ("### Tribosons  (AN Table 2, 52)", None, None),
     ("ZZZ (amcatnlo)", ["/ZZZ_TuneCP5*_13TeV-amcatnlo-pythia8"], "first"),
@@ -159,6 +197,8 @@ MC = [
     ("WWZ (amcatnlo)",
      ["/WWZ_4F_TuneCP5*_13TeV-amcatnlo-pythia8",
       "/WWZ_TuneCP5*_13TeV-amcatnlo-pythia8"], "first"),
+    ("WWW (amcatnlo)",
+     ["/WWW_4F_TuneCP5*_13TeV-amcatnlo-pythia8"], "first"),
 
     ("### gamma+jets  (AN Table 3, 52 - photon control region)", None, None),
     ("GJets HT-binned (madgraphMLM)",
@@ -204,97 +244,134 @@ MC = [
                        "600To800", "800To1000", "1000"),
            "_MuEnrichedPt5_TuneCP5_13TeV-pythia8"), "all"),
 
-    ("### Signal  (AN section 3 - POWHEG + JHUGen, high-mass grid; trim to the wanted points)",
+    ("### Signal  (AN section 3 - POWHEG + JHUGen, high-mass grid; every mass point in DAS)",
      None, None),
     ("GluGluHToZZTo2L2Nu M*",
-     ["/GluGluHToZZTo2L2Nu_M*_TuneCP5_13TeV_powheg2_JHUGen*_pythia8"], "first"),
+     ["/GluGluHToZZTo2L2Nu_M*_13TeV_powheg2*_pythia8"], "signal"),
     ("VBF HToZZTo2L2Nu M*",
-     ["/VBF_HToZZTo2L2Nu_M*_TuneCP5_13TeV_powheg2_JHUGen*_pythia8"], "first"),
+     ["/VBF_HToZZTo2L2Nu_M*_13TeV_powheg2*_pythia8"], "signal"),
 ]
 
-DATA_PD_RUN2 = ["DoubleMuon", "DoubleEG", "SingleMuon", "SingleElectron",
-                "MuonEG", "SinglePhoton"]
-DATA_PD_2018 = ["DoubleMuon", "EGamma", "SingleMuon", "MuonEG"]
+DATA_PD_RUN2 = [("DoubleMuon", ""), ("DoubleEG", ""), ("SingleMuon", ""),
+                ("SingleElectron", ""), ("MuonEG", "  (emu control region)"),
+                ("SinglePhoton", "  (HLT_Photon* in Triggers_HZZ2l2nu_SR for high-pT electrons; gamma CR)")]
+DATA_PD_2018 = [("DoubleMuon", ""), ("EGamma", "  (DoubleEG + SingleElectron + SinglePhoton)"),
+                ("SingleMuon", ""), ("MuonEG", "  (emu control region)")]
 
 
 def das(query):
     try:
         out = subprocess.run([DASGOCLIENT, "--query", query],
-                             capture_output=True, text=True, timeout=120)
+                             capture_output=True, text=True, timeout=600)
     except Exception as e:                                    # noqa: BLE001
         sys.stderr.write("dasgoclient error for %r: %s\n" % (query, e))
         return []
+    if out.returncode != 0:
+        sys.stderr.write("dasgoclient failed for %r: %s\n" % (query, out.stderr.strip()))
     return [l.strip() for l in out.stdout.splitlines() if l.strip().startswith("/")]
 
 
-def pick(results):
-    """standard re-processing(s) only: drop specialised campaigns, then drop
-    tune/model systematic variants when a nominal one exists."""
-    if not results:
+def _pd(d):
+    return d.split("/")[1]
+
+
+def _proc(d):
+    return d.split("/")[2]
+
+
+def select_versions(dsets):
+    """For one primary dataset: standard NanoAOD flavour, then per extension
+    (none, _ext1, ...) the plain processing string and the highest -vN."""
+    std = [d for d in dsets if not any(s in _proc(d) for s in SPECIAL_NANO)] or dsets
+    groups = {}
+    for d in std:
+        m = re.match(r'(.*)-v(\d+)$', _proc(d))
+        stem, ver = (m.group(1), int(m.group(2))) if m else (_proc(d), 0)
+        ext = re.search(r'_ext\d+', stem)
+        ext = ext.group(0) if ext else ""
+        # plain processing ("<campaign>-150X_...") beats prefixed ones ("4cores5k_150X_...")
+        plain = 1 if re.search(r'NanoAOD(APV)?v\d+-\d+X_', stem) else 0
+        key = (plain, ver)
+        if ext not in groups or key > groups[ext][0]:
+            groups[ext] = (key, d)
+    return [groups[e][1] for e in sorted(groups)]
+
+
+def match_pds(catalog, pattern):
+    pds = sorted({_pd(d) for d in catalog if fnmatch.fnmatchcase("/" + _pd(d), pattern)})
+    pds = [p for p in pds if not any(b in p for b in BAD_SUBSTR)] or pds
+    return pds
+
+
+def pick(catalog, pds):
+    """drop tune/model systematic variants and PSWeights duplicates when a
+    nominal exists; return the selected datasets of the remaining PDs."""
+    if not pds:
         return []
-    good = [r for r in results if not any(b in r for b in BAD_SUBSTR)] or results
-    nominal = [r for r in good if not any(s in r for s in SYST_SUBSTR)]
-    good = nominal or good
-    no_ps = [r for r in good if "PSWeights" not in r]
-    good = no_ps or good
-    base = [r for r in good if "_ext" not in r]
-    return sorted(set(base or good))
+    nominal = [p for p in pds if not any(s in p for s in SYST_SUBSTR)] or pds
+    no_ps = [p for p in nominal if "PSWeights" not in p] or nominal
+    out = []
+    for p in no_ps:
+        out += select_versions([d for d in catalog if _pd(d) == p])
+    return out
 
 
-def resolve_first(patterns, campaign, tier):
-    for pat in patterns:
-        hits = pick(das("dataset=%s/%s/%s" % (pat, campaign, tier)))
-        if hits:
-            return hits
-    return None
+def _mass(pd):
+    m = re.search(r'_M-?(\d+)', pd)
+    return int(m.group(1)) if m else 0
 
 
 def build_mc(year, nv):
     cfg = YEARS[year]
     campaign = cfg["mc"].format(NV=nv)
-    L = ["# X/H->ZZ->2l2nu  MC sample list  -  %s  (%s, NanoAOD %s)" % (
-        year, cfg["tier_note"], nv),
-        "# from CMS AN-2016/325 Tables 2, 3, 52  ->  UltraLegacy equivalents",
-        "# generated by input_data_files/make_AN2016_325_lists.py (re-run to refresh)",
-        "#"]
+    catalog = das("dataset=/*/%s-*/NANOAODSIM" % campaign)
+    if not catalog:
+        sys.exit("No %s datasets returned by DAS (proxy / network?)" % campaign)
+    L = []
     ok = bad = 0
     for label, patterns, mode in MC:
         if patterns is None:
             L += ["#", "#### " + label[4:]]
             continue
-        if mode == "all":
-            L.append("# %s" % label)
+        L.append("# %s" % label)
+        if mode == "signal":
+            pds = match_pds(catalog, patterns[0])
+            nom = sorted([p for p in pds if not any(s in p for s in SYST_SUBSTR)], key=_mass)
+            syst = sorted([p for p in pds if any(s in p for s in SYST_SUBSTR)], key=lambda p: (_mass(p), p))
+            for p in nom:
+                L += select_versions([d for d in catalog if _pd(d) == p])
+            L.append("#   masses in DAS: %s" % " ".join(str(_mass(p)) for p in nom))
+            if syst:
+                L.append("#   systematic / alternative samples (tune Up/Down, minloHJJ, dipole recoil): uncomment to include")
+                for p in syst:
+                    L += ["#" + d for d in select_versions([d for d in catalog if _pd(d) == p])]
+            if nom:
+                ok += 1
+            else:
+                L.append("# NOT IN DAS: dataset=%s/%s-*/NANOAODSIM" % (patterns[0], campaign))
+                bad += 1
+        elif mode == "all":
             for pat in patterns:
-                hits = resolve_first([pat], campaign, "NANOAODSIM")
+                hits = pick(catalog, match_pds(catalog, pat))
                 if hits:
                     L += hits
                     ok += 1
                 else:
-                    L.append("# UNRESOLVED: dataset=%s/%s/NANOAODSIM" % (pat, campaign))
+                    L.append("# NOT IN DAS: dataset=%s/%s-*/NANOAODSIM" % (pat, campaign))
                     bad += 1
         else:
-            hits = resolve_first(patterns, campaign, "NANOAODSIM")
-            L.append("# %s" % label)
+            hits = None
+            for pat in patterns:
+                hits = pick(catalog, match_pds(catalog, pat))
+                if hits:
+                    break
             if hits:
                 L += hits
                 ok += 1
             else:
-                L.append("# UNRESOLVED: dataset=%s/%s/NANOAODSIM" % (patterns[-1], campaign))
+                L.append("# NOT IN DAS: dataset=%s/%s-*/NANOAODSIM" % (patterns[-1], campaign))
                 bad += 1
-    path = os.path.join(OUTDIR, "sample_list_AN2016_325_%s_%s.dat" % (nv, year))
-    open(path, "w").write("\n".join(L) + "\n")
-    return path, ok, bad
-
-
-def _latest_version(dsets):
-    # per era (dataset name up to the trailing -vN), keep the highest N
-    best = {}
-    for d in dsets:
-        m = re.match(r'(.*)-v(\d+)/NANOAOD$', d)
-        key, ver = (m.group(1), int(m.group(2))) if m else (d, -1)
-        if key not in best or ver > best[key][0]:
-            best[key] = (ver, d)
-    return [v[1] for v in sorted(best.values(), key=lambda t: t[1])]
+    return L, ok, bad
 
 
 def build_data(year, nv):
@@ -303,32 +380,38 @@ def build_data(year, nv):
     mid = "MiniAODv2_NanoAODv9" if nv == "v9" else "NanoAODv15"
     keep = cfg["data_keep"]
     pds = DATA_PD_2018 if year == "2018" else DATA_PD_RUN2
-    L = ["# X/H->ZZ->2l2nu  DATA sample list  -  %s  (%s, NanoAOD %s)" % (
-        year, cfg["tier_note"], nv),
-        "# AN-2016/325 Table 1 primary datasets  ->  UltraLegacy",
-        "# generated by input_data_files/make_AN2016_325_lists.py",
-        "#"]
+    catalog = das("dataset=/*/%s*UL%s_%s*/NANOAOD" % (cfg["data_run"], yy, mid))
+    L = []
+    if year == "2017":
+        L += ["# Run2017B-F only: Run2017G (5 TeV) / H (low pileup) are outside the UL2017 golden JSON",
+              "# (Cert_294927-306462, last run 306460), so every event would be rejected."]
     ok = bad = 0
-    for pd in pds:
-        q = "dataset=/%s/%s*UL%s_%s*/NANOAOD" % (pd, cfg["data_run"], yy, mid)
-        hits = [h for h in sorted(set(das(q)))
-                if "BTVNano" not in h and "JMENano" not in h]
-        hits = _latest_version(hits)
-        if keep == "HIPM":
-            hits = [h for h in hits if "HIPM" in h]
-        elif keep == "NOT_HIPM":
-            hits = [h for h in hits if "HIPM" not in h]
-        L.append("# %s" % pd)
+    for pd, note in pds:
+        best = {}
+        for d in catalog:
+            if _pd(d) != pd:
+                continue
+            m = re.match(r'%s(\w)-(.*)-v(\d+)$' % cfg["data_run"], _proc(d))
+            if not m or m.group(1) not in cfg["data_eras"]:
+                continue
+            hipm = "HIPM" in m.group(2)
+            if (keep == "HIPM" and not hipm) or (keep == "NOT_HIPM" and hipm):
+                continue
+            # one dataset per era and processing string (2016B ver1 / ver2 are both kept)
+            key, ver = (m.group(1), m.group(2)), int(m.group(3))
+            if key not in best or ver > best[key][0]:
+                best[key] = (ver, d)
+        hits = [best[k][1] for k in sorted(best)]
+        L.append("# %s%s" % (pd, note))
         if hits:
             L += hits
             ok += 1
         else:
-            L.append("# UNRESOLVED: %s%s" % (
-                q, "  (%s filter)" % keep if keep != "ALL" else ""))
+            L.append("# NOT IN DAS: dataset=/%s/%s*UL%s_%s*/NANOAOD (eras %s%s)" % (
+                pd, cfg["data_run"], yy, mid, cfg["data_eras"],
+                ", %s filter" % keep if keep != "ALL" else ""))
             bad += 1
-    path = os.path.join(OUTDIR, "sample_list_AN2016_325_%s_%s_data.dat" % (nv, year))
-    open(path, "w").write("\n".join(L) + "\n")
-    return path, ok, bad
+    return L, ok, bad
 
 
 def main():
@@ -343,10 +426,25 @@ def main():
         sys.exit("No valid VOMS proxy - run: voms-proxy-init -voms cms")
 
     for year in args.years:
-        p1, a1, b1 = build_mc(year, args.nano)
-        p2, a2, b2 = build_data(year, args.nano)
-        print("%-12s  MC   %-38s  %3d ok / %2d unresolved" % (year, os.path.basename(p1), a1, b1))
-        print("%-12s  DATA %-38s  %3d ok / %2d unresolved" % ("", os.path.basename(p2), a2, b2))
+        cfg = YEARS[year]
+        mc, a1, b1 = build_mc(year, args.nano)
+        data, a2, b2 = build_data(year, args.nano)
+        head = ["# X/H->ZZ->2l2nu  %%s sample list  -  %s  (%s, NanoAOD %s)" % (
+                    year, cfg["tier_note"], args.nano),
+                "# from CMS AN-2016/325 Tables 1, 2, 3, 52  ->  UltraLegacy equivalents (+ UL additions)",
+                "# generated by input_data_files/make_AN2016_325_lists.py (re-run to refresh; edits are overwritten)",
+                "#"]
+        p1 = os.path.join(OUTDIR, "sample_list_AN2016_325_%s_%s.dat" % (args.nano, year))
+        p2 = os.path.join(OUTDIR, "sample_list_AN2016_325_%s_%s_data.dat" % (args.nano, year))
+        body = ([head[0] % "MC + DATA"] + head[1:] +
+                ["# One list for one Slurm submission: post_proc.py sets isMC / golden JSON per file (\"/data/\" in LFN).",
+                 "#"] + mc +
+                ["#", "#### DATA  (AN-2016/325 Table 1 primary datasets -> UL%s NanoAOD %s)" % (
+                    cfg["data_yy"], args.nano)] + data)
+        open(p1, "w").write("\n".join(body) + "\n")
+        open(p2, "w").write("\n".join([head[0] % "DATA"] + head[1:] + data) + "\n")
+        print("%-12s  MC   %-40s  %3d ok / %2d not in DAS" % (year, os.path.basename(p1), a1, b1))
+        print("%-12s  DATA %-40s  %3d ok / %2d not in DAS" % ("", os.path.basename(p2), a2, b2))
 
 
 if __name__ == "__main__":

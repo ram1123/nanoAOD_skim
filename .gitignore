@@ -1,4 +1,6 @@
 # Ignore root files
+.claude/
+CLAUDE.md
 *.tgz
 *.xml
 *.1
@@ -173,3 +175,14 @@ yaml-cpp/
 nanoAOD_skim.wiki/
 *.bak
 !sample*.dat
+
+# plotting/: scripts are tracked; generated config, ACLiC build and logs are not
+!plotting/*.sh
+plotting/cuts/
+plotting/controlplotvars_*.h
+plotting/logs/
+plotting/yields_*.md
+plotting/*_C.so
+plotting/*_C.d
+plotting/*_ACLiC_dict_rdict.pcm
+plotting/*C_ACLiC_*.h
