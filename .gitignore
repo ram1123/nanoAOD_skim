@@ -1,4 +1,6 @@
 # Ignore root files
+.claude/
+CLAUDE.md
 *.tgz
 *.xml
 *.1
