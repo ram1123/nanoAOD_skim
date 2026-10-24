@@ -1,12 +1,15 @@
 # NanoAOD Skim
 
 NanoAOD skimming code for H&rarr;ZZ&rarr;4l / 2l2q / 2l2nu studies, built on the
-`nanoAOD-tools` `PostProcessor`. The 2l2nu development branches
-(`HZZ_Analysis_2l2nu_dev`, `HZZ_Analysis_2l2nu_dev_gammaCR`) target the **2l2nu**
-channel and **NanoAOD v15** input.
+`nanoAOD-tools` `PostProcessor`. The 2l2nu branch is **`HZZ_Analysis_2l2nu`**
+(development: `HZZ_Analysis_2l2nu_dev`, `HZZ_Analysis_2l2nu_dev_gammaCR`); it
+targets the **2l2nu** channel and **NanoAOD v15** input.
 
-**Scope:** Run 2 UL **2017 and 2018** (`config/Input_2017.yml`, `Input_2018.yml`).
-2016 is detected but `config/Input_2016.yml` does not exist yet.
+**Documentation:** https://ram1123.github.io/nanoAOD_skim/ (samples, object and
+event selection, corrections, control plots; source in `docs/`, built with mkdocs).
+
+**Scope:** Run 2 UL **2016preVFP, 2016postVFP, 2017, 2018**
+(`config/Input_<year>.yml`). The &gamma;+jets CR (`--channels 1g`) is 2017 only.
 
 ## Workflow at a glance
 
@@ -42,8 +45,8 @@ On lxplus9 the container is not needed; skip the `cmssw-el9 ... --` prefix below
 ## Setup (one time)
 
 ```bash
-wget https://raw.githubusercontent.com/ram1123/nanoAOD_skim/HZZ_Analysis_2l2nu_dev/setup.sh
-/cvmfs/cms.cern.ch/common/cmssw-el9 -B /work/users/$USER -- bash setup.sh
+wget https://raw.githubusercontent.com/ram1123/nanoAOD_skim/HZZ_Analysis_2l2nu/setup.sh
+SKIM_BRANCH=HZZ_Analysis_2l2nu /cvmfs/cms.cern.ch/common/cmssw-el9 -B /work/users/$USER -- bash setup.sh
 ```
 
 [setup.sh](setup.sh) does: `scram project CMSSW_14_0_2` &rarr; clone the
@@ -53,8 +56,9 @@ copy the b-tag CSVs &rarr; build **MELA** by hand (its own `setup.sh` calls `tcs
 which is absent on the AF) incl. downloading the pre-compiled MCFM / MadGraph libs
 and the NNPDF grid from `spin.pha.jhu.edu` &rarr; stash an `openssl-1.1` shim for
 the container &rarr; `scram b`. Override the branch with
-`SKIM_BRANCH=<branch> bash setup.sh`. Full step-by-step / lxplus notes:
-[docs/README.md](docs/README.md).
+`SKIM_BRANCH=<branch> bash setup.sh` (without it, `setup.sh` checks out
+`HZZ_Analysis_2l2nu_dev`). Full step-by-step / lxplus notes:
+[report/README.md](report/README.md).
 
 `src/H4LTools.cc` is not built by `scram`: ROOT ACLiC compiles it on first use.
 
@@ -101,9 +105,10 @@ Output: a hadd-ed skim (`skimmed_nano.root` by default) + `cutFlow.json` + a
 
 **Year and data/MC are detected from the first input path**, so LFNs must keep the
 official dataset naming. MC vs data: `/data/` in the path. Year tokens:
-`UL2017` / `UL17NanoAODv15` &rarr; 2017; `UL2018_NanoAODv15` / `UL18NanoAODv15`
-&rarr; 2018; `20UL16NanoAOD(APV)v9` &rarr; 2016 (config missing); `Run2022` /
-`Summer22` &rarr; 2022 (stale). No match &rarr; the job fails.
+`UL16NanoAODAPVv15` / `HIPM_UL2016_NanoAODv15` &rarr; 2016preVFP;
+`UL16NanoAODv15` / `UL2016_NanoAODv15` &rarr; 2016postVFP; `UL2017` /
+`UL17NanoAODv15` &rarr; 2017; `UL2018_NanoAODv15` / `UL18NanoAODv15` &rarr; 2018;
+`Run2022` / `Summer22` &rarr; 2022 (stale). No match &rarr; the job fails.
 
 Cut values and triggers live in `config/Input_<year>.yml`, not in the C++.
 Only unprescaled HLT paths are allowed there.
@@ -259,4 +264,5 @@ normalise MC by &Sigma; genEventSumw from the `Runs` tree, never by an event cou
 | `scripts/analysis/` | `prepare_inputs.py`, duplicate removal, DY stitching, lumi / JSON tools |
 | `plotting/` | control-plot pipeline |
 | `higgs_combine/` | shape inputs and datacards for Combine |
-| `docs/` | full setup notes, AN summary, TODO |
+| `docs/`, `mkdocs.yml` | mkdocs documentation site (published by `.github/workflows/docs.yml`) |
+| `report/` | full setup notes, AN summary, AN PDFs, &gamma;-CR plan, systematics review, TODO |

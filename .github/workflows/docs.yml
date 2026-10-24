@@ -6,7 +6,7 @@ name: docs
 on:
   push:
     branches:
-      - HZZ_Analysis_2l2nu_dev_gammaCR
+      - HZZ_Analysis_2l2nu
     paths:
       - "docs/**"
       - "mkdocs.yml"

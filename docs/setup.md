@@ -6,12 +6,12 @@ path is resolved relative to that directory or to `$CMSSW_BASE`.
 ## One-time installation
 
 ```bash
-wget https://raw.githubusercontent.com/ram1123/nanoAOD_skim/HZZ_Analysis_2l2nu_dev/setup.sh
-/cvmfs/cms.cern.ch/common/cmssw-el9 -B /work/users/$USER -- bash setup.sh
-# another branch:  SKIM_BRANCH=HZZ_Analysis_2l2nu_dev_gammaCR bash setup.sh
+wget https://raw.githubusercontent.com/ram1123/nanoAOD_skim/HZZ_Analysis_2l2nu/setup.sh
+SKIM_BRANCH=HZZ_Analysis_2l2nu /cvmfs/cms.cern.ch/common/cmssw-el9 -B /work/users/$USER -- bash setup.sh
+# setup.sh alone checks out HZZ_Analysis_2l2nu_dev; SKIM_BRANCH picks the branch
 ```
 
-[`setup.sh`](https://github.com/ram1123/nanoAOD_skim/blob/HZZ_Analysis_2l2nu_dev/setup.sh)
+[`setup.sh`](https://github.com/ram1123/nanoAOD_skim/blob/HZZ_Analysis_2l2nu/setup.sh)
 does the following:
 
 1. `scram project CMSSW_14_0_2`.

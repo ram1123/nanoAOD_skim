@@ -10,8 +10,8 @@ $CMSSW_BASE/src/PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD
 ```
 
 The 4&ell; and 2&ell;2q code paths are still in the code, but this documentation
-covers the 2&ell;2&nu; branches (`HZZ_Analysis_2l2nu_dev`,
-`HZZ_Analysis_2l2nu_dev_gammaCR`).
+covers the 2&ell;2&nu; branch `HZZ_Analysis_2l2nu` (and its development branches
+`HZZ_Analysis_2l2nu_dev`, `HZZ_Analysis_2l2nu_dev_gammaCR`).
 
 | | |
 | --- | --- |
@@ -74,6 +74,6 @@ mkdocs build                       # static site in site/
 !!! note "Source of truth"
     Thresholds and trigger lists live in `config/Input_<year>.yml`, selection logic
     in `src/H4LTools.cc`, and control-region cuts in `plotting/make_config.py`.
-    These pages summarise them as of the `HZZ_Analysis_2l2nu_dev_gammaCR` branch.
+    These pages summarise them as of the `HZZ_Analysis_2l2nu` branch.
     If a page and the code disagree, trust the code.
 

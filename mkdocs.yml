@@ -2,7 +2,7 @@ site_name: HZZ 2l2nu NanoAOD skim
 site_description: NanoAOD skimmer and control-plot pipeline for the X/H -> ZZ -> 2l2nu search (Run 2 UL, NanoAOD v15)
 repo_url: https://github.com/ram1123/nanoAOD_skim
 repo_name: ram1123/nanoAOD_skim
-edit_uri: edit/HZZ_Analysis_2l2nu_dev_gammaCR/docs/
+edit_uri: edit/HZZ_Analysis_2l2nu/docs/
 
 theme:
   name: material
