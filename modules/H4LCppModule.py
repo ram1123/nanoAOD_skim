@@ -25,6 +25,21 @@ class HZZAnalysisCppProducer(Module):
         self.isMC = isMC
         self.cutFlowJSONFile = cutFlowJSONFile
         self.channels = channels # choices=["all", "4l", "2l2q", "2l2v", "1g"],
+        self.rjr = None
+        if self.channels in ("2l2v", "all"):
+            pkg = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            prefix = os.path.join(pkg, "external", "RestFrames")
+            library = os.path.join(prefix, "lib", "libRestFrames.so")
+            header = os.path.join(pkg, "include", "RJRReconstruction.h")
+            if not os.path.isfile(header):
+                raise RuntimeError("Missing RJR header: " + header)
+            ROOT.gInterpreter.AddIncludePath(os.path.join(prefix, "include"))
+            if ROOT.gSystem.Load(library) < 0:
+                raise RuntimeError("Cannot load RestFrames: " + library)
+            if not hasattr(ROOT, "XZZRJR"):
+                if not ROOT.gInterpreter.Declare("#include " + json.dumps(header)):
+                    raise RuntimeError("Cannot declare RJR helper")
+            self.rjr = ROOT.XZZRJR.Reconstruction()
         self.DEBUG = DEBUG
         self.cfgFile = cfgFile
         self.cfg = self._load_config(cfgFile)
@@ -454,6 +469,8 @@ class HZZAnalysisCppProducer(Module):
         # Branches for 2l2nu channel: ZZ kinematics
         self.out.branch("HZZ2l2nu_ZZmT",  "F")
         self.out.branch("HZZ2l2nu_ZZpT",  "F")
+        self.out.branch("HZZ2l2nu_RJR_mass", "F")
+        self.out.branch("HZZ2l2nu_RJR_status", "I")
         #self.out.branch("Pz_neutrino", "F")
 
         # Branches for 2l2nu channel: VBF jets and dijet kinematics
@@ -593,6 +610,8 @@ class HZZAnalysisCppProducer(Module):
         #    self.initReaders(event._tree)
         # do NOT access other branches in python between the check/call to
         # initReaders and the call to C++ worker code
+        rjr_mass = -999.
+        rjr_status = -1  # Not evaluated for this event/channel.
         self.worker.Initialize()
         isMC = self.isMC
         self.worker.SetObjectNum(event.nElectron,event.nMuon,event.nJet,event.nFsrPhoton)
@@ -784,6 +803,7 @@ class HZZAnalysisCppProducer(Module):
             #self.worker.SetElectrons(xe.pt, xe.eta, xe.phi, xe.mass, xe.dxy,
                                       #xe.dz, xe.mvaFall17V2Iso_WP90, xe.pdgId, xe.pfRelIso03_all) #for v9
             self.worker.SetElectrons(xe.pt, xe.eta, xe.phi, xe.mass, xe.dxy, xe.dz, xe.mvaIso_WP90, xe.pfRelIso03_all, xe.pdgId, xe.deltaEtaSC) # for v15
+            #self.worker.SetElectrons(xe.pt, xe.eta, xe.phi, xe.mass, xe.dxy, xe.dz, xe.mvaFall17V2Iso_WPL, xe.pfRelIso03_all, xe.pdgId, xe.deltaEtaSC) # for v15 ##Sumit
             self.worker.SetElectronsCutBased(xe.cutBased)   # veto-electron ID (Fall17V2 cut-based)
             if self.DEBUG:
                 print("Electrons: pT, eta: {}, {}".format(xe.pt, xe.eta))
@@ -843,6 +863,18 @@ class HZZAnalysisCppProducer(Module):
                 if self.DEBUG: print("isBoosted2l2q: ", isBoosted2l2q)
             if self.channels == "2l2v" or self.channels == "all":
                 foundZZCandidate_2l2nu = self.worker.ZZSelection_2l2nu()  #commented out for now
+                if foundZZCandidate_2l2nu:
+                    a, b = ROOT.TLorentzVector(), ROOT.TLorentzVector()
+                    a.SetPtEtaPhiM(
+                        self.worker.pTL1, self.worker.etaL1,
+                        self.worker.phiL1, self.worker.massL1)
+                    b.SetPtEtaPhiM(
+                        self.worker.pTL2, self.worker.etaL2,
+                        self.worker.phiL2, self.worker.massL2)
+                    result = self.rjr.reconstruct(a, b, corr_pt, corr_phi)
+                    rjr_status = int(result.status)
+                    rjr_mass = float(result.mass)
+
         if (self.channels == "all"  or self.channels == "4l"):
             foundZZCandidate_4l = self.worker.ZZSelection_4l()
         if self.worker.GetZ1_emuCR() and (self.channels == "all"  or self.channels == "2l2v"):
@@ -1068,6 +1100,8 @@ class HZZAnalysisCppProducer(Module):
         self.out.fillBranch("EneZ2_met",EneZ2_met)
         self.out.fillBranch("HZZ2l2nu_ZZmT", HZZ2l2nu_ZZmT)
         self.out.fillBranch("HZZ2l2nu_ZZpT", HZZ2l2nu_ZZpT)
+        self.out.fillBranch("HZZ2l2nu_RJR_mass", rjr_mass)
+        self.out.fillBranch("HZZ2l2nu_RJR_status", rjr_status)
         self.out.fillBranch("HZZ2l2nu_minDPhi_METAK4", HZZ2l2nu_minDPhi_METAK4)
         self.out.fillBranch("HZZ2l2nu_dPhi_ZMET", HZZ2l2nu_dPhi_ZMET)
         #self.out.fillBranch("Pz_neutrino", Pz_neutrino)
