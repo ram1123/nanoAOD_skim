@@ -8,7 +8,7 @@
 #       source <path>/nanoAOD_skim/set_env.sh
 #       python3 post_proc.py -i config/ExampleInputFileList.txt
 #
-#   It does:  cmsenv  +  MELA env  +  openssl-1.1 shim  +  VOMS proxy.
+#   It does: cmsenv + MELA + openssl-1.1 shim + RestFrames + VOMS proxy.
 #   On a real el9 host (lxplus9) the container line is not needed.
 # ------------------------------------------------------------------------------
 
@@ -69,6 +69,30 @@ if [ -d "$PKG/external/el8compat_lib" ]; then
     export LD_LIBRARY_PATH="$PKG/external/el8compat_lib:${LD_LIBRARY_PATH:-}"
 fi
 
+# --- RestFrames ---------------------------------------------------------
+# Use the current package location, including after batch staging/relocation.
+# Do not source the generated RestFrames setup script: it embeds the build path.
+export RESTFRAMESSYS="$PKG/external/RestFrames"
+if [ ! -f "$RESTFRAMESSYS/lib/libRestFrames.so" ] || \
+   [ ! -f "$RESTFRAMESSYS/include/RestFrames/RestFrames.hh" ]; then
+    echo "set_env.sh: RestFrames missing or incomplete at $RESTFRAMESSYS" >&2
+    echo "set_env.sh: build RestFrames with the updated setup.sh first." >&2
+    return 1 2>/dev/null || exit 1
+fi
+case ":${PATH:-}:" in
+    *":$RESTFRAMESSYS/bin:"*) ;;
+    *) export PATH="$RESTFRAMESSYS/bin:${PATH:-}" ;;
+esac
+case ":${LD_LIBRARY_PATH:-}:" in
+    *":$RESTFRAMESSYS/lib:"*) ;;
+    *) export LD_LIBRARY_PATH="$RESTFRAMESSYS/lib:${LD_LIBRARY_PATH:-}" ;;
+esac
+case ":${ROOT_INCLUDE_PATH:-}:" in
+    *":$RESTFRAMESSYS/include:"*) ;;
+    *) export ROOT_INCLUDE_PATH="$RESTFRAMESSYS/include:${ROOT_INCLUDE_PATH:-}" ;;
+esac
+echo "set_env.sh: RestFrames environment ($RESTFRAMESSYS)"
+
 # --- grid proxy --------------------------------------------------------
 if voms-proxy-info -exists --valid 1:00 >/dev/null 2>&1; then
     echo "set_env.sh: VOMS proxy OK"
@@ -85,3 +109,4 @@ else
 fi
 
 echo "set_env.sh: ready.  cd $PKG ;  python3 post_proc.py -i config/ExampleInputFileList.txt"
+

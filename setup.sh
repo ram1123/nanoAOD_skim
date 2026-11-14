@@ -1,6 +1,6 @@
 #!/bin/bash
 # ==============================================================================
-# One-time build of the HZZ NanoAOD skim.
+# One-time build of the HZZ NanoAOD skim and RestFrames.
 #
 # Run it INSIDE an el9 environment, from an empty working directory:
 #
@@ -18,10 +18,11 @@ set -e
 
 CMSSW_RELEASE=CMSSW_14_0_2
 export SCRAM_ARCH=el8_amd64_gcc12
-SKIM_BRANCH="${SKIM_BRANCH:-HZZ_Analysis_2l2nu_dev}"
+SKIM_BRANCH="${SKIM_BRANCH:-HZZ_Analysis_2l2nu}"
 TOOLS_BRANCH="${TOOLS_BRANCH:-h4l_allCh_dev}"
 MELA_TAG="${MELA_TAG:-v2.4.2}"
 NJOBS="${NJOBS:-8}"
+RESTFRAMES_COMMIT=6fa7fbe356258d48654c5bc0a76f61d55cd9201c
 
 # use https clones (ssh keys are usually not set up on lxplus / the AF)
 GH=https://github.com
@@ -42,7 +43,7 @@ source /cvmfs/cms.cern.ch/cmsset_default.sh
 export SCRAMRT_SET="${SCRAMRT_SET:-1}"
 
 # ---- 1. CMSSW release ----------------------------------------------------
-echo ">>> [1/7] scram project $CMSSW_RELEASE"
+echo ">>> [1/8] scram project $CMSSW_RELEASE"
 [ -d "$CMSSW_RELEASE" ] || scram project CMSSW "$CMSSW_RELEASE"
 cd "$CMSSW_RELEASE/src"
 eval "$(scramv1 runtime -sh 2>/dev/null)"
@@ -50,19 +51,19 @@ eval "$(scramv1 runtime -sh 2>/dev/null)"
 echo "    CMSSW_BASE=$CMSSW_BASE"
 
 # ---- 2. nanoAOD-tools (fork) ------------------------------------------
-echo ">>> [2/7] nanoAOD-tools ($TOOLS_BRANCH)"
+echo ">>> [2/8] nanoAOD-tools ($TOOLS_BRANCH)"
 [ -d PhysicsTools/NanoAODTools ] || \
     git clone -b "$TOOLS_BRANCH" "$GH/ram1123/nanoAOD-tools.git" PhysicsTools/NanoAODTools
 
 # ---- 3. this analysis package ----------------------------------------
 PKGREL=PhysicsTools/NanoAODTools/python/postprocessing/analysis/nanoAOD_skim
-echo ">>> [3/7] nanoAOD_skim ($SKIM_BRANCH)"
+echo ">>> [3/8] nanoAOD_skim ($SKIM_BRANCH)"
 [ -d "$PKGREL" ] || \
     git clone -b "$SKIM_BRANCH" "$GH/ram1123/nanoAOD_skim.git" "$PKGREL"
 PKG="$CMSSW_BASE/src/$PKGREL"
 
 # ---- 4. yaml-cpp -----------------------------------------------------
-echo ">>> [4/7] yaml-cpp"
+echo ">>> [4/8] yaml-cpp"
 cd "$PKG"
 if [ ! -f external/yaml-cpp/build/libyaml-cpp.so ]; then
     rm -rf external/yaml-cpp
@@ -74,14 +75,14 @@ if [ ! -f external/yaml-cpp/build/libyaml-cpp.so ]; then
 fi
 
 # ---- 5. b-tag CSVs -------------------------------------------------
-echo ">>> [5/7] b-tag CSV files"
+echo ">>> [5/8] b-tag CSV files"
 mkdir -p "$CMSSW_BASE/src/PhysicsTools/NanoAODTools/data/btagSF"
 cp -f data/btag/*.csv "$CMSSW_BASE/src/PhysicsTools/NanoAODTools/data/btagSF/" || true
 
 # ---- 6. MELA -------------------------------------------------------
 # JHUGenMELA/MELA/setup.sh cannot be used here: its dependency step calls
 # `tcsh` (not installed on the AF). Do the equivalent by hand.
-echo ">>> [6/7] JHUGenMELA ($MELA_TAG)"
+echo ">>> [6/8] JHUGenMELA ($MELA_TAG)"
 cd "$PKG/external"
 if [ ! -f JHUGenMELA/MELA/data/el9_amd64_gcc12/libJHUGenMELAMELA.so ]; then
     [ -d JHUGenMELA ] || git clone -b "$MELA_TAG" "$GH/JHUGen/JHUGenMELA"
@@ -131,9 +132,97 @@ if [ ! -e "$SHIM/libssl.so.1.1" ]; then
 fi
 
 # ---- 7. scram build ----------------------------------------------
-echo ">>> [7/7] scram b -j $NJOBS"
+echo ">>> [7/8] scram b -j $NJOBS"
 cd "$CMSSW_BASE/src"
 scram b -j "$NJOBS"
+
+# ---- 8. RestFrames (same ROOT/compiler as CMSSW; no separate LCG setup) ----
+echo ">>> [8/8] RestFrames ($RESTFRAMES_COMMIT)"
+cd "$PKG"
+RF_SRC="$PKG/external/RestFrames-source"
+export RESTFRAMESSYS="$PKG/external/RestFrames"
+RF_CXX="$(command -v c++)"
+RF_ROOT_CONFIG="$(command -v root-config)"
+command -v rootcling
+case "$RF_CXX" in /cvmfs/cms.cern.ch/*) ;; *)
+    echo "ERROR: compiler is outside the CMS environment: $RF_CXX" >&2; exit 1;; esac
+case "$RF_ROOT_CONFIG" in /cvmfs/cms.cern.ch/*) ;; *)
+    echo "ERROR: ROOT is outside the CMS environment: $RF_ROOT_CONFIG" >&2; exit 1;; esac
+export LD_LIBRARY_PATH="$SHIM:${LD_LIBRARY_PATH:-}"
+if [ -e "$RESTFRAMESSYS" ]; then
+    [ -f "$RESTFRAMESSYS/lib/libRestFrames.so" ] || {
+        echo "ERROR: incomplete RestFrames installation: $RESTFRAMESSYS" >&2; exit 1;
+    }
+    echo "    Reusing existing RestFrames; testing loading, not certifying build provenance."
+else
+    [ ! -e "$RF_SRC" ] || {
+        echo "ERROR: $RF_SRC already exists; inspect it before retrying a clean build." >&2
+        exit 1
+    }
+    git clone -b dev/XZllZnn "$GH/ram1123/RestFrames.git" "$RF_SRC"
+    git -C "$RF_SRC" checkout --detach "$RESTFRAMES_COMMIT"
+    ( cd "$RF_SRC"
+      CXX="$RF_CXX" bash ./configure --prefix="$RESTFRAMESSYS" --disable-debug
+      make -j "$NJOBS"
+      make install )
+    [ -f "$RESTFRAMESSYS/lib/libRestFrames.so" ] || exit 1
+    printf 'Commit: %s\nROOT: %s\nCompiler: %s\n' \
+        "$RESTFRAMES_COMMIT" "$(root-config --version)" "$RF_CXX" \
+        > "$RESTFRAMESSYS/build_environment.txt"
+fi
+export LD_LIBRARY_PATH="$RESTFRAMESSYS/lib:${LD_LIBRARY_PATH:-}"
+export ROOT_INCLUDE_PATH="$RESTFRAMESSYS/include:${ROOT_INCLUDE_PATH:-}"
+python3 - <<'PY'
+import os
+import ROOT
+lib = os.path.join(os.environ['RESTFRAMESSYS'], 'lib', 'libRestFrames.so')
+if ROOT.gSystem.Load(lib) < 0:
+    raise RuntimeError('Cannot load RestFrames: ' + lib)
+ROOT.gInterpreter.AddIncludePath(os.path.join(os.environ['RESTFRAMESSYS'], 'include'))
+if not ROOT.gInterpreter.Declare(r'''
+#include "RestFrames/RestFrames.hh"
+void check_rjr_installation() {
+    RestFrames::ContraBoostInvJigsaw cb("install_cb", "install_cb");
+}
+'''):
+    raise RuntimeError('RestFrames headers could not be declared')
+ROOT.check_rjr_installation()
+print('PASS: RestFrames library, headers and ContraBoostInvJigsaw')
+PY
+
+# Generate a relocatable environment entry point inside the installed package.
+# Refuse to overwrite an existing different script.
+RF_ENV_TMP="$(mktemp "$PKG/.set_env_rjr.XXXXXX")"
+cat > "$RF_ENV_TMP" <<'RJR_ENV'
+#!/bin/bash
+# Source this from the installed package, inside the framework EL9 environment.
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+    echo "Use: source set_env_rjr.sh" >&2
+    exit 1
+fi
+_RJR_PKG="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
+export SCRAM_ARCH=el8_amd64_gcc12
+source "$_RJR_PKG/set_env.sh" || return 1
+export RESTFRAMESSYS="$_RJR_PKG/external/RestFrames"
+if [ ! -f "$RESTFRAMESSYS/lib/libRestFrames.so" ]; then
+    echo "Missing RestFrames library under $RESTFRAMESSYS" >&2
+    return 1
+fi
+export PATH="$RESTFRAMESSYS/bin:$PATH"
+export LD_LIBRARY_PATH="$RESTFRAMESSYS/lib:${LD_LIBRARY_PATH:-}"
+export ROOT_INCLUDE_PATH="$RESTFRAMESSYS/include:${ROOT_INCLUDE_PATH:-}"
+echo "RestFrames environment ready: $RESTFRAMESSYS"
+unset _RJR_PKG
+RJR_ENV
+if [ -e "$PKG/set_env_rjr.sh" ]; then
+    if ! cmp -s "$RF_ENV_TMP" "$PKG/set_env_rjr.sh"; then
+        echo "ERROR: existing set_env_rjr.sh differs. Review proposed file: $RF_ENV_TMP" >&2
+        exit 1
+    fi
+    rm -f "$RF_ENV_TMP"
+else
+    mv "$RF_ENV_TMP" "$PKG/set_env_rjr.sh"
+fi
 
 cat <<EOF
 
@@ -146,9 +235,12 @@ cat <<EOF
    export SCRAM_ARCH=el8_amd64_gcc12
    cd $CMSSW_BASE/src && cmsenv
    cd $PKGREL
-   source set_env.sh
+   source set_env_rjr.sh
    python3 post_proc.py -i config/ExampleInputFileList.txt
 
  See README.md and scripts/slurm/README.md (batch on Purdue).
+ RestFrames is installed under external/RestFrames.
+ RJR reconstruction helper/module edits must be applied separately if absent.
 ==============================================================
 EOF
+
